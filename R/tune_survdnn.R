@@ -1,20 +1,16 @@
 
 tune_survdnn <- function(formula, data, times, metrics = "cindex",
-                         param_grid, folds = 3, seed = 42) {
-  if (!requireNamespace("dplyr", quietly = TRUE) ||
-      !requireNamespace("tibble", quietly = TRUE) ||
-      !requireNamespace("purrr", quietly = TRUE)) {
-    stop("Packages 'dplyr', 'tibble', and 'purrr' are required.")
-  }
+                         param_grid, folds = 3, seed = 42,
+                         refit = FALSE,
+                         return = c("all", "summary", "best_model")) {
+
+  return <- match.arg(return)
 
   param_df <- tidyr::crossing(!!!param_grid)
 
-  purrr::pmap_dfr(param_df, function(hidden, lr, activation, epochs) {
+  all_results <- purrr::pmap_dfr(param_df, function(hidden, lr, activation, epochs) {
     config_tbl <- tibble::tibble(
-      hidden = list(hidden),
-      lr = lr,
-      activation = activation,
-      epochs = epochs
+      hidden = list(hidden), lr = lr, activation = activation, epochs = epochs
     )
 
     cv_tbl <- cv_survdnn(
@@ -31,13 +27,33 @@ tune_survdnn <- function(formula, data, times, metrics = "cindex",
     )
 
     dplyr::bind_cols(config_tbl[rep(1, nrow(cv_tbl)), ], cv_tbl)
-  }) |>
-    dplyr::arrange(metric, dplyr::desc(value))
+  })
+
+  summary_tbl <- summarize_cv_survdnn(all_results, by_time = FALSE)
+
+  # choose best config based on first metric (e.g., cindex max or ibs min)
+  primary_metric <- metrics[1]
+  best_row <- summary_tbl |>
+    dplyr::filter(metric == primary_metric) |>
+    dplyr::slice_max(order_by = if (primary_metric %in% c("cindex")) mean else -mean, n = 1)
+
+  best_config <- best_row |> dplyr::select(any_of(c("hidden", "lr", "activation", "epochs")))
+
+  if (refit) {
+    message("Refitting best model on full data...")
+    best_model <- do.call(survdnn, c(list(formula = formula, data = data), best_config))
+  }
+
+  # return based on user choice
+  out <- switch(return,
+                "all" = all_results,
+                "summary" = summary_tbl,
+                "best_model" = if (refit) best_model else stop("refit must be TRUE to return best_model.")
+  )
+  return(out)
 }
 
-library(survival)
-data(veteran)
-
+# grid definition
 grid <- list(
   hidden = list(c(16), c(32, 16)),
   lr = c(1e-4, 5e-4),
@@ -45,14 +61,28 @@ grid <- list(
   epochs = c(300)
 )
 
-tune_res <- tune_survdnn(
+# run tuning + return full results
+res_all <- tune_survdnn(
   formula = Surv(time, status) ~ age + karno + celltype,
   data = veteran,
   times = c(90),
   metrics = c("cindex", "ibs"),
   param_grid = grid,
   folds = 3,
-  seed = 42
+  seed = 42,
+  refit = FALSE,
+  return = "all"
 )
-print(tune_res)
 
+# run tuning + return best model fitted on full data
+best_mod <- tune_survdnn(
+  formula = Surv(time, status) ~ age + karno + celltype,
+  data = veteran,
+  times = c(90),
+  metrics = c("cindex", "ibs"),
+  param_grid = grid,
+  folds = 3,
+  seed = 42,
+  refit = TRUE,
+  return = "best_model"
+)
