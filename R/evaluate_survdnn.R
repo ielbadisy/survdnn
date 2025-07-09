@@ -125,16 +125,6 @@ IAEISE_survmat <- function(object, sp_matrix, times) {
   return(round(c(IAE = IAE, ISE = ISE), 4))
 }
 
-#' Evaluate a survdnn model using survival metrics
-#'
-#' @param model A fitted `survdnn` model.
-#' @param metrics Character vector of metrics to compute. Options:
-#'   "cindex", "brier", "ibs", "iae", "ise".
-#' @param times Numeric vector of time points for evaluation.
-#' @param newdata Optional new dataset (defaults to training data).
-#'
-#' @return A tibble with columns `metric` and `value`, or for Brier: `time`, `value`.
-#' @export
 evaluate_survdnn <- function(model,
                              metrics = c("cindex", "ibs", "iae", "ise", "brier"),
                              times,
@@ -145,12 +135,12 @@ evaluate_survdnn <- function(model,
   data <- if (is.null(newdata)) model$data else newdata
   sp_matrix <- predict(model, newdata = data, times = times, type = "survival")
 
-  # Extract Surv outcome
+  # extract Surv outcome
   mf <- model.frame(model$formula, data)
   y <- model.response(mf)
   if (!inherits(y, "Surv")) stop("The outcome must be a 'Surv' object.")
 
-  # Metric computation
+  # Mmtric computation
   results <- purrr::map_dfr(metrics, function(metric) {
     if (metric == "brier" && length(times) > 1) {
       tibble::tibble(
@@ -198,13 +188,7 @@ evaluate_survdnn(mod, metrics = "brier", times = c(30, 60, 90), newdata = test_d
 
 
 
-#' Plot evaluation metric curves over time (e.g. Brier score)
-#'
-#' @param eval_df Output from `evaluate_survdnn()` containing columns: metric, time, value.
-#' @param metric Name of the metric to plot (e.g., "brier").
-#'
-#' @return A `ggplot2` line plot of metric value vs time.
-#' @export
+
 plot_metric_curve <- function(eval_df, metric = "brier") {
   if (!requireNamespace("ggplot2", quietly = TRUE)) {
     stop("The 'ggplot2' package is required for this plot.")
