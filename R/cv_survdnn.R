@@ -42,3 +42,42 @@ cv_res <- cv_survdnn(
 )
 
 cv_res
+
+
+
+summarize_cv_survdnn <- function(cv_results, by_time = TRUE) {
+  if (!all(c("fold", "metric", "value") %in% names(cv_results))) {
+    stop("Input must be a tibble returned from cv_survdnn().")
+  }
+
+  group_vars <- if ("time" %in% names(cv_results) && by_time) {
+    c("metric", "time")
+  } else {
+    "metric"
+  }
+
+  cv_results |>
+    dplyr::group_by(dplyr::across(all_of(group_vars))) |>
+    dplyr::summarise(
+      mean = mean(value, na.rm = TRUE),
+      sd = sd(value, na.rm = TRUE),
+      .groups = "drop"
+    )
+}
+
+
+
+# run CV
+cvres <- cv_survdnn(
+  Surv(time, status) ~ age + celltype + karno,
+  data = veteran,
+  times = 1:365,
+  metrics = c("ibs", "cindex"),
+  folds = 3,
+  seed = 42,
+  hidden = c(32, 16), epochs = 200
+)
+
+# summarize
+summarize_cv_survdnn(cvres)
+
