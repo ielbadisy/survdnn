@@ -55,3 +55,24 @@ rank_loss <- function(pred, true) {
   loss_tensor <- torch_stack(loss_terms)
   return(torch_mean(loss_tensor))
 }
+
+
+
+aft_loss <- function(pred, true) {
+  time <- true[, 1]
+  status <- true[, 2]
+  log_time <- torch_log(time)
+
+  event_mask <- (status == 1)
+  n_events <- as.numeric(torch_sum(event_mask))
+
+  if (n_events == 0) {
+    return(torch_tensor(0, dtype = torch_float()))
+  }
+
+  pred_event <- pred[event_mask, 1]
+  log_time_event <- log_time[event_mask]
+
+  mse <- torch_mean((pred_event - log_time_event)^2)
+  return(mse)
+}
