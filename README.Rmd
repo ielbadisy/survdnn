@@ -179,3 +179,69 @@ survdnn(..., .loss_fn = my_custom_loss)
 * [ ] AFT + time-to-event distribution estimation
 
 * [ ] Integration with `survalis` as `fit_survdnn()` and `predict_survdnn()`
+
+
+
+## Functions to be implemented in the `survdnn` R package
+
+
+### Core API
+
+| Function            | Purpose                                                   | Exported |
+| ------------------- | --------------------------------------------------------- | -------- |
+| `survdnn()`         | Main model-fitting function with formula interface        | Yes       |
+| `predict.survdnn()` | Predict method (S3): returns survival, risk, or LP        | Yes      |
+| `print.survdnn()`   | Print method (S3): shows architecture and training info   | Yes      |
+| `summary.survdnn()` | Summary method (S3): model details, final loss, data info | Yes      |
+| `plot.survdnn()`    | Plot survival curves (optional: mean, CI)                 | Yes      |
+
+
+### Loss functions
+
+| Function             | Purpose                                                   | Exported |
+| -------------------- | --------------------------------------------------------- | -------- |
+| `cox_loss()`         | Partial likelihood (default loss)                         | Yes     |
+| `cox_l2_loss()`      | Cox loss + L2 penalty on predictions                      | Yes      |
+| `aft_loss()`         | AFT loss (e.g., Weibull/log-normal log-likelihood or MSE) | Yes      |
+| `rank_loss()`        | Pairwise ranking loss (for concordance)                   | Yes      |
+| `flex_loss()`        | Fully parametric log-likelihood of survival distributions | Yes      |
+| `validate_loss_fn()` | Internal helper to check that a `.loss_fn` is valid       | No      |
+
+
+### Training and evaluation
+
+| Function             | Purpose                                                   | Exported |
+| -------------------- | --------------------------------------------------------- | -------- |
+| `cv_survdnn()`       | K-fold cross-validation with survival metrics             | Yes       |
+| `tune_survdnn()`     | Hyperparameter tuning (grid search, optional parallelism) | Yes     |
+| `train_survdnn()`    | Internal training loop (torch-optimized)                  | No      |
+| `evaluate_survdnn()` | Internal: evaluation wrapper for model + metric           | Yes       |
+
+
+### Testing + Benchmarking
+
+| Function                 | Purpose                                          | Exported |
+| ------------------------ | ------------------------------------------------ | -------- |
+| `benchmark_survdnn()`    | Compare with `coxph()`, `ranger::rfsrc()`, etc.  | Yes     |
+| `compare_survdnn_loss()` | Compare `cox_loss()` to `coxph()` log-likelihood | Non      |
+
+
+### Documentation and examples
+
+| Function/File                | Purpose                                                    | Exported |
+| ---------------------------- | ---------------------------------------------------------- | -------- |
+| `vignette("survdnn-intro")`  | Full example: fit, custom loss, predict, plot              | Yes    |
+| `vignette("loss-functions")` | Mathematical overview and use-cases for each loss function | Yes      |
+
+
+### Internal helpers (Not Exported)
+
+| Function               | Purpose                                                   |
+| ---------------------- | --------------------------------------------------------- |
+| `.parse_formula()`     | Extract response and predictors from formula              |
+| `.torch_dataset()`     | Convert data into torch `dataset()`                       |
+| `.get_activation()`    | Map user input to `nn_relu`, `nn_tanh`, etc.              |
+| `.compute_surv_prob()` | Compute survival from risk scores (e.g., KM / parametric) |
+| `.validate_inputs()`   | Sanity checks on data types and formula                   |
+
+
