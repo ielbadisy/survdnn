@@ -1,3 +1,73 @@
+library(torch)
+
+build_dnn <- function(input_dim, hidden, activation = "relu") {
+  layers <- list()
+  in_features <- input_dim
+
+  act_fn <- switch(activation,
+                   relu = torch::nn_relu,
+                   tanh = torch::nn_tanh,
+                   leaky_relu = torch::nn_leaky_relu,
+                   stop("Unsupported activation function: ", activation)
+  )
+
+  for (h in hidden) {
+    layers <- append(layers, list(
+      torch::nn_linear(in_features, h),
+      torch::nn_batch_norm1d(h),
+      act_fn(),
+      torch::nn_dropout(p = 0.3)
+    ))
+    in_features <- h
+  }
+
+  layers <- append(layers, list(torch::nn_linear(in_features, 1)))
+  torch::nn_sequential(!!!layers)
+}
+
+cox_loss <- function(pred, true) {
+  time <- true[, 1]
+  status <- true[, 2]
+  idx <- torch_argsort(time, descending = TRUE)
+  time <- time[idx]
+  status <- status[idx]
+  pred <- -pred[idx, 1]  
+
+  log_cumsum_exp <- torch_logcumsumexp(pred, dim = 1)
+  event_mask <- (status == 1)
+  loss <- -torch_mean(pred[event_mask] - log_cumsum_exp[event_mask])
+  return(loss)
+}
+
+# internal training function
+fit_coxdnn <- function(x, time, status,
+                       hidden = c(32L, 16L), activation = "relu",
+                       lr = 1e-4, epochs = 300L, verbose = TRUE) {
+  library(torch)
+  y <- cbind(time, status)
+  x <- torch_tensor(as.matrix(x), dtype = torch_float())
+  y <- torch_tensor(as.matrix(y), dtype = torch_float())
+  net <- build_dnn(ncol(x), hidden, activation)
+  optimizer <- optim_adam(net$parameters, lr = lr, weight_decay = 1e-4)
+
+  for (epoch in 1:epochs) {
+    net$train()
+    optimizer$zero_grad()
+    pred <- net(x)
+    loss <- cox_loss(pred, y)
+    loss$backward()
+    optimizer$step()
+    if (verbose && epoch %% 50 == 0) {
+      cat("Epoch", epoch, "Loss:", loss$item(), "\n")
+    }
+  }
+
+  structure(list(
+    model = net, x = x, y = y,
+    activation = activation, hidden = hidden,
+    lr = lr, epochs = epochs
+  ), class = "coxdnn")
+}
 
 survdnn <- function(formula, data,
                     hidden = c(32L, 16L),
