@@ -86,3 +86,44 @@ best_mod <- tune_survdnn(
   refit = TRUE,
   return = "best_model"
 )
+
+
+
+summarize_tune_survdnn <- function(tuning_results, by_time = TRUE) {
+  if (!all(c("metric", "value") %in% names(tuning_results))) {
+    stop("Input must be the result of `tune_survdnn(return = 'all')`.")
+  }
+
+  group_vars <- c("hidden", "lr", "activation", "epochs", "metric")
+  if (by_time && "time" %in% names(tuning_results)) {
+    group_vars <- c(group_vars, "time")
+  }
+
+  tuning_results |>
+    dplyr::group_by(dplyr::across(all_of(group_vars))) |>
+    dplyr::summarise(
+      mean = mean(value, na.rm = TRUE),
+      sd = sd(value, na.rm = TRUE),
+      .groups = "drop"
+    ) |>
+    dplyr::arrange(metric, dplyr::desc(mean))
+}
+
+
+tune_res <- tune_survdnn(
+  formula = Surv(time, status) ~ age + karno + celltype,
+  data = veteran,
+  times = 1:180,
+  metrics = c("cindex", "ibs"),
+  param_grid = grid,
+  folds = 3,
+  seed = 42,
+  refit = FALSE,
+  return = "all"
+)
+
+# summarize all tuning runs
+summary_tbl <- summarize_tune_survdnn(tune_res)
+
+# summarize time-resolved metrics (brier)
+summary_brier <- summarize_tune_survdnn(tune_res, by_time = TRUE)
