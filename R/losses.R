@@ -76,3 +76,28 @@ aft_loss <- function(pred, true) {
   mse <- torch_mean((pred_event - log_time_event)^2)
   return(mse)
 }
+
+
+
+
+
+
+# internal validator for .loss_fn (not exported)
+validate_loss_fn <- function(.loss_fn) {
+  test_pred <- torch_randn(10, 1)
+  test_true <- torch_cat(list(
+    torch_rand(10, 1) * 100,          # random times
+    torch_randint(low = 0, high = 2, size = c(10, 1)) # event indicator
+  ), dim = 2)
+
+  test_loss <- try(.loss_fn(test_pred, test_true), silent = TRUE)
+
+  if (inherits(test_loss, "try-error") || !inherits(test_loss, "torch_tensor") ||
+      test_loss$numel() != 1) {
+    stop(".loss_fn must return a scalar torch tensor with shape (1)")
+  }
+}
+
+
+
+
