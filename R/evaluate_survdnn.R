@@ -198,4 +198,35 @@ evaluate_survdnn(mod, metrics = "brier", times = c(30, 60, 90), newdata = test_d
 
 
 
+#' Plot evaluation metric curves over time (e.g. Brier score)
+#'
+#' @param eval_df Output from `evaluate_survdnn()` containing columns: metric, time, value.
+#' @param metric Name of the metric to plot (e.g., "brier").
+#'
+#' @return A `ggplot2` line plot of metric value vs time.
+#' @export
+plot_metric_curve <- function(eval_df, metric = "brier") {
+  if (!requireNamespace("ggplot2", quietly = TRUE)) {
+    stop("The 'ggplot2' package is required for this plot.")
+  }
+
+  df <- eval_df[eval_df$metric == metric & !is.na(eval_df$time), , drop = FALSE]
+  if (nrow(df) == 0) {
+    stop("No curve data found for metric: ", metric)
+  }
+
+  ggplot2::ggplot(df, ggplot2::aes(x = time, y = value)) +
+    ggplot2::geom_line(linewidth = 1.1) +
+    ggplot2::labs(
+      title = paste(toupper(metric), "Score Over Time"),
+      x = "Time", y = metric
+    ) +
+    ggplot2::theme_minimal()
+}
+
+
+
+
+eval_brier <- evaluate_survdnn(mod, metrics = "brier", times = 1:365, newdata = test_data)
+plot_metric_curve(eval_brier, metric = "brier")
 
