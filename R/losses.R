@@ -14,3 +14,12 @@ cox_loss <- function(pred, true) {
   loss <- -torch_mean(pred[event_mask] - log_cumsum_exp[event_mask])
   return(loss)
 }
+
+
+
+
+cox_l2_loss <- function(pred, true, lambda = 1e-4) {
+  loss <- cox_loss(pred, true)
+  l2_penalty <- lambda * torch_mean(pred^2)
+  return(loss + l2_penalty)
+}
