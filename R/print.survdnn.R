@@ -1,15 +1,8 @@
-
 print.survdnn <- function(x, ...) {
-  stopifnot(inherits(x, "survdnn"))
-
-  cat("== survdnn model (torch-based DNN for survival) ==\n")
-  cat("• Formula: "); print(x$formula)
-  cat("• Hidden layers: ", paste(x$hidden, collapse = " → "), "\n", sep = "")
-  cat("• Activation: ", x$activation, "\n", sep = "")
-  cat("• Epochs trained: ", x$epochs, "\n", sep = "")
-  cat("• Learning rate: ", x$lr, "\n", sep = "")
-  cat("• Final loss: ", formatC(x$loss, digits = 6, format = "f"), "\n", sep = "")
-
+  cat("== survdnn model ==\n")
+  cat("Formula: "); print(x$formula)
+  cat(sprintf("Hidden layers: %s\n", paste(x$hidden, collapse = " → ")))
+  cat(sprintf("Final loss: %.4f (after %d epochs)\n", x$loss, x$epochs))
   invisible(x)
 }
 
