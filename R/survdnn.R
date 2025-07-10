@@ -120,5 +120,5 @@ survdnn <- function(formula, data,
     lr = lr,
     epochs = epochs,
     .loss_fn = .loss_fn
-  ), class = "survdnn", engine = "torchsurv")
+  ), class = "survdnn")
 }
