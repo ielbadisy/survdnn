@@ -65,3 +65,28 @@ library(survival)
 
 mod <- survdnn(Surv(time, status) ~ age + karno + celltype, data = veteran)
 summary(mod)
+
+
+#--- simulated data
+
+set.seed(42)
+n <- 200
+
+sim_data <- data.frame(
+  age = rnorm(n, mean = 60, sd = 10),
+  sex = sample(c("male", "female"), n, replace = TRUE),
+  treatment = sample(c("A", "B"), n, replace = TRUE),
+  surv_time = rexp(n, rate = 0.05),                 # custom time variable
+  event_occurred = rbinom(n, size = 1, prob = 0.7)  # custom event indicator
+)
+
+# inspect
+head(sim_data)
+
+mod <- survdnn(Surv(surv_time, event_occurred) ~ age + sex + treatment, data = sim_data)
+summary(mod)
+
+
+
+mod$loss_history
+plot(mod$loss_history, type = "l", ylab = "Loss", xlab = "Epoch")
