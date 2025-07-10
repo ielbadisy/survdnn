@@ -150,3 +150,24 @@ mod_aft <- survdnn(Surv(time, status) ~ x1 + x2,
                    verbose = TRUE)
 
 plot(mod_aft$loss_history, type = "l", main = "aft_loss", ylab = "Loss", xlab = "Epoch")
+
+
+## custom
+
+combo_loss <- function(pred, true) {
+  time <- true[, 1]
+  torch_mean((pred - log(time + 1))^2) + 0.01 * torch_mean(pred)
+}
+
+
+
+
+mod_combo <- survdnn(Surv(time, status) ~ x1 + x2,
+                   data = toy_data,
+                   .loss_fn = combo_loss,
+                   epochs = 100,     
+                   verbose = TRUE)
+s
+plot(mod_combo$loss_history, type = "l", main = "combo_loss", ylab = "Loss", xlab = "Epoch")
+
+
