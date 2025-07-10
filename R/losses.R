@@ -100,4 +100,53 @@ validate_loss_fn <- function(.loss_fn) {
 
 
 
+#----- TEST
 
+
+gc()
+
+library(torch)
+library(survival)
+library(purrr)
+
+# data
+set.seed(123)
+n <- 100
+toy_data <- data.frame(
+  x1 = rnorm(n),
+  x2 = rbinom(n, 1, 0.5),
+  time = rexp(n, 0.1),
+  status = rbinom(n, 1, 0.7)
+)
+
+
+
+
+mod_cox <- survdnn(Surv(time, status) ~ x1 + x2,
+                   data = toy_data,
+                   .loss_fn = cox_loss,
+                   epochs = 100,   
+                   verbose = TRUE)
+
+plot(mod_cox$loss_history, type = "l", main = "cox_loss", ylab = "Loss", xlab = "Epoch")
+
+
+
+
+mod_cox_l2 <- survdnn(Surv(time, status) ~ x1 + x2,
+                   data = toy_data,
+                   .loss_fn = cox_l2_loss,
+                   epochs = 100,    
+                   verbose = TRUE)
+
+plot(mod_cox_l2$loss_history, type = "l", main = "cox_l2_loss", ylab = "Loss", xlab = "Epoch")
+
+
+
+mod_aft <- survdnn(Surv(time, status) ~ x1 + x2,
+                   data = toy_data,
+                   .loss_fn = aft_loss,
+                   epochs = 100,     
+                   verbose = TRUE)
+
+plot(mod_aft$loss_history, type = "l", main = "aft_loss", ylab = "Loss", xlab = "Epoch")
