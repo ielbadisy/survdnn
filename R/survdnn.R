@@ -39,35 +39,6 @@ cox_loss <- function(pred, true) {
   return(loss)
 }
 
-# internal training function
-fit_coxdnn <- function(x, time, status,
-                       hidden = c(32L, 16L), activation = "relu",
-                       lr = 1e-4, epochs = 300L, verbose = TRUE) {
-  library(torch)
-  y <- cbind(time, status)
-  x <- torch_tensor(as.matrix(x), dtype = torch_float())
-  y <- torch_tensor(as.matrix(y), dtype = torch_float())
-  net <- build_dnn(ncol(x), hidden, activation)
-  optimizer <- optim_adam(net$parameters, lr = lr, weight_decay = 1e-4)
-
-  for (epoch in 1:epochs) {
-    net$train()
-    optimizer$zero_grad()
-    pred <- net(x)
-    loss <- cox_loss(pred, y)
-    loss$backward()
-    optimizer$step()
-    if (verbose && epoch %% 50 == 0) {
-      cat("Epoch", epoch, "Loss:", loss$item(), "\n")
-    }
-  }
-
-  structure(list(
-    model = net, x = x, y = y,
-    activation = activation, hidden = hidden,
-    lr = lr, epochs = epochs
-  ), class = "coxdnn")
-}
 
 survdnn <- function(formula, data,
                     hidden = c(32L, 16L),
