@@ -16,8 +16,8 @@ summary.survdnn <- function(object, ...) {
     training_summary = list(
       epochs = object$epochs,
       learning_rate = object$lr,
-      loss_function = deparse(substitute(object$.loss_fn))
-    ),
+      loss_function = object$loss_name
+      ),
     data_summary = list(
       observations = nrow(object$data),
       predictors = object$xnames,
@@ -59,6 +59,8 @@ print.summary.survdnn <- function(x, ...) {
   invisible(x)
 }
 
+
+library(survival)
 
 
 mod <- survdnn(Surv(time, status) ~ age + karno + celltype, data = veteran)
