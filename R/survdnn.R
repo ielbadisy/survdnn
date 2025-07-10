@@ -120,5 +120,6 @@ survdnn <- function(formula, data,
     lr = lr,
     epochs = epochs,
     .loss_fn = .loss_fn
+    loss_name = deparse(substitute(.loss_fn))  # fix the problem of improper name 
   ), class = "survdnn")
 }
