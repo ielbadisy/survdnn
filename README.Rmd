@@ -15,23 +15,23 @@ Deep Neural Network for Survival Analysis using `torch` in R, with formula inter
 
 ### Create `survdnn()` with a clean formula interface
 
-* [ ] Implement `survdnn()` with formula, data, and key parameters (`hidden`, `lr`, `activation`, `epochs`, `.loss_fn`)
+* [X] Implement `survdnn()` with formula, data, and key parameters (`hidden`, `lr`, `activation`, `epochs`, `.loss_fn`)
 
-* [ ] Support `Surv(time, status)`
+* [X] Support `Surv(time, status)`
 
 * [ ] Add argument checks and clear error messages (missing or invalid input)
 
 ### Implement default Cox loss
 
-* [ ] Provide clean `cox_loss()` implementation (default)
+* [X] Provide clean `cox_loss()` implementation (default)
 
 * [ ] Validate gradients using a numerical approximation
 
 ### Expose `.loss_fn` argument
 
-* [ ] Allow `.loss_fn = cox_loss` as default
+* [X] Allow `.loss_fn = cox_loss` as default
 
-* [ ] Assert `.loss_fn(pred, y)` returns scalar tensor and correct shape
+* [X] Assert `.loss_fn(pred, y)` returns scalar tensor and correct shape
 
 ### Allow user-defined loss function
 
@@ -56,13 +56,12 @@ survdnn(..., .loss_fn = my_custom_loss)
 
 ### Implement additional loss functions
 
-* [ ] `cox_l2_loss` (`cox_loss + λ‖pred‖²`)
+* [X] `cox_l2_loss` (`cox_loss + λ‖pred‖²`)
 
-* [ ] `aft_loss` (MSE of log-times with dist = "weibull", "lognormal")
+* [X] `aft_loss` (MSE of log-times with dist = "weibull", "lognormal")
 
-* [ ] `rank_loss` (pairwise concordance)
+* [X] `rank_loss` (pairwise concordance)
 
-* [ ] `flex_loss` (full parametric log-likelihood of survival dist)
 
 ### Document all loss functions
 
@@ -76,7 +75,6 @@ survdnn(..., .loss_fn = my_custom_loss)
   
   * [ ] Rank
   
-  * [ ] Flex
  
 * [ ] Export and document with Roxygen2
 
@@ -84,25 +82,25 @@ survdnn(..., .loss_fn = my_custom_loss)
 
 ### Implement S3 predict method
 
-* [ ] Add `predict.survdnn()` using standard S3 interface
+* [X] Add `predict.survdnn()` using standard S3 interface
 
 * Support:
 
-  * [ ] `type = "survival"` (matrix of survival probabilities)
+  * [X] `type = "survival"` (matrix of survival probabilities)
   
-  * [ ] `type = "lp"` (linear predictors)
+  * [X] `type = "lp"` (linear predictors)
   
-  * [ ] `type = "risk"` (`1 - S(t)` at a given time)
+  * [X] `type = "risk"` (`1 - S(t)` at a given time)
 
 * [ ] Document predict interface and return values
 
 ### User-friendly printing and summary
 
-* [ ] Implement `print.survdnn()` (show architecture, loss, epochs)
+* [X] Implement `print.survdnn()` (show architecture, loss, epochs)
 
-* [ ] Implement `summary.survdnn()` (show model structure, training info, final loss, data summary)
+* [X] Implement `summary.survdnn()` (show model structure, training info, final loss, data summary)
 
-* [ ] Implement `plot.survdnn()` for survival curves
+* [X] Implement `plot.survdnn()` for survival curves
 
 ## TESTING AND VALIDATION
 
@@ -132,7 +130,7 @@ survdnn(..., .loss_fn = my_custom_loss)
 
 ### Implement tuning
 
-* [ ] Create `tune_survdnn()` (grid search)
+* [X] Create `tune_survdnn()` (grid search)
 
 * [ ] Support custom `.loss_fn` in tuning
 
@@ -146,7 +144,7 @@ survdnn(..., .loss_fn = my_custom_loss)
 
 ### Implement cross-validation
 
-* [ ] Add `cv_survdnn()`:
+* [X] Add `cv_survdnn()`:
 
   * K-fold CV
   
