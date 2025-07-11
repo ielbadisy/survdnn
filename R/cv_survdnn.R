@@ -1,9 +1,12 @@
 cv_survdnn <- function(formula, data, times,
                        metrics = c("cindex", "ibs"),
                        folds = 5, seed = NULL, ...) {
+  
+  ## maybe not necessary with roxygen doc ??
   if (!requireNamespace("rsample", quietly = TRUE)) {
     stop("Package 'rsample' is required for cross-validation.")
   }
+  ## checks 
 
   if (!inherits(formula, "formula")) stop("`formula` must be a survival formula.")
   if (!is.data.frame(data)) stop("`data` must be a data frame.")
@@ -13,11 +16,14 @@ cv_survdnn <- function(formula, data, times,
   vfolds <- rsample::vfold_cv(data, v = folds, strata = all.vars(formula)[1])
 
   results <- purrr::imap_dfr(vfolds$splits, function(split, i) {
+    ## split the data
     train_data <- rsample::analysis(split)
     test_data  <- rsample::assessment(split)
-
+    
+    ## fit the model 
     model <- survdnn(formula, data = train_data, ...)
-
+    
+    ## evaluate the model which use internally predict
     eval_tbl <- evaluate_survdnn(model, metrics = metrics, times = times, newdata = test_data)
     eval_tbl$fold <- i
     eval_tbl
@@ -35,7 +41,7 @@ cv_res <- cv_survdnn(
   formula = Surv(time, status) ~ age + karno + celltype,
   data = veteran,
   times = c(30, 90, 180),
-  metrics = c("cindex", "ibs"),
+  metrics = c("ibs"),
   folds = 3,
   seed = 42,
   hidden = c(16, 8), epochs = 200
@@ -44,11 +50,13 @@ cv_res <- cv_survdnn(
 cv_res
 
 
-
-summarize_cv_survdnn <- function(cv_results, by_time = TRUE) {
+## utility function
+summarize_cv_survdnn <- function(cv_results, by_time = TRUE, conf_level = 0.95) {
   if (!all(c("fold", "metric", "value") %in% names(cv_results))) {
     stop("Input must be a tibble returned from cv_survdnn().")
   }
+
+  z <- qnorm((1 + conf_level) / 2)
 
   group_vars <- if ("time" %in% names(cv_results) && by_time) {
     c("metric", "time")
@@ -58,11 +66,16 @@ summarize_cv_survdnn <- function(cv_results, by_time = TRUE) {
 
   cv_results |>
     dplyr::group_by(dplyr::across(all_of(group_vars))) |>
-    dplyr::summarise(
+    dplyr::summarize(
       mean = mean(value, na.rm = TRUE),
       sd = sd(value, na.rm = TRUE),
+      n = dplyr::n(),
+      se = sd / sqrt(n),
+      lower = mean - z * se,
+      upper = mean + z * se,
       .groups = "drop"
-    )
+    ) |>
+    dplyr::select(-n, -se)
 }
 
 
@@ -72,7 +85,7 @@ cvres <- cv_survdnn(
   Surv(time, status) ~ age + celltype + karno,
   data = veteran,
   times = 1:365,
-  metrics = c("ibs", "cindex"),
+  metrics = c("cindex"),
   folds = 3,
   seed = 42,
   hidden = c(32, 16), epochs = 200
