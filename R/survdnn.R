@@ -5,9 +5,13 @@ build_dnn <- function(input_dim, hidden, activation = "relu") {
   in_features <- input_dim
 
   act_fn <- switch(activation,
-                   relu = torch::nn_relu,
-                   tanh = torch::nn_tanh,
-                   leaky_relu = torch::nn_leaky_relu,
+    relu        = torch::nn_relu,
+    leaky_relu  = torch::nn_leaky_relu,
+    tanh        = torch::nn_tanh,
+    sigmoid     = torch::nn_sigmoid,
+    gelu        = torch::nn_gelu,
+    elu         = torch::nn_elu,
+    softplus    = torch::nn_softplus,
                    stop("Unsupported activation function: ", activation)
   )
 
