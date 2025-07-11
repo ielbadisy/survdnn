@@ -1,5 +1,3 @@
-#' Tune survdnn model hyperparameters (explicit loss support)
-#' @export
 tune_survdnn <- function(formula, data, times, metrics = "cindex",
                          param_grid, folds = 3, seed = 42,
                          refit = FALSE,
@@ -10,12 +8,12 @@ tune_survdnn <- function(formula, data, times, metrics = "cindex",
 
   all_results <- purrr::pmap_dfr(param_df, function(hidden, lr, activation, epochs, .loss_fn, loss_name) {
     config_tbl <- tibble::tibble(
-      hidden = list(hidden),
-      lr = lr,
+      hidden     = list(hidden),
+      lr         = lr,
       activation = activation,
-      epochs = epochs,
-      .loss_fn = list(.loss_fn),
-      loss_name = loss_name
+      epochs     = epochs,
+      .loss_fn   = list(.loss_fn),
+      loss_name  = loss_name
     )
 
     cv_tbl <- cv_survdnn(
@@ -37,25 +35,33 @@ tune_survdnn <- function(formula, data, times, metrics = "cindex",
 
   summary_tbl <- summarize_tune_survdnn(all_results, by_time = FALSE)
 
-  # Select best configuration
+  # select best configuration from all_results
   primary_metric <- metrics[1]
-  best_row <- summary_tbl |>
+  best_row_all <- all_results |>
     dplyr::filter(metric == primary_metric) |>
-    dplyr::slice_max(order_by = if (primary_metric %in% c("cindex")) mean else -mean, n = 1)
-
-  best_config <- best_row |>
-    dplyr::select(any_of(c("hidden", "lr", "activation", "epochs", ".loss_fn")))
+    dplyr::group_by(hidden, lr, activation, epochs, .loss_fn, loss_name) |>
+    dplyr::summarise(mean = mean(value, na.rm = TRUE), .groups = "drop") |>
+    dplyr::slice_max(order_by = if (primary_metric == "cindex") mean else -mean, n = 1)
 
   if (refit) {
     message("Refitting best model on full data...")
-    best_model <- do.call(survdnn, c(list(formula = formula, data = data), best_config))
+
+    best_model <- survdnn(
+      formula    = formula,
+      data       = data,
+      hidden     = best_row_all$hidden[[1]],
+      lr         = best_row_all$lr,
+      activation = best_row_all$activation,
+      epochs     = best_row_all$epochs,
+      .loss_fn   = best_row_all$.loss_fn[[1]]
+    )
+    best_model$loss_name <- best_row_all$loss_name[[1]]
   }
 
   switch(return,
          "all" = all_results,
          "summary" = summary_tbl,
-         "best_model" = if (refit) best_model else stop("refit must be TRUE to return best_model.")
-  )
+         "best_model" = if (refit) best_model else dplyr::select(best_row_all, -mean))
 }
 
 
@@ -83,25 +89,30 @@ summarize_tune_survdnn <- function(tuning_results, by_time = TRUE) {
 
 
 
+#----- TEST
+
+library(survival)
+library(dplyr)
+library(tibble)
+
+data(veteran)
+
 grid <- list(
   hidden     = list(c(16), c(32, 16)),
   lr         = c(1e-4),
   activation = c("relu"),
-  epochs     = c(300),
+  epochs     = c(100),
   .loss_fn   = list(cox_loss, aft_loss),
   loss_name  = c("cox_loss", "aft_loss")
 )
+eval_times <- c(90, 300)
 
 
-
-library(survival)
-data(veteran)
-
-# Run tuning
-tune_res <- tune_survdnn(
+## return all results 
+tune_all <- tune_survdnn(
   formula = Surv(time, status) ~ age + karno + celltype,
   data = veteran,
-  times = c(90),
+  times = eval_times,
   metrics = c("cindex"),
   param_grid = grid,
   folds = 3,
@@ -110,7 +121,41 @@ tune_res <- tune_survdnn(
   return = "all"
 )
 
-# Summarize
-summary_tbl <- summarize_tune_survdnn(tune_res)
+tune_all
 
-summary_tbl
+## return = "summary" mean CV per config 
+
+tune_summary <- tune_survdnn(
+  formula = Surv(time, status) ~ age + karno + celltype,
+  data = veteran,
+  times = eval_times,
+  metrics = c("cindex"),
+  param_grid = grid,
+  folds = 3,
+  seed = 42,
+  refit = FALSE,
+  return = "summary"
+)
+
+tune_summary
+
+
+
+## retrun = "best_model"
+
+## when refit = TRUE tune_survdnn() return a model object , when FALSE is retun best values for hyperparameters 
+
+tune_best <- tune_survdnn(
+  formula = Surv(time, status) ~ age + karno + celltype,
+  data = veteran,
+  times = eval_times,
+  metrics = c("cindex"),
+  param_grid = grid,
+  folds = 3,
+  seed = 42,
+  refit = FALSE,
+  return = "best_model"
+)
+
+tune_best
+
