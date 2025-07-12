@@ -1,4 +1,64 @@
-
+#' Loss Functions for survdnn Models
+#'
+#' These functions define various loss functions used to train `survdnn` deep learning survival models.
+#'
+#' @param pred A tensor of predicted values from the neural network (typically of shape `[n, 1]`).
+#' @param true A tensor with two columns: observed time and event indicator.
+#' @param lambda Regularization strength (for `cox_l2_loss`).
+#'
+#' @return A scalar torch tensor representing the loss.
+#' @rdname survdnn_losses
+#' @export
+#' @examples
+#' library(torch)
+#' library(survival)
+#'
+#' # Simulated survival data
+#' set.seed(123)
+#' n <- 100
+#' toy_data <- data.frame(
+#'   x1 = rnorm(n),
+#'   x2 = rbinom(n, 1, 0.5),
+#'   time = rexp(n, 0.1),
+#'   status = rbinom(n, 1, 0.7)
+#' )
+#'
+#' # Cox loss
+#' mod_cox <- survdnn(Surv(time, status) ~ x1 + x2,
+#'                    data = toy_data,
+#'                    .loss_fn = cox_loss,
+#'                    epochs = 100,
+#'                    verbose = TRUE)
+#' plot(mod_cox$loss_history, type = "l", main = "cox_loss")
+#'
+#' # Cox + L2 penalty
+#' mod_cox_l2 <- survdnn(Surv(time, status) ~ x1 + x2,
+#'                    data = toy_data,
+#'                    .loss_fn = cox_l2_loss,
+#'                    epochs = 100,
+#'                    verbose = TRUE)
+#' plot(mod_cox_l2$loss_history, type = "l", main = "cox_l2_loss")
+#'
+#' # AFT loss
+#' mod_aft <- survdnn(Surv(time, status) ~ x1 + x2,
+#'                    data = toy_data,
+#'                    .loss_fn = aft_loss,
+#'                    epochs = 100,
+#'                    verbose = TRUE)
+#' plot(mod_aft$loss_history, type = "l", main = "aft_loss")
+#'
+#' # Custom loss
+#' combo_loss <- function(pred, true) {
+#'   time <- true[, 1]
+#'   torch_mean((pred - log(time + 1))^2) + 0.01 * torch_mean(pred)
+#' }
+#'
+#' mod_combo <- survdnn(Surv(time, status) ~ x1 + x2,
+#'                    data = toy_data,
+#'                    .loss_fn = combo_loss,
+#'                    epochs = 100,
+#'                    verbose = TRUE)
+#' plot(mod_combo$loss_history, type = "l", main = "combo_loss")
 cox_loss <- function(pred, true) {
   time <- true[, 1]
   status <- true[, 2]
@@ -6,7 +66,7 @@ cox_loss <- function(pred, true) {
   idx <- torch_argsort(time, descending = TRUE)
   time <- time[idx]
   status <- status[idx]
-  pred <- -pred[idx, 1]  # flip sign to convert to negative risk
+  pred <- -pred[idx, 1]
 
   log_cumsum_exp <- torch_logcumsumexp(pred, dim = 1)
   event_mask <- (status == 1)
@@ -15,18 +75,16 @@ cox_loss <- function(pred, true) {
   return(loss)
 }
 
-
-
-
+#' @rdname survdnn_losses
+#' @export
 cox_l2_loss <- function(pred, true, lambda = 1e-4) {
   loss <- cox_loss(pred, true)
   l2_penalty <- lambda * torch_mean(pred^2)
   return(loss + l2_penalty)
 }
 
-
-
-
+#' @rdname survdnn_losses
+#' @export
 rank_loss <- function(pred, true) {
   time <- true[, 1]
   status <- true[, 2]
@@ -40,7 +98,6 @@ rank_loss <- function(pred, true) {
       si <- as.numeric(status[i])
       sj <- as.numeric(status[j])
 
-      # comparable pairs: one event, different times
       if ((si == 1 && ti < tj) || (sj == 1 && tj < ti)) {
         d_ij <- pred[i, 1] - pred[j, 1]
         y_ij <- if (ti < tj) 1 else -1
@@ -56,8 +113,8 @@ rank_loss <- function(pred, true) {
   return(torch_mean(loss_tensor))
 }
 
-
-
+#' @rdname survdnn_losses
+#' @export
 aft_loss <- function(pred, true) {
   time <- true[, 1]
   status <- true[, 2]
@@ -77,17 +134,30 @@ aft_loss <- function(pred, true) {
   return(mse)
 }
 
+#' @rdname survdnn_losses
+#' @export
+combo_loss <- function(pred, true) {
+  time <- true[, 1]
+  torch_mean((pred - log(time + 1))^2) + 0.01 * torch_mean(pred)
+}
 
-
-
-
-
-# internal validator for .loss_fn (not exported)
+#' Validate a Custom Loss Function
+#'
+#' Ensures that a user-supplied loss function is compatible with `survdnn` training requirements.
+#'
+#' @param .loss_fn A function that takes two arguments (`pred`, `true`) and returns a scalar torch tensor.
+#'
+#' @return NULL. Throws an error if validation fails.
+#' @export
+#' @examples
+#' validate_loss_fn(cox_loss)
+#' validate_loss_fn(aft_loss)
+#' validate_loss_fn(function(pred, true) torch_mean((pred - true[, 1])^2))
 validate_loss_fn <- function(.loss_fn) {
   test_pred <- torch_randn(10, 1)
   test_true <- torch_cat(list(
-    torch_rand(10, 1) * 100,          # random times
-    torch_randint(low = 0, high = 2, size = c(10, 1)) # event indicator
+    torch_rand(10, 1) * 100,
+    torch_randint(low = 0, high = 2, size = c(10, 1))
   ), dim = 2)
 
   test_loss <- try(.loss_fn(test_pred, test_true), silent = TRUE)
@@ -97,70 +167,3 @@ validate_loss_fn <- function(.loss_fn) {
     stop(".loss_fn must return a scalar torch tensor with shape (1)")
   }
 }
-
-
-
-#----- TEST
-
-
-gc()
-
-library(torch)
-library(survival)
-library(purrr)
-
-# data
-set.seed(123)
-n <- 100
-toy_data <- data.frame(
-  x1 = rnorm(n),
-  x2 = rbinom(n, 1, 0.5),
-  time = rexp(n, 0.1),
-  status = rbinom(n, 1, 0.7)
-)
-
-
-
-
-mod_cox <- survdnn(Surv(time, status) ~ x1 + x2,
-                   data = toy_data,
-                   .loss_fn = cox_loss,
-                   epochs = 100,   
-                   verbose = TRUE)
-
-plot(mod_cox$loss_history, type = "l", main = "cox_loss", ylab = "Loss", xlab = "Epoch")
-
-
-
-
-mod_cox_l2 <- survdnn(Surv(time, status) ~ x1 + x2,
-                   data = toy_data,
-                   .loss_fn = cox_l2_loss,
-                   epochs = 100,    
-                   verbose = TRUE)
-
-plot(mod_cox_l2$loss_history, type = "l", main = "cox_l2_loss", ylab = "Loss", xlab = "Epoch")
-
-
-
-mod_aft <- survdnn(Surv(time, status) ~ x1 + x2,
-                   data = toy_data,
-                   .loss_fn = aft_loss,
-                   epochs = 100,     
-                   verbose = TRUE)
-
-plot(mod_aft$loss_history, type = "l", main = "aft_loss", ylab = "Loss", xlab = "Epoch")
-
-
-## custom
-combo_loss <- function(pred, true) {
-  time <- true[, 1]
-  torch_mean((pred - log(time + 1))^2) + 0.01 * torch_mean(pred)
-}
-
-mod_combo <- survdnn(Surv(time, status) ~ x1 + x2,
-                   data = toy_data,
-                   .loss_fn = combo_loss,
-                   epochs = 100,     
-                   verbose = TRUE)
-plot(mod_combo$loss_history, type = "l", main = "combo_loss", ylab = "Loss", xlab = "Epoch")
