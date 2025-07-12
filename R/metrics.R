@@ -1,3 +1,24 @@
+#' Concordance Index from a Survival Probability Matrix
+#'
+#' Computes the time-dependent concordance index (C-index) from a predicted survival matrix
+#' at a fixed time point. The risk is computed as `1 - S(t_star)`.
+#'
+#' @param object A `Surv` object representing the observed survival data.
+#' @param predicted A data frame or matrix of predicted survival probabilities.
+#'   Each column corresponds to a time point (e.g., `t=90`, `t=180`).
+#' @param t_star A numeric time point corresponding to one of the columns in `predicted`.
+#'   If `NULL`, the last column is used.
+#'
+#' @return A single numeric value representing the C-index.
+#' @export
+#'
+#' @examples
+#' data(veteran, package = "survival")
+#' mod <- survdnn(Surv(time, status) ~ age + karno + celltype, data = veteran, epochs = 50, verbose = FALSE)
+#' pred <- predict(mod, newdata = veteran, type = "survival", times = c(30, 90, 180))
+#' y <- model.response(model.frame(mod$formula, veteran))
+#' cindex_survmat(y, pred, t_star = 180)
+
 cindex_survmat <- function(object, predicted, t_star = NULL) {
   if (!inherits(object, "Surv")) stop("object must be a survival object (from Surv())")
   
@@ -53,6 +74,25 @@ cindex_survmat <- function(object, predicted, t_star = NULL) {
   return(round(c_index, 6))
 }
 
+
+#' Brier Score for Right-Censored Survival Data at a Fixed Time
+#'
+#' Computes the Brier score at a fixed time point using inverse probability of censoring weights (IPCW).
+#'
+#' @param object A `Surv` object with observed time and status.
+#' @param pre_sp A numeric vector of predicted survival probabilities at `t_star`.
+#' @param t_star The evaluation time point.
+#'
+#' @return A single numeric value representing the Brier score.
+#' @export
+#'
+#' @examples
+#' data(veteran, package = "survival")
+#' mod <- survdnn(Surv(time, status) ~ age + karno + celltype, data = veteran, epochs = 50, verbose = FALSE)
+#' pred <- predict(mod, newdata = veteran, type = "survival", times = c(30, 90, 180))
+#' y <- model.response(model.frame(mod$formula, veteran))
+#' brier(y, pre_sp = pred[["t=90"]], t_star = 90)
+
 brier <- function(object, pre_sp, t_star) {
   if (!inherits(object, "Surv")) stop("object must be a survival object")
   if (length(pre_sp) != nrow(object)) stop("Length of predictions must match number of observations")
@@ -93,7 +133,31 @@ brier <- function(object, pre_sp, t_star) {
 
 
 
-brier_ibs_survmat <- function(object, sp_matrix, times) {
+
+#' Integrated Brier Score (IBS) from a Survival Probability Matrix
+#'
+#' Computes the Integrated Brier Score (IBS) over a set of evaluation time points,
+#' using trapezoidal integration and IPCW adjustment for right-censoring.
+#'
+#' @param object A `Surv` object with observed time and status.
+#' @param sp_matrix A data frame or matrix of predicted survival probabilities.
+#'   Each column corresponds to a time point in `times`.
+#' @param times A numeric vector of time points. Must match the columns of `sp_matrix`.
+#'
+#' @return A single numeric value representing the integrated Brier score.
+#' @export
+#'
+#' @examples
+#' set.seed(123)
+#' data(veteran, package = "survival")
+#' idx <- sample(nrow(veteran), 0.7 * nrow(veteran))
+#' train <- veteran[idx, ]; test <- veteran[-idx, ]
+#' mod <- survdnn(Surv(time, status) ~ age + karno + celltype, data = train, epochs = 50, verbose = FALSE)
+#' pred <- predict(mod, newdata = test, times = c(30, 90, 180), type = "survival")
+#' y_test <- model.response(model.frame(mod$formula, test))
+#' ibs_survmat(y_test, sp_matrix = pred, times = c(30, 90, 180))
+
+ibs_survmat <- function(object, sp_matrix, times) {
   if (!inherits(object, "Surv")) stop("object must be a survival object")
   if (length(times) != ncol(sp_matrix)) stop("Length of times must match sp_matrix columns")
 
@@ -112,40 +176,3 @@ brier_ibs_survmat <- function(object, sp_matrix, times) {
   names(ibs_value) <- "ibs"
   return(round(ibs_value, 6))
 }
-
-
-#-------TEST 
-
-library(survival)
-library(torch)
-
-data(veteran)
-set.seed(42)
-train_idx <- sample(nrow(veteran), 0.7 * nrow(veteran))
-train_data <- veteran[train_idx, ]
-test_data  <- veteran[-train_idx, ]
-
-# Fit survdnn model
-mod <- survdnn(Surv(time, status) ~ age + karno + celltype,
-               data = train_data,
-               hidden = c(32, 16),
-               epochs = 100,
-               verbose = FALSE)
-
-# prediction time
-eval_times <- c(30, 90, 180)
-
-# compute predicted survival probas
-pred_surv <- predict(mod, newdata = test_data, times = eval_times, type = "survival")
-
-# extract real survival outcome
-y_test <- model.response(model.frame(mod$formula, test_data))
-
-## C-index
-cindex_survmat(y_test, predicted = pred_surv, t_star = max(eval_times))
-
-## brier score in a single time
-brier(y_test, pre_sp = pred_surv[["t=90"]], t_star = 90)
-
-# ibs 
-brier_ibs_survmat(y_test, pred_surv, eval_times)
