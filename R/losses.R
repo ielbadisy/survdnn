@@ -152,7 +152,7 @@ combo_loss <- function(pred, true) {
 #' @examples
 #' validate_loss_fn(cox_loss)
 #' validate_loss_fn(aft_loss)
-#' validate_loss_fn(function(pred, true) torch_mean((pred - true[, 1])^2))
+
 validate_loss_fn <- function(.loss_fn) {
   test_pred <- torch_randn(10, 1)
   test_true <- torch_cat(list(
