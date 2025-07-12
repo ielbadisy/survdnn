@@ -11,9 +11,9 @@
 #'
 #' @return A `nn_sequential` object representing the network.
 #' @keywords internal
+#' @export
 #'
 #' @examples
-#' # Internal use only
 #' net <- build_dnn(10, hidden = c(64, 32), activation = "relu")
 
 build_dnn <- function(input_dim, hidden, activation = "relu") {
@@ -90,9 +90,10 @@ build_dnn <- function(input_dim, hidden, activation = "relu") {
 #' status <- rbinom(n, 1, 0.7)
 #' df <- data.frame(time = time, status = status, x1 = x1, x2 = x2)
 #'
-#' mod <- survdnn(Surv(time, status) ~ ., data = df, epochs = 50, verbose = FALSE)
+#' mod <- survdnn(Surv(time, status) ~ x1 + x2, data = df, epochs = 50, verbose = FALSE)
 #' mod$loss  # final training loss
 
+#' @export
 survdnn <- function(formula, data,
   hidden = c(32L, 16L),
   activation = "relu",
@@ -103,27 +104,33 @@ survdnn <- function(formula, data,
 
 stopifnot(inherits(formula, "formula"))
 stopifnot(is.data.frame(data))
-
 if (!is.function(.loss_fn)) stop("`.loss_fn` must be a function.")
 
-  
+# Ensure Surv is available during formula evaluation
+environment(formula) <- list2env(list(Surv = survival::Surv), parent = environment(formula))
+
+# Build model frame and extract features
 mf <- model.frame(formula, data)
 y <- model.response(mf)
-x <- model.matrix(attr(mf, "terms"), data)[, -1, drop = FALSE]
+x <- model.matrix(attr(mf, "terms"), data = mf)[, -1, drop = FALSE]
 
+# Extract time and status
 time <- y[, "time"]
 status <- y[, "status"]
+
+# Standardize predictors
 x_scaled <- scale(x)
 
+# Convert to torch tensors
 x_tensor <- torch::torch_tensor(as.matrix(x_scaled), dtype = torch::torch_float())
 y_tensor <- torch::torch_tensor(as.matrix(cbind(time, status)), dtype = torch::torch_float())
 
+# Build model and optimizer
 net <- build_dnn(ncol(x_tensor), hidden, activation)
 optimizer <- torch::optim_adam(net$parameters, lr = lr, weight_decay = 1e-4)
 
-# store loss at each epoch
+# Train the model
 loss_history <- numeric(epochs)
-
 for (epoch in 1:epochs) {
 net$train()
 optimizer$zero_grad()
@@ -139,6 +146,7 @@ cat(sprintf("Epoch %d - Loss: %.6f\n", epoch, loss$item()))
 }
 }
 
+# Return fitted survdnn object
 structure(list(
 model = net,
 formula = formula,
@@ -147,12 +155,12 @@ xnames = colnames(x),
 x_center = attr(x_scaled, "scaled:center"),
 x_scale = attr(x_scaled, "scaled:scale"),
 loss = tail(loss_history, 1),
-loss_history = loss_history,  # track the loss history
+loss_history = loss_history,
 activation = activation,
 hidden = hidden,
 lr = lr,
 epochs = epochs,
 .loss_fn = .loss_fn,
-loss_name = deparse(substitute(.loss_fn))  # fixed naming
+loss_name = deparse(substitute(.loss_fn))
 ), class = "survdnn")
 }
