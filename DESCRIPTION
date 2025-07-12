@@ -1,14 +1,16 @@
 Package: survdnn
-Title: Deep Neural Networks for Survival Analysis using 'torch'
-Version: 0.1.0
+Title: Deep Neural Networks for Survival Analysis Using 'torch'
+Version: 0.5.0
 Authors@R: 
     person(given = "Imad", 
            family = "EL BADISY", 
-           role = c("aut", "cre"), 
-           email = "elbadisyimad@gmail.com")
-Description: Implements deep neural network models for right-censored survival data using the 'torch' backend. 
-    Includes support for Cox loss, ranking loss, AFT loss, and model evaluation via C-index, Brier score, IBS, IAE, and ISE. 
-    Provides a formula-based interface, cross-validation, hyperparameter tuning, plotting utilities, and extensible modular losses.
+           email = "elbadisyimad@gmail.com", 
+           role = c("aut", "cre"))
+Description: Provides deep learning models for right-censored survival data using the 'torch' backend. 
+    Supports multiple loss functions including Cox partial likelihood, ranking loss, and accelerated failure time (AFT) loss. 
+    Includes a formula-based interface, built-in support for cross-validation, hyperparameter tuning, survival curve plotting, 
+    and comprehensive evaluation metrics (C-index, Brier score, and integrated Brier score (IBS). 
+    The loss function interface is modular and extensible for custom research needs.
 License: MIT + file LICENSE
 Encoding: UTF-8
 LazyData: true
@@ -24,12 +26,13 @@ Imports:
     purrr,
     tidyr,
     ggplot2,
-    methods
+    methods,
+    cli
 Suggests: 
     testthat,
     knitr,
     rmarkdown
-RoxygenNote: 7.3.1
+RoxygenNote: 7.3.2
 Config/testthat/edition: 3
 BugReports: https://github.com/ielbadisy/survdnn/issues
 URL: https://github.com/ielbadisy/survdnn
