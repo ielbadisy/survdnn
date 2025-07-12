@@ -52,28 +52,28 @@ summary.survdnn <- function(object, ...) {
   )
   class(out) <- "summary.survdnn"
 
-  # Print styled header (cli is now a required dependency)
+  # Print styled header
   cli::cli_h1("Summary of survdnn model")
 
   cat("\nFormula:\n  ")
   print(out$formula)
 
   cat("\nModel architecture:\n")
-  cat("• Hidden layers: ", paste(out$model_summary$hidden_layers, collapse = " → "), "\n")
-  cat("• Activation: ", out$model_summary$activation, "\n")
-  cat("• Dropout: ", out$model_summary$dropout, "\n")
-  cat("• Final loss: ", formatC(out$model_summary$final_loss, digits = 6, format = "f"), "\n")
+  cat("  Hidden layers: ", paste(out$model_summary$hidden_layers, collapse = " : "), "\n")
+  cat("  Activation: ", out$model_summary$activation, "\n")
+  cat("  Dropout: ", out$model_summary$dropout, "\n")
+  cat("  Final loss: ", formatC(out$model_summary$final_loss, digits = 6, format = "f"), "\n")
 
   cat("\nTraining summary:\n")
-  cat("• Epochs: ", out$training_summary$epochs, "\n")
-  cat("• Learning rate: ", out$training_summary$learning_rate, "\n")
-  cat("• Loss function: ", out$training_summary$loss_function, "\n")
+  cat("  Epochs: ", out$training_summary$epochs, "\n")
+  cat("  Learning rate: ", out$training_summary$learning_rate, "\n")
+  cat("  Loss function: ", out$training_summary$loss_function, "\n")
 
   cat("\nData summary:\n")
-  cat("• Observations: ", out$data_summary$observations, "\n")
-  cat("• Predictors: ", paste(out$data_summary$predictors, collapse = ", "), "\n")
-  cat("• Time range: [", paste(out$data_summary$time_range, collapse = ", "), "]\n")
-  cat("• Event rate: ", sprintf("%.1f%%", 100 * out$data_summary$event_rate), "\n")
+  cat("  Observations: ", out$data_summary$observations, "\n")
+  cat("  Predictors: ", paste(out$data_summary$predictors, collapse = ", "), "\n")
+  cat("  Time range: [", paste(out$data_summary$time_range, collapse = ", "), "]\n")
+  cat("  Event rate: ", sprintf("%.1f%%", 100 * out$data_summary$event_rate), "\n")
 
   invisible(out)
 }
