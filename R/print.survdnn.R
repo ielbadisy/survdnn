@@ -10,6 +10,7 @@
 #' @export
 #'
 #' @examples
+#' library(survival)
 #' data(veteran, package = "survival")
 #' mod <- survdnn(Surv(time, status) ~ age + karno + celltype, data = veteran, epochs = 20, verbose = FALSE)
 #' print(mod)
