@@ -29,6 +29,7 @@ Supported metrics include the concordance index (`"cindex"`), Brier score (`"bri
 and integrated Brier score (`"ibs"`).
 }
 \examples{
+library(survival)
 data(veteran, package = "survival")
 mod <- survdnn(Surv(time, status) ~ age + karno + celltype, data = veteran, epochs = 100, verbose = FALSE)
 evaluate_survdnn(mod, metrics = c("cindex", "ibs"), times = c(30, 90, 180))

@@ -19,6 +19,7 @@ Pretty prints a fitted `survdnn` model using the `{cli}` package. Displays the f
 network architecture, training configuration, and final training loss.
 }
 \examples{
+library(survival)
 data(veteran, package = "survival")
 mod <- survdnn(Surv(time, status) ~ age + karno + celltype, data = veteran, epochs = 20, verbose = FALSE)
 print(mod)

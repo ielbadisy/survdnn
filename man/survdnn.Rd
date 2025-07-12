@@ -65,6 +65,6 @@ time <- rexp(n, rate = 0.1)
 status <- rbinom(n, 1, 0.7)
 df <- data.frame(time = time, status = status, x1 = x1, x2 = x2)
 
-mod <- survdnn(Surv(time, status) ~ ., data = df, epochs = 50, verbose = FALSE)
+mod <- survdnn(Surv(time, status) ~ x1 + x2, data = df, epochs = 50, verbose = FALSE)
 mod$loss  # final training loss
 }

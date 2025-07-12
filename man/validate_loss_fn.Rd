@@ -18,5 +18,4 @@ Ensures that a user-supplied loss function is compatible with `survdnn` training
 \examples{
 validate_loss_fn(cox_loss)
 validate_loss_fn(aft_loss)
-validate_loss_fn(function(pred, true) torch_mean((pred - true[, 1])^2))
 }

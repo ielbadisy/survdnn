@@ -23,6 +23,7 @@ using trapezoidal integration and IPCW adjustment for right-censoring.
 }
 \examples{
 set.seed(123)
+library(survival)
 data(veteran, package = "survival")
 idx <- sample(nrow(veteran), 0.7 * nrow(veteran))
 train <- veteran[idx, ]; test <- veteran[-idx, ]

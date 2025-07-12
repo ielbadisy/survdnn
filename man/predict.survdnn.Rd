@@ -32,6 +32,7 @@ Generate predictions from a fitted `survdnn` model for new data. Supports linear
 survival probabilities at specified time points, or risk estimates at a single time point.
 }
 \examples{
+library(survival)
 data(veteran, package = "survival")
 mod <- survdnn(Surv(time, status) ~ age + karno + celltype, data = veteran, epochs = 50, verbose = FALSE)
 predict(mod, newdata = veteran, type = "lp")[1:5]

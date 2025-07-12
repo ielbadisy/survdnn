@@ -20,6 +20,7 @@ A tibble summarizing mean, sd, and confidence bounds per metric (and per time if
 Computes mean, standard deviation, and confidence intervals for metrics from cross-validation.
 }
 \examples{
+library(survival)
 data(veteran, package = "survival")
 res <- cv_survdnn(
   Surv(time, status) ~ age + karno + celltype,

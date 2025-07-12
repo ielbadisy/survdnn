@@ -36,6 +36,7 @@ A tibble containing metric values per fold and (optionally) per time point.
 Performs cross-validation for a `survdnn` model using the specified evaluation metrics.
 }
 \examples{
+library(survival)
 data(veteran, package = "survival")
 cv_survdnn(
   Surv(time, status) ~ age + karno + celltype,

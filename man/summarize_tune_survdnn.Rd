@@ -20,6 +20,7 @@ of performance metrics per hyperparameter configuration.
 }
 \examples{
 # Example with return = "all"
+library(survival)
 data(veteran, package = "survival")
 grid <- list(
   hidden     = list(c(16), c(32, 16)),

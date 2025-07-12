@@ -62,6 +62,7 @@ grid <- list(
 )
 
 # Load data
+library(survival)
 data(veteran, package = "survival")
 eval_times <- c(90, 300)
 
