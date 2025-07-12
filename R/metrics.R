@@ -13,6 +13,7 @@
 #' @export
 #'
 #' @examples
+#' library(survival)
 #' data(veteran, package = "survival")
 #' mod <- survdnn(Surv(time, status) ~ age + karno + celltype, data = veteran, epochs = 50, verbose = FALSE)
 #' pred <- predict(mod, newdata = veteran, type = "survival", times = c(30, 90, 180))
@@ -87,11 +88,12 @@ cindex_survmat <- function(object, predicted, t_star = NULL) {
 #' @export
 #'
 #' @examples
+#' library(survival)
 #' data(veteran, package = "survival")
 #' mod <- survdnn(Surv(time, status) ~ age + karno + celltype, data = veteran, epochs = 50, verbose = FALSE)
 #' pred <- predict(mod, newdata = veteran, type = "survival", times = c(30, 90, 180))
 #' y <- model.response(model.frame(mod$formula, veteran))
-#' brier(y, pre_sp = pred[["t=90"]], t_star = 90)
+#' survdnn::brier(y, pre_sp = pred[["t=90"]], t_star = 90)
 
 brier <- function(object, pre_sp, t_star) {
   if (!inherits(object, "Surv")) stop("object must be a survival object")
@@ -149,6 +151,7 @@ brier <- function(object, pre_sp, t_star) {
 #'
 #' @examples
 #' set.seed(123)
+#' library(survival)
 #' data(veteran, package = "survival")
 #' idx <- sample(nrow(veteran), 0.7 * nrow(veteran))
 #' train <- veteran[idx, ]; test <- veteran[-idx, ]
