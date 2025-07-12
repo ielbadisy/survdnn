@@ -1,6 +1,6 @@
 #' Print a survdnn Model
 #'
-#' Pretty prints a fitted `survdnn` model using the `{cli}` package. Displays the formula,
+#' Pretty prints a fitted `survdnn` model. Displays the formula,
 #' network architecture, training configuration, and final training loss.
 #'
 #' @param x An object of class `"survdnn"`, returned by [survdnn()].
@@ -19,7 +19,7 @@ print.survdnn <- function(x, ...) {
 
   cli::cli_h1("survdnn model")
   cli::cli_text("Formula: {.val {deparse(x$formula)}}")
-  cli::cli_text("Hidden layers: {.val {paste(x$hidden, collapse = ' → ')}}")
+  cli::cli_text("Hidden layers: {.val {paste(x$hidden, collapse = ' : ')}}")
   cli::cli_text("Activation: {.val {x$activation}}")
   cli::cli_text("Learning rate: {.val {x$lr}}")
   cli::cli_text("Loss function: {.val {x$loss_name}}")
