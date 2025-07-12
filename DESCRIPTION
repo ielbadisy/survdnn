@@ -27,6 +27,7 @@ Imports:
     tidyr,
     ggplot2,
     methods,
+    rsample,
     cli
 Suggests: 
     testthat,
