@@ -1,3 +1,32 @@
+#' Predict from a survdnn Model
+#'
+#' Generate predictions from a fitted `survdnn` model for new data. Supports linear predictors,
+#' survival probabilities at specified time points, or risk estimates at a single time point.
+#'
+#' @param object An object of class `"survdnn"` returned by [survdnn()].
+#' @param newdata A data frame of new observations to predict on.
+#' @param times Numeric vector of time points at which to compute survival or risk probabilities.
+#'   Required if `type = "survival"` or `type = "risk"`.
+#' @param type Character string specifying the type of prediction to return:
+#'   \describe{
+#'     \item{"lp"}{Linear predictor (log-risk score, higher = worse prognosis).}
+#'     \item{"survival"}{Survival probabilities at `times`.}
+#'     \item{"risk"}{Cumulative risk (1 - survival) at a single time point.}
+#'   }
+#' @param ... Currently ignored (for future compatibility).
+#'
+#' @return A numeric vector (if `type = "lp"` or `"risk"`), or a data frame with survival
+#' probabilities (if `type = "survival"`).
+#'
+#' @export
+#'
+#' @examples
+#' data(veteran, package = "survival")
+#' mod <- survdnn(Surv(time, status) ~ age + karno + celltype, data = veteran, epochs = 50, verbose = FALSE)
+#' predict(mod, newdata = veteran, type = "lp")[1:5]
+#' predict(mod, newdata = veteran, type = "survival", times = c(30, 90, 180))[1:5, ]
+#' predict(mod, newdata = veteran, type = "risk", times = 180)[1:5]
+
 
 predict.survdnn <- function(object, newdata, times = NULL,
                             type = c("survival", "lp", "risk"), ...) {
@@ -51,14 +80,3 @@ predict.survdnn <- function(object, newdata, times = NULL,
   return(surv_df)
 }
 
-
-
-# TEST
-
-library(survival)
-data(veteran)
-
-mod <- survdnn(Surv(time, status) ~ age + karno + celltype, data = veteran)
-pred_lp <- predict(mod, veteran, type = "lp")
-pred_surv <- predict(mod, veteran, type = "survival", times = c(30, 90, 180))
-pred_risk <- predict(mod, veteran, type = "risk", times = 180)
