@@ -1,18 +1,38 @@
-#' Plot survdnn survival curves using ggplot2
+#' Plot survdnn Survival Curves using ggplot2
 #'
-#' @param x A fitted survdnn object
-#' @param newdata Optional new data (defaults to training data)
-#' @param times Time grid to compute survival probabilities
-#' @param group_by Optional column in `newdata` to group/color curves
-#' @param plot_mean_only If TRUE, plots only mean survival per group
-#' @param add_mean If TRUE, overlays group-wise mean curves
-#' @param alpha Transparency for individual curves (ignored if mean-only)
-#' @param mean_lwd Line width for mean curves
-#' @param mean_lty Line type for mean curves
-#' @param ... Reserved for future use
+#' Visualizes survival curves predicted by a fitted `survdnn` model.
+#' Curves can be grouped by a categorical variable in `newdata` and
+#' optionally display only the group-wise means or overlay them.
 #'
-#' @return A ggplot object
+#' @param x A fitted `survdnn` model object.
+#' @param newdata Optional data frame for prediction (defaults to training data).
+#' @param times A numeric vector of time points at which to compute survival probabilities.
+#' @param group_by Optional name of a column in `newdata` used to color and group curves.
+#' @param plot_mean_only Logical; if `TRUE`, plots only the mean survival curve per group.
+#' @param add_mean Logical; if `TRUE`, adds mean curves to the individual lines.
+#' @param alpha Alpha transparency for individual curves (ignored if `plot_mean_only = TRUE`).
+#' @param mean_lwd Line width for mean survival curves.
+#' @param mean_lty Line type for mean survival curves.
+#' @param ... Reserved for future use.
+#'
+#' @return A `ggplot` object.
 #' @export
+#'
+#' @examples
+#' library(survival)
+#' data(veteran)
+#' set.seed(42)
+#' mod <- survdnn(Surv(time, status) ~ age + karno + celltype, data = veteran,
+#'                hidden = c(16, 8), epochs = 100, verbose = FALSE)
+#'
+#' # Default plot (on training data)
+#' plot(mod)
+#'
+#' # Plot full curves with color grouping
+#' plot(mod, group_by = "celltype", times = 1:300)
+#'
+#' # Plot group-wise mean survival curves only
+#' plot(mod, group_by = "celltype", times = 1:300, plot_mean_only = TRUE)
 plot.survdnn <- function(x, newdata = NULL, times = 1:365,
   group_by = NULL,
   plot_mean_only = FALSE,
@@ -24,25 +44,29 @@ plot.survdnn <- function(x, newdata = NULL, times = 1:365,
 stopifnot(inherits(x, "survdnn"))
 if (is.null(newdata)) newdata <- x$data
 
-# compute survival matrix
+# compute survival probabilities
 survmat <- predict(x, newdata = newdata, times = times, type = "survival")
 df_surv <- as.data.frame(survmat)
 df_surv$id <- seq_len(nrow(df_surv))
 
 # reshape to long format
-df_long <- reshape2::melt(df_surv, id.vars = "id", variable.name = "time_label", value.name = "surv")
+df_long <- df_surv |>
+  tidyr::pivot_longer(
+    cols = -id,
+    names_to = "time_label",
+    values_to = "surv"
+  )
+
 df_long$time <- as.numeric(gsub("t=", "", df_long$time_label))
 
-# here we add grouping variable if requested
+# add group variable if specified
 if (!is.null(group_by)) {
-df_long$group <- rep(newdata[[group_by]], times = length(times))
+  df_long$group <- rep(newdata[[group_by]], each = length(times))
 } else {
 df_long$group <- "all"
 }
 
-library(ggplot2)
-
-# store the base ggplot object
+# build the plot
 p <- ggplot(df_long, aes(x = time, y = surv, group = id, color = group))
 
 if (!plot_mean_only) {
@@ -62,16 +86,13 @@ inherit.aes = FALSE)
 }
 
 p <- p +
-theme_minimal()
-labs(title = "Predicted Survival Curves",
-x = "Time", y = "Survival Probability",
-color = if (!is.null(group_by)) group_by else NULL)
+  theme_minimal() +
+  labs(
+    title = "Predicted Survival Curves",
+    x = "Time",
+    y = "Survival Probability",
+    color = if (!is.null(group_by)) group_by else NULL
+  )
 
 return(p)
 }
-
-
-#--- TEST
-plot(mod)  # all 
-plot(mod, group_by = "celltype", times = 1:300)  # full curves + mean
-plot(mod, group_by = "celltype", times = 1:300, plot_mean_only = TRUE)  # mean only
