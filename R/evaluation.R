@@ -13,6 +13,7 @@
 #' @export
 #'
 #' @examples
+#' library(survival)
 #' data(veteran, package = "survival")
 #' mod <- survdnn(Surv(time, status) ~ age + karno + celltype, data = veteran, epochs = 100, verbose = FALSE)
 #' evaluate_survdnn(mod, metrics = c("cindex", "ibs"), times = c(30, 90, 180))
@@ -72,6 +73,7 @@ evaluate_survdnn <- function(model, metrics = c("cindex", "brier", "ibs"), times
 #' @export
 #'
 #' @examples
+#' library(survival)
 #' data(veteran, package = "survival")
 #' cv_survdnn(
 #'   Surv(time, status) ~ age + karno + celltype,
@@ -124,6 +126,7 @@ dplyr::select(results, fold, metric, time = dplyr::any_of("time"), value)
 #' @export
 #'
 #' @examples
+#' library(survival)
 #' data(veteran, package = "survival")
 #' res <- cv_survdnn(
 #'   Surv(time, status) ~ age + karno + celltype,
