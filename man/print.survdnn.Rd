@@ -15,7 +15,7 @@
 The model object, invisibly.
 }
 \description{
-Pretty prints a fitted `survdnn` model using the `{cli}` package. Displays the formula,
+Pretty prints a fitted `survdnn` model. Displays the formula,
 network architecture, training configuration, and final training loss.
 }
 \examples{
