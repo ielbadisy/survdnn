@@ -30,7 +30,7 @@ Imports:
     rsample,
     cli
 Suggests: 
-    testthat,
+    testthat (>= 3.0.0),
     knitr,
     rmarkdown
 RoxygenNote: 7.3.2
