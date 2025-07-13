@@ -45,7 +45,7 @@ predict.survdnn <- function(object, newdata, times = NULL,
 
   ## torch inference is done inside with_no_grad()
   ## model outputs genative risk: we flip sign to get cox style linear predictor
-  with_no_grad({lp <- -as.numeric(object$model(x_tensor)[, 1])})
+  torch::with_no_grad({lp <- -as.numeric(object$model(x_tensor)[, 1])})
 
   if (type == "lp") return(lp)
   ## times handling for lp
@@ -55,7 +55,7 @@ predict.survdnn <- function(object, newdata, times = NULL,
   if (type == "risk" && length(times) != 1) {
     stop("For type = 'risk', `times` must be a single numeric value.")
   }
-  
+
   # estimate baseline hazard using training set
   train_x <- model.matrix(delete.response(terms(object$formula)), object$data)[, object$xnames, drop = FALSE]
   train_x_scaled <- scale(train_x, center = object$x_center, scale = object$x_scale)
