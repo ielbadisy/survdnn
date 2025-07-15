@@ -12,7 +12,8 @@
 #' @examples
 #' library(survival)
 #' data(veteran, package = "survival")
-#' mod <- survdnn(Surv(time, status) ~ age + karno + celltype, data = veteran, epochs = 20, verbose = FALSE)
+#' mod <- survdnn(Surv(time, status) ~
+#' age + karno + celltype, data = veteran, epochs = 20, verbose = FALSE)
 #' print(mod)
 print.survdnn <- function(x, ...) {
   stopifnot(inherits(x, "survdnn"))
@@ -22,8 +23,14 @@ print.survdnn <- function(x, ...) {
   cli::cli_text("Hidden layers: {.val {paste(x$hidden, collapse = ' : ')}}")
   cli::cli_text("Activation: {.val {x$activation}}")
   cli::cli_text("Learning rate: {.val {x$lr}}")
-  cli::cli_text("Loss function: {.val {x$loss_name}}")
-  cli::cli_text("Final loss: {.val {round(x$loss, 4)}} after {.val {x$epochs}} epochs")
+  cli::cli_text("Loss function: {.val {x$loss}}")
+
+  # safely print final loss if it is numeric
+  if (is.numeric(x$final_loss) && length(x$final_loss) == 1 && !is.na(x$final_loss)) {
+    cli::cli_text("Final loss: {.val {round(x$final_loss, 4)}} after {.val {x$epochs}} epochs")
+  } else {
+    cli::cli_alert_warning("Final loss is not available.")
+  }
 
   invisible(x)
 }
