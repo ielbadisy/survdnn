@@ -27,7 +27,18 @@ test_that("cv_survdnn errors on missing inputs or bad arguments", {
 
   df <- survival::veteran
 
-  expect_error(cv_survdnn("not a formula", df, times = 50), "`formula` must be a survival formula")
-  expect_error(cv_survdnn(Surv(time, status) ~ ., "not a df", times = 50), "`data` must be a data frame")
-  expect_error(cv_survdnn(Surv(time, status) ~ ., df), "must provide a `times`")
+  expect_error(
+    cv_survdnn("not a formula", df, times = 50),
+    "`formula` must be a survival formula"
+  )
+
+  expect_error(
+    cv_survdnn(Surv(time, status) ~ ., "not a df", times = 50),
+    "`data` must be a data frame"
+  )
+
+  expect_error(
+    cv_survdnn(Surv(time, status) ~ ., df),
+    "must provide a `times`"
+  )
 })
