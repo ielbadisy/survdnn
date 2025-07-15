@@ -1,64 +1,27 @@
 #' Loss Functions for survdnn Models
 #'
-#' These functions define various loss functions used to train `survdnn` deep learning survival models.
+#' These functions define various loss functions used internally by `survdnn()` for training deep neural networks on right-censored survival data.
 #'
-#' @param pred A tensor of predicted values from the neural network (typically of shape `[n, 1]`).
-#' @param true A tensor with two columns: observed time and event indicator.
-#' @param lambda Regularization strength (for `cox_l2_loss`).
+#' @section Supported Losses:
+#' - **Cox partial likelihood loss** (`cox_loss`): Negative partial log-likelihood used in proportional hazards modeling.
+#' - **L2-penalized Cox loss** (`cox_l2_loss`): Adds L2 regularization to the Cox loss.
+#' - **Accelerated Failure Time (AFT) loss** (`aft_loss`): Mean squared error between predicted and log-transformed event times, applied to uncensored observations only.
+#' - **CoxTime loss** (`coxtime_loss`): Similar to AFT loss, but defined for log(time + 1e-6); used in discrete-time neural survival models.
 #'
-#' @return A scalar torch tensor representing the loss.
+#' @param pred A tensor of predicted values (typically linear predictors or log-times).
+#' @param true A tensor with two columns: observed time and status (1 = event, 0 = censored).
+#' @param lambda Regularization parameter for `cox_l2_loss` (default: `1e-4`).
+#'
+#' @return A scalar `torch_tensor` representing the loss value.
+#' @name survdnn_losses
+#' @keywords internal
+#' @examples
+#' # Used internally by survdnn()
+NULL
+
+
 #' @rdname survdnn_losses
 #' @export
-#' @examples
-#' library(torch)
-#' library(survival)
-#'
-#' # Simulated survival data
-#' set.seed(123)
-#' n <- 100
-#' toy_data <- data.frame(
-#'   x1 = rnorm(n),
-#'   x2 = rbinom(n, 1, 0.5),
-#'   time = rexp(n, 0.1),
-#'   status = rbinom(n, 1, 0.7)
-#' )
-#'
-#' # Cox loss
-#' mod_cox <- survdnn(Surv(time, status) ~ x1 + x2,
-#'                    data = toy_data,
-#'                    .loss_fn = cox_loss,
-#'                    epochs = 100,
-#'                    verbose = TRUE)
-#' plot(mod_cox$loss_history, type = "l", main = "cox_loss")
-#'
-#' # Cox + L2 penalty
-#' mod_cox_l2 <- survdnn(Surv(time, status) ~ x1 + x2,
-#'                    data = toy_data,
-#'                    .loss_fn = cox_l2_loss,
-#'                    epochs = 100,
-#'                    verbose = TRUE)
-#' plot(mod_cox_l2$loss_history, type = "l", main = "cox_l2_loss")
-#'
-#' # AFT loss
-#' mod_aft <- survdnn(Surv(time, status) ~ x1 + x2,
-#'                    data = toy_data,
-#'                    .loss_fn = aft_loss,
-#'                    epochs = 100,
-#'                    verbose = TRUE)
-#' plot(mod_aft$loss_history, type = "l", main = "aft_loss")
-#'
-#' # Custom loss
-#' combo_loss <- function(pred, true) {
-#'   time <- true[, 1]
-#'   torch_mean((pred - log(time + 1))^2) + 0.01 * torch_mean(pred)
-#' }
-#'
-#' mod_combo <- survdnn(Surv(time, status) ~ x1 + x2,
-#'                    data = toy_data,
-#'                    .loss_fn = combo_loss,
-#'                    epochs = 100,
-#'                    verbose = TRUE)
-#' plot(mod_combo$loss_history, type = "l", main = "combo_loss")
 cox_loss <- function(pred, true) {
   time <- true[, 1]
   status <- true[, 2]
@@ -66,52 +29,24 @@ cox_loss <- function(pred, true) {
   idx <- torch_argsort(time, descending = TRUE)
   time <- time[idx]
   status <- status[idx]
-  pred <- -pred[idx, 1]
+  pred <- -pred[idx, 1]  # negate for log-partial likelihood
 
   log_cumsum_exp <- torch_logcumsumexp(pred, dim = 1)
   event_mask <- (status == 1)
 
   loss <- -torch_mean(pred[event_mask] - log_cumsum_exp[event_mask])
-  return(loss)
+  loss
 }
+
 
 #' @rdname survdnn_losses
 #' @export
 cox_l2_loss <- function(pred, true, lambda = 1e-4) {
-  loss <- cox_loss(pred, true)
+  base_loss <- cox_loss(pred, true)
   l2_penalty <- lambda * torch_mean(pred^2)
-  return(loss + l2_penalty)
+  base_loss + l2_penalty
 }
 
-#' @rdname survdnn_losses
-#' @export
-rank_loss <- function(pred, true) {
-  time <- true[, 1]
-  status <- true[, 2]
-  n <- pred$size(1)
-
-  loss_terms <- list()
-  for (i in 1:(n - 1)) {
-    for (j in (i + 1):n) {
-      ti <- as.numeric(time[i])
-      tj <- as.numeric(time[j])
-      si <- as.numeric(status[i])
-      sj <- as.numeric(status[j])
-
-      if ((si == 1 && ti < tj) || (sj == 1 && tj < ti)) {
-        d_ij <- pred[i, 1] - pred[j, 1]
-        y_ij <- if (ti < tj) 1 else -1
-
-        hinge <- torch_relu(1 - y_ij * d_ij)
-        loss_terms <- append(loss_terms, list(hinge))
-      }
-    }
-  }
-
-  if (length(loss_terms) == 0) return(torch_tensor(0.0, dtype = torch_float()))
-  loss_tensor <- torch_stack(loss_terms)
-  return(torch_mean(loss_tensor))
-}
 
 #' @rdname survdnn_losses
 #' @export
@@ -130,40 +65,46 @@ aft_loss <- function(pred, true) {
   pred_event <- pred[event_mask, 1]
   log_time_event <- log_time[event_mask]
 
-  mse <- torch_mean((pred_event - log_time_event)^2)
-  return(mse)
+  torch_mean((pred_event - log_time_event)^2)
 }
+
 
 #' @rdname survdnn_losses
 #' @export
-combo_loss <- function(pred, true) {
+coxtime_loss <- function(pred, true) {
+
+  # `pred` is a tensor of shape [n, 1]: g(t_i, x_i)
+  # `true` is a tensor with columns: time and status
+
   time <- true[, 1]
-  torch_mean((pred - log(time + 1))^2) + 0.01 * torch_mean(pred)
+  status <- true[, 2]
+  n <- time$size()[[1]]
+
+  # sorting by time descending
+  idx <- torch_argsort(time, descending = TRUE)
+  time <- time[idx]
+  status <- status[idx]
+  pred <- pred[idx, 1]  # ensure shape [n]
+
+  # compute risk set matrix: R_ij = 1 if time_j >= time_i
+  time_i <- time$view(c(n, 1))           # [n, 1]
+  time_j <- time$view(c(1, n))           # [1, n]
+  risk_matrix <- (time_j >= time_i)$to(dtype = torch_float())  # [n, n]
+
+  # compute difference: g(t_i, x_j) - g(t_i, x_i)
+  pred_i <- pred$view(c(n, 1))           # [n, 1]
+  pred_j <- pred$view(c(1, n))           # [1, n]
+  diff <- pred_j - pred_i                # [n, n]
+
+  # mask for events only
+  event_mask <- (status == 1)
+
+  # compute log sum exp over risk set
+  log_sum_exp <- torch_logsumexp(diff * risk_matrix, dim = 2)  # [n]
+
+  # final partial likelihood loss: mean over events only
+  loss_terms <- log_sum_exp[event_mask]
+  loss <- torch_mean(loss_terms)
+  return(loss)
 }
 
-#' Validate a Custom Loss Function
-#'
-#' Ensures that a user-supplied loss function is compatible with `survdnn` training requirements.
-#'
-#' @param .loss_fn A function that takes two arguments (`pred`, `true`) and returns a scalar torch tensor.
-#'
-#' @return NULL. Throws an error if validation fails.
-#' @export
-#' @examples
-#' validate_loss_fn(cox_loss)
-#' validate_loss_fn(aft_loss)
-
-validate_loss_fn <- function(.loss_fn) {
-  test_pred <- torch_randn(10, 1)
-  test_true <- torch_cat(list(
-    torch_rand(10, 1) * 100,
-    torch_randint(low = 0, high = 2, size = c(10, 1))
-  ), dim = 2)
-
-  test_loss <- try(.loss_fn(test_pred, test_true), silent = TRUE)
-
-  if (inherits(test_loss, "try-error") || !inherits(test_loss, "torch_tensor") ||
-      test_loss$numel() != 1) {
-    stop(".loss_fn must return a scalar torch tensor with shape (1)")
-  }
-}
