@@ -6,7 +6,7 @@
 #' - **Cox partial likelihood loss** (`cox_loss`): Negative partial log-likelihood used in proportional hazards modeling.
 #' - **L2-penalized Cox loss** (`cox_l2_loss`): Adds L2 regularization to the Cox loss.
 #' - **Accelerated Failure Time (AFT) loss** (`aft_loss`): Mean squared error between predicted and log-transformed event times, applied to uncensored observations only.
-#' - **CoxTime loss** (`coxtime_loss`): Similar to AFT loss, but defined for log(time + 1e-6); used in discrete-time neural survival models.
+#' - **CoxTime loss** (`coxtime_loss`): Implements the partial likelihood loss from Kvamme & Borgan (2019), used in Cox-Time models.
 #'
 #' @param pred A tensor of predicted values (typically linear predictors or log-times).
 #' @param true A tensor with two columns: observed time and status (1 = event, 0 = censored).
