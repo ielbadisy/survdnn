@@ -58,5 +58,5 @@ test_that("predict.survdnn handles invalid or missing times properly", {
                "`times` must be specified")
 
   expect_error(predict(mod, newdata = data, type = "risk", times = c(30, 60)),
-               "must be a single numeric value")
+               "For type = 'risk', `times` must be a single value.")
 })

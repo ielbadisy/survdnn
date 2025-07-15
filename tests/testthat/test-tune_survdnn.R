@@ -3,60 +3,59 @@ test_that("tune_survdnn returns correct structure for all modes", {
   skip_if_not(torch::torch_is_installed())
 
   data <- survival::veteran
-  times <- c(90, 300)
-  grid <- list(
-    hidden     = list(c(8)),
+  param_grid <- list(
+    hidden     = list(c(8), c(8, 4)),
     lr         = c(1e-3),
     activation = c("relu"),
     epochs     = c(5),
-    .loss_fn   = list(cox_loss),
-    loss_name  = c("cox_loss")
+    loss       = c("cox")
   )
+  times <- c(30, 90)
 
-  res_all <- tune_survdnn(
-    formula = Surv(time, status) ~ age + karno + celltype,
+  all_res <- tune_survdnn(
+    Surv(time, status) ~ age + karno + celltype,
     data = data,
     times = times,
     metrics = "cindex",
-    param_grid = grid,
+    param_grid = param_grid,
     folds = 2,
-    .seed = 42,
+    .seed = 123,
     refit = FALSE,
     return = "all"
   )
 
-  expect_s3_class(res_all, "data.frame")
-  expect_true(all(c("metric", "value", "loss_name") %in% names(res_all)))
+  expect_s3_class(all_res, "data.frame")
+  expect_true(all(c("fold", "metric", "value") %in% names(all_res)))
 
-  res_summary <- tune_survdnn(
-    formula = Surv(time, status) ~ age + karno + celltype,
+  summary_res <- tune_survdnn(
+    Surv(time, status) ~ age + karno + celltype,
     data = data,
     times = times,
     metrics = "cindex",
-    param_grid = grid,
+    param_grid = param_grid,
     folds = 2,
-    .seed = 42,
+    .seed = 123,
     refit = FALSE,
     return = "summary"
   )
 
-  expect_s3_class(res_summary, "data.frame")
-  expect_true(all(c("metric", "mean", "sd") %in% names(res_summary)))
+  expect_s3_class(summary_res, "data.frame")
+  expect_true(all(c("metric", "mean", "sd") %in% names(summary_res)))
 
-  res_best <- tune_survdnn(
-    formula = Surv(time, status) ~ age + karno + celltype,
+  best_cfg <- tune_survdnn(
+    Surv(time, status) ~ age + karno + celltype,
     data = data,
     times = times,
     metrics = "cindex",
-    param_grid = grid,
+    param_grid = param_grid,
     folds = 2,
-    .seed = 42,
+    .seed = 123,
     refit = FALSE,
     return = "best_model"
   )
 
-  expect_s3_class(res_best, "data.frame")
-  expect_true(all(c("hidden", "lr", "activation", "epochs", ".loss_fn", "loss_name") %in% names(res_best)))
+  expect_s3_class(best_cfg, "data.frame")
+  expect_true(all(c("hidden", "lr", "activation", "epochs", "loss") %in% names(best_cfg)))
 })
 
 test_that("tune_survdnn works with refit = TRUE and returns survdnn model", {
@@ -64,30 +63,29 @@ test_that("tune_survdnn works with refit = TRUE and returns survdnn model", {
   skip_if_not(torch::torch_is_installed())
 
   data <- survival::veteran
-  times <- c(90, 300)
-  grid <- list(
+  param_grid <- list(
     hidden     = list(c(8)),
     lr         = c(1e-3),
     activation = c("relu"),
-    epochs     = c(5),
-    .loss_fn   = list(cox_loss),
-    loss_name  = c("cox_loss")
+    epochs     = c(3),
+    loss       = c("cox")
   )
+  times <- c(30, 90)
 
   mod <- tune_survdnn(
-    formula = Surv(time, status) ~ age + karno + celltype,
+    Surv(time, status) ~ age + karno + celltype,
     data = data,
     times = times,
     metrics = "cindex",
-    param_grid = grid,
+    param_grid = param_grid,
     folds = 2,
-    .seed = 123,
+    .seed = 42,
     refit = TRUE,
     return = "best_model"
   )
 
   expect_s3_class(mod, "survdnn")
-  expect_true(inherits(mod$model, "nn_module"))
+  expect_s3_class(mod$model, "nn_module")
 })
 
 test_that("summarize_tune_survdnn aggregates correctly and throws on bad input", {
@@ -95,30 +93,33 @@ test_that("summarize_tune_survdnn aggregates correctly and throws on bad input",
   skip_if_not(torch::torch_is_installed())
 
   data <- survival::veteran
-  times <- c(90, 300)
-  grid <- list(
+  param_grid <- list(
     hidden     = list(c(8)),
     lr         = c(1e-3),
     activation = c("relu"),
-    epochs     = c(5),
-    .loss_fn   = list(cox_loss),
-    loss_name  = c("cox_loss")
+    epochs     = c(3),
+    loss       = c("cox")
   )
+  times <- c(30, 90)
 
-  res_all <- tune_survdnn(
-    formula = Surv(time, status) ~ age + karno + celltype,
+  all_res <- tune_survdnn(
+    Surv(time, status) ~ age + karno + celltype,
     data = data,
     times = times,
-    metrics = "cindex",
-    param_grid = grid,
+    metrics = "brier",  
+    param_grid = param_grid,
     folds = 2,
-    .seed = 42,
+    .seed = 123,
+    refit = FALSE,
     return = "all"
   )
 
-  smry <- summarize_tune_survdnn(res_all)
-  expect_s3_class(smry, "data.frame")
-  expect_true(all(c("metric", "mean", "sd") %in% names(smry)))
+  sm <- summarize_tune_survdnn(all_res, by_time = TRUE)
+  expect_s3_class(sm, "data.frame")
 
-  expect_error(summarize_tune_survdnn(data.frame(a = 1, b = 2)), "tune_survdnn")
+  if ("time" %in% names(all_res)) {
+    expect_true("time" %in% names(sm))
+  }
+
+  expect_error(summarize_tune_survdnn(data.frame(a = 1)), "Input must be the result")
 })
