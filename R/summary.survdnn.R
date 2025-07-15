@@ -2,7 +2,7 @@
 #'
 #' Provides a structured summary of a fitted `survdnn` model, including the network architecture,
 #' training configuration, and data characteristics. The summary is printed automatically with
-#' a styled header and sectioned output using `{cli}` and base formatting. The object is returned invisibly.
+#' a styled header and sectioned output using \{cli\} and base formatting. The object is returned invisibly.
 #'
 #' @param object An object of class `"survdnn"` returned by the [survdnn()] function.
 #' @param ... Currently ignored (for future compatibility).
@@ -35,12 +35,12 @@ summary.survdnn <- function(object, ...) {
       hidden_layers = object$hidden,
       activation = object$activation,
       dropout = 0.3,
-      final_loss = object$loss
+      final_loss = object$final_loss
     ),
     training_summary = list(
       epochs = object$epochs,
       learning_rate = object$lr,
-      loss_function = object$loss_name
+      loss_function = object$loss
     ),
     data_summary = list(
       observations = nrow(object$data),
@@ -52,7 +52,7 @@ summary.survdnn <- function(object, ...) {
   )
   class(out) <- "summary.survdnn"
 
-  # Print styled header
+  # pretty output
   cli::cli_h1("Summary of survdnn model")
 
   cat("\nFormula:\n  ")
