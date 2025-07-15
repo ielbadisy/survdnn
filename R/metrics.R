@@ -15,14 +15,15 @@
 #' @examples
 #' library(survival)
 #' data(veteran, package = "survival")
-#' mod <- survdnn(Surv(time, status) ~ age + karno + celltype, data = veteran, epochs = 50, verbose = FALSE)
+#' mod <- survdnn(Surv(time, status) ~
+#' age + karno + celltype, data = veteran, epochs = 50, verbose = FALSE)
 #' pred <- predict(mod, newdata = veteran, type = "survival", times = c(30, 90, 180))
 #' y <- model.response(model.frame(mod$formula, veteran))
 #' cindex_survmat(y, pred, t_star = 180)
 
 cindex_survmat <- function(object, predicted, t_star = NULL) {
   if (!inherits(object, "Surv")) stop("object must be a survival object (from Surv())")
-  
+
   time <- object[, 1]
   status <- object[, 2]
 
@@ -45,14 +46,14 @@ cindex_survmat <- function(object, predicted, t_star = NULL) {
 
   for (i in 1:(n - 1)) {
     for (j in (i + 1):n) {
-      if ((time[i] < time[j] && status[i] == 0) || 
+      if ((time[i] < time[j] && status[i] == 0) ||
           (time[j] < time[i] && status[j] == 0)) next
       if (time[i] == time[j] && status[i] == 0 && status[j] == 0) next
 
       permissible <- permissible + 1
 
       if (time[i] != time[j]) {
-        if ((time[i] < time[j] && risk_score[i] > risk_score[j]) || 
+        if ((time[i] < time[j] && risk_score[i] > risk_score[j]) ||
             (time[j] < time[i] && risk_score[j] > risk_score[i])) {
           concord <- concord + 1
         } else if (risk_score[i] == risk_score[j]) {
@@ -90,7 +91,8 @@ cindex_survmat <- function(object, predicted, t_star = NULL) {
 #' @examples
 #' library(survival)
 #' data(veteran, package = "survival")
-#' mod <- survdnn(Surv(time, status) ~ age + karno + celltype, data = veteran, epochs = 50, verbose = FALSE)
+#' mod <- survdnn(Surv(time, status) ~
+#' age + karno + celltype, data = veteran, epochs = 50, verbose = FALSE)
 #' pred <- predict(mod, newdata = veteran, type = "survival", times = c(30, 90, 180))
 #' y <- model.response(model.frame(mod$formula, veteran))
 #' survdnn::brier(y, pre_sp = pred[["t=90"]], t_star = 90)
@@ -155,7 +157,8 @@ brier <- function(object, pre_sp, t_star) {
 #' data(veteran, package = "survival")
 #' idx <- sample(nrow(veteran), 0.7 * nrow(veteran))
 #' train <- veteran[idx, ]; test <- veteran[-idx, ]
-#' mod <- survdnn(Surv(time, status) ~ age + karno + celltype, data = train, epochs = 50, verbose = FALSE)
+#' mod <- survdnn(Surv(time, status) ~
+#' age + karno + celltype, data = train, epochs = 50, verbose = FALSE)
 #' pred <- predict(mod, newdata = test, times = c(30, 90, 180), type = "survival")
 #' y_test <- model.response(model.frame(mod$formula, test))
 #' ibs_survmat(y_test, sp_matrix = pred, times = c(30, 90, 180))
