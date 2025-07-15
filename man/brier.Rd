@@ -22,7 +22,8 @@ Computes the Brier score at a fixed time point using inverse probability of cens
 \examples{
 library(survival)
 data(veteran, package = "survival")
-mod <- survdnn(Surv(time, status) ~ age + karno + celltype, data = veteran, epochs = 50, verbose = FALSE)
+mod <- survdnn(Surv(time, status) ~
+age + karno + celltype, data = veteran, epochs = 50, verbose = FALSE)
 pred <- predict(mod, newdata = veteran, type = "survival", times = c(30, 90, 180))
 y <- model.response(model.frame(mod$formula, veteran))
 survdnn::brier(y, pre_sp = pred[["t=90"]], t_star = 90)

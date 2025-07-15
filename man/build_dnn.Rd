@@ -4,7 +4,7 @@
 \alias{build_dnn}
 \title{Build a Deep Neural Network for Survival Analysis}
 \usage{
-build_dnn(input_dim, hidden, activation = "relu")
+build_dnn(input_dim, hidden, activation = "relu", output_dim = 1L)
 }
 \arguments{
 \item{input_dim}{Integer. Number of input features.}
@@ -13,13 +13,15 @@ build_dnn(input_dim, hidden, activation = "relu")
 
 \item{activation}{Character. Name of the activation function to use in each layer.
 Supported options: `"relu"`, `"leaky_relu"`, `"tanh"`, `"sigmoid"`, `"gelu"`, `"elu"`, `"softplus"`.}
+
+\item{output_dim}{Integer. Output layer dimension (default = 1).}
 }
 \value{
 A `nn_sequential` object representing the network.
 }
 \description{
 Constructs a multilayer perceptron (MLP) with batch normalization,
-activation functions, and dropout. Used internally by `survdnn()` to
+activation functions, and dropout. Used internally by [survdnn()] to
 define the model architecture.
 }
 \examples{

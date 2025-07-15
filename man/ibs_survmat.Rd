@@ -27,7 +27,8 @@ library(survival)
 data(veteran, package = "survival")
 idx <- sample(nrow(veteran), 0.7 * nrow(veteran))
 train <- veteran[idx, ]; test <- veteran[-idx, ]
-mod <- survdnn(Surv(time, status) ~ age + karno + celltype, data = train, epochs = 50, verbose = FALSE)
+mod <- survdnn(Surv(time, status) ~
+age + karno + celltype, data = train, epochs = 50, verbose = FALSE)
 pred <- predict(mod, newdata = test, times = c(30, 90, 180), type = "survival")
 y_test <- model.response(model.frame(mod$formula, test))
 ibs_survmat(y_test, sp_matrix = pred, times = c(30, 90, 180))

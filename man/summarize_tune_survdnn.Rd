@@ -2,43 +2,19 @@
 % Please edit documentation in R/tune_survdnn.R
 \name{summarize_tune_survdnn}
 \alias{summarize_tune_survdnn}
-\title{Summarize Cross-Validation Results from tune_survdnn()}
+\title{Summarize survdnn Tuning Results}
 \usage{
 summarize_tune_survdnn(tuning_results, by_time = TRUE)
 }
 \arguments{
-\item{tuning_results}{A tibble returned by `tune_survdnn(return = "all")`.}
+\item{tuning_results}{The full tibble returned by `tune_survdnn(..., return = "all")`.}
 
-\item{by_time}{Logical. If `TRUE` (default), aggregates per time point as well.}
+\item{by_time}{Logical; whether to group and summarize separately by time points.}
 }
 \value{
-A tibble with mean and standard deviation of performance for each configuration.
+A summarized tibble with mean and standard deviation of performance metrics.
 }
 \description{
-Aggregates the results of `tune_survdnn()` to compute mean and standard deviation
-of performance metrics per hyperparameter configuration.
-}
-\examples{
-# Example with return = "all"
-library(survival)
-data(veteran, package = "survival")
-grid <- list(
-  hidden     = list(c(16), c(32, 16)),
-  lr         = c(1e-4),
-  activation = c("relu"),
-  epochs     = c(100),
-  .loss_fn   = list(cox_loss, aft_loss),
-  loss_name  = c("cox_loss", "aft_loss")
-)
-results_all <- tune_survdnn(
-  formula = Surv(time, status) ~ age + karno + celltype,
-  data = veteran,
-  times = c(90, 300),
-  metrics = "cindex",
-  param_grid = grid,
-  folds = 3,
-  .seed = 42,
-  return = "all"
-)
-summarize_tune_survdnn(results_all)
+Aggregates cross-validation results from `tune_survdnn(return = "all")`
+by configuration, metric, and optionally by time point.
 }

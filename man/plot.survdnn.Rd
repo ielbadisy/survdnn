@@ -52,13 +52,5 @@ data(veteran)
 set.seed(42)
 mod <- survdnn(Surv(time, status) ~ age + karno + celltype, data = veteran,
                hidden = c(16, 8), epochs = 100, verbose = FALSE)
-
-# Default plot (on training data)
-plot(mod)
-
-# Plot full curves with color grouping
 plot(mod, group_by = "celltype", times = 1:300)
-
-# Plot group-wise mean survival curves only
-plot(mod, group_by = "celltype", times = 1:300, plot_mean_only = TRUE)
 }

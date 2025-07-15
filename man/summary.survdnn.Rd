@@ -17,7 +17,7 @@ Invisibly returns an object of class `"summary.survdnn"`.
 \description{
 Provides a structured summary of a fitted `survdnn` model, including the network architecture,
 training configuration, and data characteristics. The summary is printed automatically with
-a styled header and sectioned output using `{cli}` and base formatting. The object is returned invisibly.
+a styled header and sectioned output using \{cli\} and base formatting. The object is returned invisibly.
 }
 \examples{
 set.seed(42)

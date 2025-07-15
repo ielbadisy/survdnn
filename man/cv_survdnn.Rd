@@ -25,7 +25,7 @@ cv_survdnn(
 
 \item{folds}{Integer. Number of folds to use.}
 
-\item{.seed}{Optional. Set random seed for reproducibility (not passed to the model).}
+\item{.seed}{Optional. Set random seed for reproducibility.}
 
 \item{...}{Additional arguments passed to [survdnn()].}
 }
@@ -37,12 +37,12 @@ Performs cross-validation for a `survdnn` model using the specified evaluation m
 }
 \examples{
 library(survival)
-data(veteran, package = "survival")
+data(veteran)
 cv_survdnn(
   Surv(time, status) ~ age + karno + celltype,
   data = veteran,
   times = c(30, 90, 180),
-  metrics = c("ibs"),
+  metrics = "ibs",
   folds = 3,
   .seed = 42,
   hidden = c(16, 8),

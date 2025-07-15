@@ -26,9 +26,8 @@ tune_survdnn(
 \item{metrics}{A character vector of evaluation metrics: "cindex", "brier", or "ibs".
 Only the first metric is used for model selection.}
 
-\item{param_grid}{A named list defining hyperparameter combinations to evaluate,
-passed through [tidyr::crossing()].
-Must include `hidden`, `lr`, `activation`, `epochs`, `.loss_fn`, and `loss_name`.}
+\item{param_grid}{A named list defining hyperparameter combinations to evaluate.
+Required names: `hidden`, `lr`, `activation`, `epochs`, `loss`.}
 
 \item{folds}{Number of cross-validation folds (default: 3).}
 
@@ -38,9 +37,9 @@ Must include `hidden`, `lr`, `activation`, `epochs`, `.loss_fn`, and `loss_name`
 
 \item{return}{One of "all", "summary", or "best_model":
 \describe{
-  \item{"all"}{Returns the full cross-validation result across all hyperparameter combinations.}
+  \item{"all"}{Returns the full cross-validation result across all combinations.}
   \item{"summary"}{Returns averaged results per configuration.}
-  \item{"best_model"}{Returns the refitted model or best hyperparameters, depending on `refit`.}
+  \item{"best_model"}{Returns the refitted model or best hyperparameters.}
 }}
 }
 \value{
@@ -49,72 +48,4 @@ A tibble or model object depending on the `return` value.
 \description{
 Performs k-fold cross-validation over a user-defined hyperparameter grid
 and selects the best configuration according to the specified evaluation metric.
-}
-\examples{
-# Define hyperparameter grid
-grid <- list(
-  hidden     = list(c(16), c(32, 16)),
-  lr         = c(1e-4),
-  activation = c("relu"),
-  epochs     = c(100),
-  .loss_fn   = list(cox_loss, aft_loss),
-  loss_name  = c("cox_loss", "aft_loss")
-)
-
-# Load data
-library(survival)
-data(veteran, package = "survival")
-eval_times <- c(90, 300)
-
-# (1) Return all fold-level results
-res_all <- tune_survdnn(
-  formula = Surv(time, status) ~ age + karno + celltype,
-  data = veteran,
-  times = eval_times,
-  metrics = "cindex",
-  param_grid = grid,
-  folds = 3,
-  .seed = 42,
-  refit = FALSE,
-  return = "all"
-)
-
-# (2) Return summary per configuration (mean CV performance)
-res_summary <- tune_survdnn(
-  formula = Surv(time, status) ~ age + karno + celltype,
-  data = veteran,
-  times = eval_times,
-  metrics = "cindex",
-  param_grid = grid,
-  folds = 3,
-  .seed = 42,
-  refit = FALSE,
-  return = "summary"
-)
-
-# (3) Return best configuration only (no refit)
-res_best <- tune_survdnn(
-  formula = Surv(time, status) ~ age + karno + celltype,
-  data = veteran,
-  times = eval_times,
-  metrics = "cindex",
-  param_grid = grid,
-  folds = 3,
-  .seed = 42,
-  refit = FALSE,
-  return = "best_model"
-)
-
-# (4) Refit best model on full data
-final_model <- tune_survdnn(
-  formula = Surv(time, status) ~ age + karno + celltype,
-  data = veteran,
-  times = eval_times,
-  metrics = "cindex",
-  param_grid = grid,
-  folds = 3,
-  .seed = 42,
-  refit = TRUE,
-  return = "best_model"
-)
 }

@@ -2,7 +2,7 @@
 % Please edit documentation in R/evaluation.R
 \name{evaluate_survdnn}
 \alias{evaluate_survdnn}
-\title{Evaluate a survdnn Model using Survival Metrics}
+\title{Evaluate a survdnn Model Using Survival Metrics}
 \usage{
 evaluate_survdnn(
   model,
@@ -18,10 +18,10 @@ evaluate_survdnn(
 
 \item{times}{A numeric vector of evaluation time points.}
 
-\item{newdata}{Optional. A data frame on which to evaluate. If `NULL`, uses training data.}
+\item{newdata}{Optional. A data frame on which to evaluate the model. Defaults to training data.}
 }
 \value{
-A tibble with metric results, containing at least `metric` and `value`, and `time` if applicable.
+A tibble with evaluation results, containing at least `metric`, `value`, and possibly `time`.
 }
 \description{
 Computes evaluation metrics for a fitted `survdnn` model at one or more time points.
@@ -30,8 +30,9 @@ and integrated Brier score (`"ibs"`).
 }
 \examples{
 library(survival)
-data(veteran, package = "survival")
-mod <- survdnn(Surv(time, status) ~ age + karno + celltype, data = veteran, epochs = 100, verbose = FALSE)
+data(veteran)
+mod <- survdnn(Surv(time, status) ~ age + karno + celltype,
+               data = veteran, epochs = 100, verbose = FALSE)
 evaluate_survdnn(mod, metrics = c("cindex", "ibs"), times = c(30, 90, 180))
-evaluate_survdnn(mod, metrics = c("brier"), times = c(30, 90, 180))
+evaluate_survdnn(mod, metrics = "brier", times = c(30, 90, 180))
 }

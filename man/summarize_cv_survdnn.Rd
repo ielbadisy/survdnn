@@ -21,11 +21,11 @@ Computes mean, standard deviation, and confidence intervals for metrics from cro
 }
 \examples{
 library(survival)
-data(veteran, package = "survival")
+data(veteran)
 res <- cv_survdnn(
   Surv(time, status) ~ age + karno + celltype,
   data = veteran,
-  times = c(30, 90, 180, 270, 360),
+  times = c(30, 90, 180, 270),
   metrics = c("cindex", "ibs"),
   folds = 3,
   .seed = 42,
