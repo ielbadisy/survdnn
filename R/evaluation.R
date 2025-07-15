@@ -1,4 +1,4 @@
-#' Evaluate a survdnn Model using Survival Metrics
+#' Evaluate a survdnn Model Using Survival Metrics
 #'
 #' Computes evaluation metrics for a fitted `survdnn` model at one or more time points.
 #' Supported metrics include the concordance index (`"cindex"`), Brier score (`"brier"`),
@@ -7,35 +7,34 @@
 #' @param model A fitted `survdnn` model object.
 #' @param metrics A character vector of metric names: `"cindex"`, `"brier"`, `"ibs"`.
 #' @param times A numeric vector of evaluation time points.
-#' @param newdata Optional. A data frame on which to evaluate. If `NULL`, uses training data.
+#' @param newdata Optional. A data frame on which to evaluate the model. Defaults to training data.
 #'
-#' @return A tibble with metric results, containing at least `metric` and `value`, and `time` if applicable.
+#' @return A tibble with evaluation results, containing at least `metric`, `value`, and possibly `time`.
 #' @export
 #'
 #' @examples
 #' library(survival)
-#' data(veteran, package = "survival")
-#' mod <- survdnn(Surv(time, status) ~ age + karno + celltype, data = veteran, epochs = 100, verbose = FALSE)
+#' data(veteran)
+#' mod <- survdnn(Surv(time, status) ~ age + karno + celltype,
+#'                data = veteran, epochs = 100, verbose = FALSE)
 #' evaluate_survdnn(mod, metrics = c("cindex", "ibs"), times = c(30, 90, 180))
-#' evaluate_survdnn(mod, metrics = c("brier"), times = c(30, 90, 180))
-
-
+#' evaluate_survdnn(mod, metrics = "brier", times = c(30, 90, 180))
 evaluate_survdnn <- function(model, metrics = c("cindex", "brier", "ibs"), times, newdata = NULL) {
   stopifnot(inherits(model, "survdnn"))
   if (missing(times)) stop("You must provide `times` for evaluation.")
-  
+
   allowed_metrics <- c("cindex", "brier", "ibs")
   unknown <- setdiff(metrics, allowed_metrics)
   if (length(unknown) > 0) stop("Unknown metric(s): ", paste(unknown, collapse = ", "))
-  
+
   data <- if (is.null(newdata)) model$data else newdata
   sp_matrix <- predict(model, newdata = data, times = times, type = "survival")
-  
+
   mf <- model.frame(model$formula, data)
   y <- model.response(mf)
-  if (!inherits(y, "Surv")) stop("The outcome must be a 'Surv' object.")
-  
-  results <- purrr::map_dfr(metrics, function(metric) {
+  if (!inherits(y, "Surv")) stop("The response must be a 'Surv' object.")
+
+  purrr::map_dfr(metrics, function(metric) {
     if (metric == "brier" && length(times) > 1) {
       tibble::tibble(
         metric = "brier",
@@ -46,16 +45,15 @@ evaluate_survdnn <- function(model, metrics = c("cindex", "brier", "ibs"), times
       )
     } else {
       val <- switch(metric,
-        "cindex" = cindex_survmat(y, predicted = sp_matrix, t_star = max(times)),
-        "brier"  = brier(y, pre_sp = sp_matrix[, 1], t_star = times[1]),
-        "ibs"    = ibs_survmat(y, sp_matrix, times)
+                    "cindex" = cindex_survmat(y, predicted = sp_matrix, t_star = max(times)),
+                    "brier"  = brier(y, pre_sp = sp_matrix[, 1], t_star = times[1]),
+                    "ibs"    = ibs_survmat(y, sp_matrix, times)
       )
       tibble::tibble(metric = metric, value = val)
     }
   })
-  
-  return(results)
 }
+
 
 #' K-Fold Cross-Validation for survdnn Models
 #'
@@ -66,7 +64,7 @@ evaluate_survdnn <- function(model, metrics = c("cindex", "brier", "ibs"), times
 #' @param times A numeric vector of evaluation time points.
 #' @param metrics A character vector: any of `"cindex"`, `"brier"`, `"ibs"`.
 #' @param folds Integer. Number of folds to use.
-#' @param .seed Optional. Set random seed for reproducibility (not passed to the model).
+#' @param .seed Optional. Set random seed for reproducibility.
 #' @param ... Additional arguments passed to [survdnn()].
 #'
 #' @return A tibble containing metric values per fold and (optionally) per time point.
@@ -74,43 +72,44 @@ evaluate_survdnn <- function(model, metrics = c("cindex", "brier", "ibs"), times
 #'
 #' @examples
 #' library(survival)
-#' data(veteran, package = "survival")
+#' data(veteran)
 #' cv_survdnn(
 #'   Surv(time, status) ~ age + karno + celltype,
 #'   data = veteran,
 #'   times = c(30, 90, 180),
-#'   metrics = c("ibs"),
+#'   metrics = "ibs",
 #'   folds = 3,
 #'   .seed = 42,
 #'   hidden = c(16, 8),
 #'   epochs = 200
 #' )
-
 cv_survdnn <- function(formula, data, times,
-  metrics = c("cindex", "ibs"),
-  folds = 5, .seed = NULL, ...) {
-if (!requireNamespace("rsample", quietly = TRUE)) {
-stop("Package 'rsample' is required for cross-validation.")
-}
+                       metrics = c("cindex", "ibs"),
+                       folds = 5,
+                       .seed = NULL,
+                       ...) {
+  if (!requireNamespace("rsample", quietly = TRUE)) {
+    stop("Package 'rsample' is required for cross-validation.")
+  }
 
-if (!inherits(formula, "formula")) stop("`formula` must be a survival formula.")
-if (!is.data.frame(data)) stop("`data` must be a data frame.")
-if (missing(times)) stop("You must provide a `times` vector.")
+  if (!inherits(formula, "formula")) stop("`formula` must be a survival formula")
+  if (!is.data.frame(data)) stop("`data` must be a data frame")
+  if (missing(times)) stop("You must provide a `times` vector.")
 
-if (!is.null(.seed)) set.seed(.seed)
+  if (!is.null(.seed)) set.seed(.seed)
 
-vfolds <- rsample::vfold_cv(data, v = folds, strata = all.vars(formula)[1])
+  vfolds <- rsample::vfold_cv(data, v = folds, strata = all.vars(formula)[1])
 
-results <- purrr::imap_dfr(vfolds$splits, function(split, i) {
-train_data <- rsample::analysis(split)
-test_data  <- rsample::assessment(split)
-model <- survdnn(formula, data = train_data, ...)
-eval_tbl <- evaluate_survdnn(model, metrics = metrics, times = times, newdata = test_data)
-eval_tbl$fold <- i
-eval_tbl
-})
+  results <- purrr::imap_dfr(vfolds$splits, function(split, i) {
+    train_data <- rsample::analysis(split)
+    test_data  <- rsample::assessment(split)
+    model <- survdnn(formula, data = train_data, ...)
+    eval_tbl <- evaluate_survdnn(model, metrics = metrics, times = times, newdata = test_data)
+    eval_tbl$fold <- i
+    eval_tbl
+  })
 
-dplyr::select(results, fold, metric, time = dplyr::any_of("time"), value)
+  dplyr::select(results, fold, metric, time = dplyr::any_of("time"), value)
 }
 
 
@@ -127,11 +126,11 @@ dplyr::select(results, fold, metric, time = dplyr::any_of("time"), value)
 #'
 #' @examples
 #' library(survival)
-#' data(veteran, package = "survival")
+#' data(veteran)
 #' res <- cv_survdnn(
 #'   Surv(time, status) ~ age + karno + celltype,
 #'   data = veteran,
-#'   times = c(30, 90, 180, 270, 360),
+#'   times = c(30, 90, 180, 270),
 #'   metrics = c("cindex", "ibs"),
 #'   folds = 3,
 #'   .seed = 42,
@@ -139,12 +138,9 @@ dplyr::select(results, fold, metric, time = dplyr::any_of("time"), value)
 #'   epochs = 200
 #' )
 #' summarize_cv_survdnn(res)
-
 summarize_cv_survdnn <- function(cv_results, by_time = TRUE, conf_level = 0.95) {
-  if (!all(c("fold", "metric", "value") %in% names(cv_results))) {
-    stop("Input must be a tibble returned from cv_survdnn().")
-  }
-  
+  stopifnot(all(c("fold", "metric", "value") %in% names(cv_results)))
+
   z <- qnorm((1 + conf_level) / 2)
   group_vars <- if ("time" %in% names(cv_results) && by_time) {
     c("metric", "time")
