@@ -1,13 +1,14 @@
 #' Build a Deep Neural Network for Survival Analysis
 #'
 #' Constructs a multilayer perceptron (MLP) with batch normalization,
-#' activation functions, and dropout. Used internally by `survdnn()` to
+#' activation functions, and dropout. Used internally by [survdnn()] to
 #' define the model architecture.
 #'
 #' @param input_dim Integer. Number of input features.
 #' @param hidden Integer vector. Sizes of the hidden layers (e.g., c(32, 16)).
 #' @param activation Character. Name of the activation function to use in each layer.
 #'   Supported options: `"relu"`, `"leaky_relu"`, `"tanh"`, `"sigmoid"`, `"gelu"`, `"elu"`, `"softplus"`.
+#' @param output_dim Integer. Output layer dimension (default = 1).
 #'
 #' @return A `nn_sequential` object representing the network.
 #' @keywords internal
@@ -15,19 +16,18 @@
 #'
 #' @examples
 #' net <- build_dnn(10, hidden = c(64, 32), activation = "relu")
-
-build_dnn <- function(input_dim, hidden, activation = "relu") {
+build_dnn <- function(input_dim, hidden, activation = "relu", output_dim = 1L) {
   layers <- list()
   in_features <- input_dim
 
   act_fn <- switch(activation,
-    relu        = torch::nn_relu,
-    leaky_relu  = torch::nn_leaky_relu,
-    tanh        = torch::nn_tanh,
-    sigmoid     = torch::nn_sigmoid,
-    gelu        = torch::nn_gelu,
-    elu         = torch::nn_elu,
-    softplus    = torch::nn_softplus,
+                   relu       = torch::nn_relu,
+                   leaky_relu = torch::nn_leaky_relu,
+                   tanh       = torch::nn_tanh,
+                   sigmoid    = torch::nn_sigmoid,
+                   gelu       = torch::nn_gelu,
+                   elu        = torch::nn_elu,
+                   softplus   = torch::nn_softplus,
                    stop("Unsupported activation function: ", activation)
   )
 
@@ -41,24 +41,24 @@ build_dnn <- function(input_dim, hidden, activation = "relu") {
     in_features <- h
   }
 
-  layers <- append(layers, list(torch::nn_linear(in_features, 1)))
+  layers <- append(layers, list(torch::nn_linear(in_features, output_dim)))
   torch::nn_sequential(!!!layers)
 }
 
 
 #' Fit a Deep Neural Network for Survival Analysis
 #'
-#' Trains a flexible deep neural network (DNN) to model right-censored survival data
-#' using the specified loss function. Supports Cox loss and any custom `torch`-compatible loss.
+#' Trains a deep neural network (DNN) to model right-censored survival data
+#' using one of the predefined loss functions: Cox, AFT, or Coxtime.
 #'
 #' @param formula A survival formula of the form `Surv(time, status) ~ predictors`.
-#' @param data A data.frame containing the variables in the model.
+#' @param data A data frame containing the variables in the model.
 #' @param hidden Integer vector. Sizes of the hidden layers (default: c(32, 16)).
 #' @param activation Character string specifying the activation function to use in each layer.
-#'   Supported: `"relu"`, `"leaky_relu"`, `"tanh"`, `"sigmoid"`, `"gelu"`, `"elu"`, `"softplus"`.
+#'   Supported options: `"relu"`, `"leaky_relu"`, `"tanh"`, `"sigmoid"`, `"gelu"`, `"elu"`, `"softplus"`.
 #' @param lr Learning rate for the Adam optimizer (default: `1e-4`).
 #' @param epochs Number of training epochs (default: 300).
-#' @param .loss_fn A custom loss function compatible with torch (default: `cox_loss`).
+#' @param loss Character name of the loss function to use. One of `"cox"`, `"cox_l2"`, `"aft"`, or `"coxtime"`.
 #' @param verbose Logical; whether to print loss progress every 50 epochs (default: TRUE).
 #'
 #' @return An object of class `"survdnn"` containing:
@@ -69,98 +69,89 @@ build_dnn <- function(input_dim, hidden, activation = "relu") {
 #'   \item{xnames}{Predictor variable names.}
 #'   \item{x_center}{Column means of predictors.}
 #'   \item{x_scale}{Column standard deviations of predictors.}
-#'   \item{loss}{Final epoch loss.}
 #'   \item{loss_history}{Vector of loss values per epoch.}
-#'   \item{activation}{Used activation function.}
+#'   \item{final_loss}{Final training loss.}
+#'   \item{loss}{Loss function name used ("cox", "aft", etc.).}
+#'   \item{activation}{Activation function used.}
 #'   \item{hidden}{Hidden layer sizes.}
-#'   \item{lr}{Learning rate used.}
+#'   \item{lr}{Learning rate.}
 #'   \item{epochs}{Number of training epochs.}
-#'   \item{.loss_fn}{The loss function used for training.}
-#'   \item{loss_name}{Character representation of the loss function name.}
 #' }
 #'
 #' @export
 #'
 #' @examples
 #' set.seed(123)
-#' n <- 100
-#' x1 <- rnorm(n)
-#' x2 <- rbinom(n, 1, 0.5)
-#' time <- rexp(n, rate = 0.1)
-#' status <- rbinom(n, 1, 0.7)
-#' df <- data.frame(time = time, status = status, x1 = x1, x2 = x2)
-#'
-#' mod <- survdnn(Surv(time, status) ~ x1 + x2, data = df, epochs = 50, verbose = FALSE)
-#' mod$loss  # final training loss
-
-#' @export
+#' df <- data.frame(
+#'   time = rexp(100, rate = 0.1),
+#'   status = rbinom(100, 1, 0.7),
+#'   x1 = rnorm(100),
+#'   x2 = rbinom(100, 1, 0.5)
+#' )
+#' mod <- survdnn(Surv(time, status) ~ x1 + x2, data = df, epochs = 50, loss = "cox", verbose = FALSE)
+#' mod$final_loss
 survdnn <- function(formula, data,
-  hidden = c(32L, 16L),
-  activation = "relu",
-  lr = 1e-4,
-  epochs = 300L,
-  .loss_fn = cox_loss,
-  verbose = TRUE) {
+                    hidden = c(32L, 16L),
+                    activation = "relu",
+                    lr = 1e-4,
+                    epochs = 300L,
+                    loss = c("cox", "cox_l2", "aft", "coxtime"),
+                    verbose = TRUE) {
+  stopifnot(inherits(formula, "formula"))
+  stopifnot(is.data.frame(data))
 
-stopifnot(inherits(formula, "formula"))
-stopifnot(is.data.frame(data))
-if (!is.function(.loss_fn)) stop("`.loss_fn` must be a function.")
+  loss <- match.arg(loss)
+  loss_fn <- switch(loss,
+                    cox     = cox_loss,
+                    cox_l2  = function(pred, true) cox_l2_loss(pred, true, lambda = 1e-3),
+                    aft     = aft_loss,
+                    coxtime = coxtime_loss)
 
-# Ensure Surv is available during formula evaluation
-environment(formula) <- list2env(list(Surv = survival::Surv), parent = environment(formula))
+  environment(formula) <- list2env(list(Surv = survival::Surv), parent = environment(formula))
 
-# Build model frame and extract features
-mf <- model.frame(formula, data)
-y <- model.response(mf)
-x <- model.matrix(attr(mf, "terms"), data = mf)[, -1, drop = FALSE]
+  mf <- model.frame(formula, data)
+  y <- model.response(mf)
+  x <- model.matrix(attr(mf, "terms"), data = mf)[, -1, drop = FALSE]
+  time <- y[, "time"]
+  status <- y[, "status"]
+  x_scaled <- scale(x)
 
-# Extract time and status
-time <- y[, "time"]
-status <- y[, "status"]
+  x_tensor <- if (loss == "coxtime") {
+    torch::torch_tensor(cbind(time, x_scaled), dtype = torch::torch_float())
+  } else {
+    torch::torch_tensor(x_scaled, dtype = torch::torch_float())
+  }
 
-# Standardize predictors
-x_scaled <- scale(x)
+  y_tensor <- torch::torch_tensor(cbind(time, status), dtype = torch::torch_float())
+  net <- build_dnn(ncol(x_tensor), hidden, activation)
+  optimizer <- torch::optim_adam(net$parameters, lr = lr, weight_decay = 1e-4)
 
-# Convert to torch tensors
-x_tensor <- torch::torch_tensor(as.matrix(x_scaled), dtype = torch::torch_float())
-y_tensor <- torch::torch_tensor(as.matrix(cbind(time, status)), dtype = torch::torch_float())
+  loss_history <- numeric(epochs)
+  for (epoch in 1:epochs) {
+    net$train()
+    optimizer$zero_grad()
+    pred <- net(x_tensor)
+    loss_val <- loss_fn(pred, y_tensor)
+    loss_val$backward()
+    optimizer$step()
+    loss_history[epoch] <- loss_val$item()
+    if (verbose && epoch %% 50 == 0)
+      cat(sprintf("Epoch %d - Loss: %.6f\n", epoch, loss_val$item()))
+  }
 
-# Build model and optimizer
-net <- build_dnn(ncol(x_tensor), hidden, activation)
-optimizer <- torch::optim_adam(net$parameters, lr = lr, weight_decay = 1e-4)
-
-# Train the model
-loss_history <- numeric(epochs)
-for (epoch in 1:epochs) {
-net$train()
-optimizer$zero_grad()
-pred <- net(x_tensor)
-loss <- .loss_fn(pred, y_tensor)
-loss$backward()
-optimizer$step()
-
-loss_history[epoch] <- loss$item()
-
-if (verbose && epoch %% 50 == 0) {
-cat(sprintf("Epoch %d - Loss: %.6f\n", epoch, loss$item()))
-}
-}
-
-# Return fitted survdnn object
-structure(list(
-model = net,
-formula = formula,
-data = data,
-xnames = colnames(x),
-x_center = attr(x_scaled, "scaled:center"),
-x_scale = attr(x_scaled, "scaled:scale"),
-loss = tail(loss_history, 1),
-loss_history = loss_history,
-activation = activation,
-hidden = hidden,
-lr = lr,
-epochs = epochs,
-.loss_fn = .loss_fn,
-loss_name = deparse(substitute(.loss_fn))
-), class = "survdnn")
+  structure(list(
+    model = net,
+    formula = formula,
+    data = data,
+    xnames = colnames(x),
+    x_center = attr(x_scaled, "scaled:center"),
+    x_scale = attr(x_scaled, "scaled:scale"),
+    loss_history = loss_history,
+    final_loss = tail(loss_history, 1),
+    loss = loss,
+    activation = activation,
+    hidden = hidden,
+    lr = lr,
+    epochs = epochs
+  ), class = "survdnn")
 }
