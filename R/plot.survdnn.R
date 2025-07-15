@@ -24,75 +24,73 @@
 #' set.seed(42)
 #' mod <- survdnn(Surv(time, status) ~ age + karno + celltype, data = veteran,
 #'                hidden = c(16, 8), epochs = 100, verbose = FALSE)
-#'
-#' # Default plot (on training data)
-#' plot(mod)
-#'
-#' # Plot full curves with color grouping
 #' plot(mod, group_by = "celltype", times = 1:300)
-#'
-#' # Plot group-wise mean survival curves only
-#' plot(mod, group_by = "celltype", times = 1:300, plot_mean_only = TRUE)
 plot.survdnn <- function(x, newdata = NULL, times = 1:365,
-  group_by = NULL,
-  plot_mean_only = FALSE,
-  add_mean = TRUE,
-  alpha = 0.3,
-  mean_lwd = 1.3,
-  mean_lty = 1,
-  ...) {
-stopifnot(inherits(x, "survdnn"))
-if (is.null(newdata)) newdata <- x$data
+                         group_by = NULL,
+                         plot_mean_only = FALSE,
+                         add_mean = TRUE,
+                         alpha = 0.3,
+                         mean_lwd = 1.3,
+                         mean_lty = 1,
+                         ...) {
+  stopifnot(inherits(x, "survdnn"))
+  if (is.null(newdata)) newdata <- x$data
 
-# compute survival probabilities
-survmat <- predict(x, newdata = newdata, times = times, type = "survival")
-df_surv <- as.data.frame(survmat)
-df_surv$id <- seq_len(nrow(df_surv))
+  # compute survival probabilities
+  survmat <- predict(x, newdata = newdata, times = times, type = "survival")
+  df_surv <- as.data.frame(survmat)
+  df_surv$id <- seq_len(nrow(df_surv))
 
-# reshape to long format
-df_long <- df_surv |>
-  tidyr::pivot_longer(
+  # reshape to long format
+  df_long <- tidyr::pivot_longer(
+    df_surv,
     cols = -id,
     names_to = "time_label",
     values_to = "surv"
   )
 
-df_long$time <- as.numeric(gsub("t=", "", df_long$time_label))
+  # clean up time labels
+  df_long$time <- as.numeric(gsub("t=", "", df_long$time_label))
 
-# add group variable if specified
-if (!is.null(group_by)) {
-  df_long$group <- rep(newdata[[group_by]], each = length(times))
-} else {
-df_long$group <- "all"
-}
+  # group handling
+  if (!is.null(group_by)) {
+    if (!group_by %in% names(newdata)) {
+      stop("Column '", group_by, "' not found in newdata.")
+    }
+    df_long$group <- rep(newdata[[group_by]], each = length(times))
+  } else {
+    df_long$group <- "all"
+  }
 
-# build the plot
-p <- ggplot(df_long, aes(x = time, y = surv, group = id, color = group))
+  # base ggplot
+  p <- ggplot(df_long, aes(x = time, y = surv, group = id, color = group))
 
-if (!plot_mean_only) {
-p <- p + geom_line(alpha = alpha, linewidth = 0.7)
-}
+  # plot individual curves
+  if (!plot_mean_only) {
+    p <- p + geom_line(alpha = alpha, linewidth = 0.7)
+  }
 
-if (add_mean || plot_mean_only) {
-df_mean <- df_long |>
-dplyr::group_by(group, time) |>
-dplyr::summarise(mean_surv = mean(surv, na.rm = TRUE), .groups = "drop")
+  # plot mean curves
+  if (add_mean || plot_mean_only) {
+    df_mean <- dplyr::group_by(df_long, group, time) |>
+      dplyr::summarise(mean_surv = mean(surv, na.rm = TRUE), .groups = "drop")
 
-p <- p + geom_line(data = df_mean,
-mapping = aes(x = time, y = mean_surv, color = group),
-linewidth = mean_lwd,
-linetype = mean_lty,
-inherit.aes = FALSE)
-}
+    p <- p + geom_line(data = df_mean,
+                       mapping = aes(x = time, y = mean_surv, color = group),
+                       linewidth = mean_lwd,
+                       linetype = mean_lty,
+                       inherit.aes = FALSE)
+  }
 
-p <- p +
-  theme_minimal() +
-  labs(
-    title = "Predicted Survival Curves",
-    x = "Time",
-    y = "Survival Probability",
-    color = if (!is.null(group_by)) group_by else NULL
-  )
+  # finalize
+  p <- p +
+    theme_minimal() +
+    labs(
+      title = "Predicted Survival Curves",
+      x = "Time",
+      y = "Survival Probability",
+      color = if (!is.null(group_by)) group_by else NULL
+    )
 
-return(p)
+  return(p)
 }
