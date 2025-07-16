@@ -11,7 +11,7 @@ Description: Provides deep learning models for right-censored survival data usin
     Includes a formula-based interface, built-in support for cross-validation, hyperparameter tuning, survival curve plotting, 
     and comprehensive evaluation metrics (C-index, Brier score, and integrated Brier score (IBS). 
     The loss function interface is modular and extensible for custom research needs.
-License: MIT + file LICENSE.md
+License: MIT + file LICENSE
 Encoding: UTF-8
 LazyData: true
 Depends: 
