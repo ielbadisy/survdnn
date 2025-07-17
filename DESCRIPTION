@@ -1,16 +1,16 @@
 Package: survdnn
 Title: Deep Neural Networks for Survival Analysis Using 'torch'
-Version: 0.5.0
+Version: 0.6.0
 Authors@R: 
     person(given = "Imad", 
            family = "EL BADISY", 
            email = "elbadisyimad@gmail.com", 
            role = c("aut", "cre"))
 Description: Provides deep learning models for right-censored survival data using the 'torch' backend. 
-    Supports multiple loss functions including Cox partial likelihood, ranking loss, and accelerated failure time (AFT) loss. 
-    Includes a formula-based interface, built-in support for cross-validation, hyperparameter tuning, survival curve plotting, 
-    and comprehensive evaluation metrics (C-index, Brier score, and integrated Brier score (IBS). 
-    The loss function interface is modular and extensible for custom research needs.
+    Supports multiple loss functions, including Cox partial likelihood, L2-penalized Cox, time-dependent Cox (coxtime), 
+    and accelerated failure time (AFT) loss. Offers a formula-based interface, built-in support for cross-validation, 
+    hyperparameter tuning, survival curve plotting, and comprehensive evaluation metrics such as the C-index, Brier score, 
+    and integrated Brier score (IBS).
 License: MIT + file LICENSE
 Encoding: UTF-8
 LazyData: true
