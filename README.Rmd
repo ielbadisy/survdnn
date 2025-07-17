@@ -47,12 +47,13 @@ remotes::install_github("ielbadisy/survdnn")
 
 ## Quick Example
 
-```{r}
+```{r, message = FALSE, warning = FALSE}
 library(survdnn)
 library(survival, quietly = TRUE)
 library(ggplot2)
 
 veteran <- survival::veteran
+
 mod <- survdnn(
   Surv(time, status) ~ age + karno + celltype,
   data = veteran,
@@ -61,8 +62,13 @@ mod <- survdnn(
   loss = "cox",
   verbose = TRUE
 )
+```
 
+```{r}
 summary(mod)
+```
+
+```{r}
 plot(mod, group_by = "celltype", times = 1:300)
 ```
 
@@ -77,23 +83,28 @@ mod1 <- survdnn(
   data = veteran,
   loss = "cox",
   epochs = 200
-)
+  )
+```
 
+```{r}
 # Accelerated Failure Time
 mod2 <- survdnn(
   Surv(time, status) ~ age + karno,
   data = veteran,
   loss = "aft",
   epochs = 300
-)
+  )
+```
 
+
+```{r}
 # Deep time-dependent Cox (Coxtime)
 mod3 <- survdnn(
   Surv(time, status) ~ age + karno,
   data = veteran,
   loss = "coxtime",
   epochs = 100
-)
+  )
 ```
 
 ---
@@ -125,7 +136,7 @@ grid <- list(
   activation = c("relu"),
   epochs     = c(100, 300),
   loss       = c("cox", "aft", "coxtime")
-)
+  )
 
 tune_res <- tune_survdnn(
   formula = Surv(time, status) ~ age + karno + celltype,
@@ -136,7 +147,7 @@ tune_res <- tune_survdnn(
   folds = 3,
   refit = FALSE,
   return = "summary"
-)
+  )
 print(tune_res)
 ```
 
@@ -146,6 +157,10 @@ print(tune_res)
 
 ```{r}
 plot(mod1, group_by = "celltype", times = 1:300)
+```
+
+
+```{r}
 plot(mod1, group_by = "celltype", times = 1:300, plot_mean_only = TRUE)
 ```
 
