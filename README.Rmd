@@ -76,7 +76,7 @@ mod1 <- survdnn(
   Surv(time, status) ~ age + karno,
   data = veteran,
   loss = "cox",
-  epochs = 100
+  epochs = 200
 )
 
 # Accelerated Failure Time
@@ -84,7 +84,7 @@ mod2 <- survdnn(
   Surv(time, status) ~ age + karno,
   data = veteran,
   loss = "aft",
-  epochs = 100
+  epochs = 300
 )
 
 # Deep time-dependent Cox (Coxtime)
@@ -109,7 +109,7 @@ cv_results <- cv_survdnn(
   folds = 3,
   hidden = c(16, 8),
   loss = "cox",
-  epochs = 100
+  epochs = 300
 )
 print(cv_results)
 ```
@@ -123,8 +123,8 @@ grid <- list(
   hidden     = list(c(16), c(32, 16)),
   lr         = c(1e-3),
   activation = c("relu"),
-  epochs     = c(100),
-  loss       = c("cox", "aft")
+  epochs     = c(100, 300),
+  loss       = c("cox", "aft", "coxtime")
 )
 
 tune_res <- tune_survdnn(
