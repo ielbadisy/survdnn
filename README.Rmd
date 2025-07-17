@@ -21,22 +21,21 @@ output: github_document
 - Modular neural architectures: configurable layers, activations, and losses
 - Built-in survival loss functions:
   - `"cox"`: Cox partial likelihood
-  - `"aft"`: Accelerated Failure Time
   - `"cox_l2"`: penalized Cox
+  - `"aft"`: Accelerated Failure Time
   - `"coxtime"`: deep time-dependent Cox (like DeepSurv)
 - Evaluation: C-index, Brier score, Integrated Brier Score (IBS)
 - Model selection with `cv_survdnn()` and `tune_survdnn()`
 - Prediction of survival curves via `predict()` and `plot()`
-- GPU compatible (coming soon)
 
 ---
 
 ## Installation
 
-```{r}
+```{r, eval = FALSE}
 # Install from GitHub
 # install.packages("remotes")
-#remotes::install_github("ielbadisy/survdnn")
+remotes::install_github("ielbadisy/survdnn")
 
 # Or clone and install locally
 # git clone https://github.com/ielbadisy/survdnn.git
@@ -50,16 +49,15 @@ output: github_document
 
 ```{r}
 library(survdnn)
-library(survival)
+library(survival, quietly = TRUE)
 library(ggplot2)
 
-data(veteran, package = "survival")
-
+veteran <- survival::veteran
 mod <- survdnn(
   Surv(time, status) ~ age + karno + celltype,
   data = veteran,
   hidden = c(32, 16),
-  epochs = 100,
+  epochs = 300,
   loss = "cox",
   verbose = TRUE
 )

@@ -28,13 +28,12 @@ hyperparameter tuning.
   losses
 - Built-in survival loss functions:
   - `"cox"`: Cox partial likelihood
-  - `"aft"`: Accelerated Failure Time
   - `"cox_l2"`: penalized Cox
+  - `"aft"`: Accelerated Failure Time
   - `"coxtime"`: deep time-dependent Cox (like DeepSurv)
 - Evaluation: C-index, Brier score, Integrated Brier Score (IBS)
 - Model selection with `cv_survdnn()` and `tune_survdnn()`
 - Prediction of survival curves via `predict()` and `plot()`
-- GPU compatible (coming soon)
 
 ------------------------------------------------------------------------
 
@@ -43,7 +42,7 @@ hyperparameter tuning.
 ``` r
 # Install from GitHub
 # install.packages("remotes")
-#remotes::install_github("ielbadisy/survdnn")
+remotes::install_github("ielbadisy/survdnn")
 
 # Or clone and install locally
 # git clone https://github.com/ielbadisy/survdnn.git
@@ -57,7 +56,7 @@ hyperparameter tuning.
 
 ``` r
 library(survdnn)
-library(survival)
+library(survival, quietly = TRUE)
 ```
 
     ## 
@@ -70,24 +69,23 @@ library(survival)
 ``` r
 library(ggplot2)
 
-data(veteran, package = "survival")
-```
-
-    ## Warning in data(veteran, package = "survival"): data set 'veteran' not found
-
-``` r
+veteran <- survival::veteran
 mod <- survdnn(
   Surv(time, status) ~ age + karno + celltype,
   data = veteran,
   hidden = c(32, 16),
-  epochs = 100,
+  epochs = 300,
   loss = "cox",
   verbose = TRUE
 )
 ```
 
-    ## Epoch 50 - Loss: 3.985620
-    ## Epoch 100 - Loss: 3.923990
+    ## Epoch 50 - Loss: 3.977486
+    ## Epoch 100 - Loss: 3.964091
+    ## Epoch 150 - Loss: 3.884193
+    ## Epoch 200 - Loss: 3.901107
+    ## Epoch 250 - Loss: 3.903059
+    ## Epoch 300 - Loss: 3.834641
 
 ``` r
 summary(mod)
@@ -100,16 +98,16 @@ summary(mod)
     ## 
     ## Formula:
     ##   Surv(time, status) ~ age + karno + celltype
-    ## <environment: 0x55742a26de10>
+    ## <environment: 0x583ba51e52f8>
     ## 
     ## Model architecture:
     ##   Hidden layers:  32 : 16 
     ##   Activation:  relu 
     ##   Dropout:  0.3 
-    ##   Final loss:  3.923990 
+    ##   Final loss:  3.834641 
     ## 
     ## Training summary:
-    ##   Epochs:  100 
+    ##   Epochs:  300 
     ##   Learning rate:  1e-04 
     ##   Loss function:  cox 
     ## 
@@ -139,8 +137,8 @@ mod1 <- survdnn(
 )
 ```
 
-    ## Epoch 50 - Loss: 3.912308
-    ## Epoch 100 - Loss: 3.932914
+    ## Epoch 50 - Loss: 3.881097
+    ## Epoch 100 - Loss: 3.943323
 
 ``` r
 # Accelerated Failure Time
@@ -152,8 +150,8 @@ mod2 <- survdnn(
 )
 ```
 
-    ## Epoch 50 - Loss: 12.996538
-    ## Epoch 100 - Loss: 12.497688
+    ## Epoch 50 - Loss: 17.080214
+    ## Epoch 100 - Loss: 16.353647
 
 ``` r
 # Deep time-dependent Cox (Coxtime)
@@ -165,8 +163,8 @@ mod3 <- survdnn(
 )
 ```
 
-    ## Epoch 50 - Loss: 4.905575
-    ## Epoch 100 - Loss: 4.867847
+    ## Epoch 50 - Loss: 4.919549
+    ## Epoch 100 - Loss: 4.968542
 
 ------------------------------------------------------------------------
 
@@ -185,12 +183,12 @@ cv_results <- cv_survdnn(
 )
 ```
 
-    ## Epoch 50 - Loss: 3.653896
-    ## Epoch 100 - Loss: 3.561917
-    ## Epoch 50 - Loss: 3.470510
-    ## Epoch 100 - Loss: 3.488897
-    ## Epoch 50 - Loss: 3.684512
-    ## Epoch 100 - Loss: 3.586723
+    ## Epoch 50 - Loss: 3.685887
+    ## Epoch 100 - Loss: 3.643225
+    ## Epoch 50 - Loss: 3.601465
+    ## Epoch 100 - Loss: 3.593301
+    ## Epoch 50 - Loss: 3.640470
+    ## Epoch 100 - Loss: 3.637941
 
 ``` r
 print(cv_results)
@@ -199,12 +197,12 @@ print(cv_results)
     ## # A tibble: 6 × 3
     ##    fold metric value
     ##   <int> <chr>  <dbl>
-    ## 1     1 cindex 0.482
-    ## 2     1 ibs    0.245
-    ## 3     2 cindex 0.714
-    ## 4     2 ibs    0.230
-    ## 5     3 cindex 0.618
-    ## 6     3 ibs    0.213
+    ## 1     1 cindex 0.451
+    ## 2     1 ibs    0.256
+    ## 3     2 cindex 0.672
+    ## 4     2 ibs    0.202
+    ## 5     3 cindex 0.546
+    ## 6     3 ibs    0.224
 
 ------------------------------------------------------------------------
 
@@ -231,30 +229,30 @@ tune_res <- tune_survdnn(
 )
 ```
 
-    ## Epoch 50 - Loss: 14.174407
-    ## Epoch 100 - Loss: 9.958608
-    ## Epoch 50 - Loss: 15.507205
-    ## Epoch 100 - Loss: 12.294044
-    ## Epoch 50 - Loss: 17.522932
-    ## Epoch 100 - Loss: 13.783732
-    ## Epoch 50 - Loss: 3.426694
-    ## Epoch 100 - Loss: 3.342683
-    ## Epoch 50 - Loss: 3.485209
-    ## Epoch 100 - Loss: 3.469287
-    ## Epoch 50 - Loss: 3.434398
-    ## Epoch 100 - Loss: 3.350627
-    ## Epoch 50 - Loss: 15.841441
-    ## Epoch 100 - Loss: 12.313823
-    ## Epoch 50 - Loss: 14.313324
-    ## Epoch 100 - Loss: 10.436322
-    ## Epoch 50 - Loss: 12.376007
-    ## Epoch 100 - Loss: 9.313435
-    ## Epoch 50 - Loss: 3.329328
-    ## Epoch 100 - Loss: 3.235596
-    ## Epoch 50 - Loss: 3.398006
-    ## Epoch 100 - Loss: 3.433734
-    ## Epoch 50 - Loss: 3.410466
-    ## Epoch 100 - Loss: 3.352182
+    ## Epoch 50 - Loss: 14.573132
+    ## Epoch 100 - Loss: 11.292369
+    ## Epoch 50 - Loss: 15.591273
+    ## Epoch 100 - Loss: 12.278717
+    ## Epoch 50 - Loss: 16.437584
+    ## Epoch 100 - Loss: 13.317498
+    ## Epoch 50 - Loss: 3.540871
+    ## Epoch 100 - Loss: 3.457459
+    ## Epoch 50 - Loss: 3.485572
+    ## Epoch 100 - Loss: 3.389402
+    ## Epoch 50 - Loss: 3.439479
+    ## Epoch 100 - Loss: 3.356264
+    ## Epoch 50 - Loss: 14.920561
+    ## Epoch 100 - Loss: 12.463149
+    ## Epoch 50 - Loss: 14.736887
+    ## Epoch 100 - Loss: 11.081664
+    ## Epoch 50 - Loss: 11.418893
+    ## Epoch 100 - Loss: 8.095353
+    ## Epoch 50 - Loss: 3.291874
+    ## Epoch 100 - Loss: 3.256801
+    ## Epoch 50 - Loss: 3.439318
+    ## Epoch 100 - Loss: 3.387714
+    ## Epoch 50 - Loss: 3.438096
+    ## Epoch 100 - Loss: 3.354662
 
 ``` r
 print(tune_res)
@@ -263,10 +261,10 @@ print(tune_res)
     ## # A tibble: 4 × 8
     ##   hidden       lr activation epochs loss  metric  mean     sd
     ##   <list>    <dbl> <chr>       <dbl> <chr> <chr>  <dbl>  <dbl>
-    ## 1 <dbl [2]> 0.001 relu          100 cox   cindex 0.736 0.0293
-    ## 2 <dbl [1]> 0.001 relu          100 cox   cindex 0.727 0.0665
-    ## 3 <dbl [2]> 0.001 relu          100 aft   cindex 0.686 0.0412
-    ## 4 <dbl [1]> 0.001 relu          100 aft   cindex 0.563 0.135
+    ## 1 <dbl [1]> 0.001 relu          100 cox   cindex 0.741 0.0561
+    ## 2 <dbl [2]> 0.001 relu          100 cox   cindex 0.741 0.0283
+    ## 3 <dbl [2]> 0.001 relu          100 aft   cindex 0.677 0.0131
+    ## 4 <dbl [1]> 0.001 relu          100 aft   cindex 0.574 0.0980
 
 ------------------------------------------------------------------------
 
