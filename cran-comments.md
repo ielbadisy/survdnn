@@ -1,6 +1,8 @@
 
 ## R CMD check results
-There were no ERRORs, WARNINGs, or NOTEs.
+0 ERRORs, 0 WARNINGs, 1 NOTEs.
+
+- “IBS” and “coxtime” are technical terms referring to integrated Brier score and a time-dependent Cox loss function, respectively.
 
 ## Test environments
 - Local: Ubuntu 22.04, R 4.4.0
