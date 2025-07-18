@@ -187,6 +187,15 @@ devtools::test()
 
 ---
 
+
+## Availability 
+
+The `survdnn` R package is available at: https://github.com/ielbadisy/survdnn  
+A stable version has been archived at Zenodo: https://doi.org/10.5281/zenodo.XXXXXXX  
+The package is currently under submission to CRAN.
+
+---
+
 ## Contributions
 
 Contributions, issues, and feature requests are welcome.

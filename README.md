@@ -71,12 +71,12 @@ mod <- survdnn(
 )
 ```
 
-    ## Epoch 50 - Loss: 3.977111
-    ## Epoch 100 - Loss: 3.931406
-    ## Epoch 150 - Loss: 3.975285
-    ## Epoch 200 - Loss: 3.895568
-    ## Epoch 250 - Loss: 3.903689
-    ## Epoch 300 - Loss: 3.893920
+    ## Epoch 50 - Loss: 4.017306
+    ## Epoch 100 - Loss: 3.976948
+    ## Epoch 150 - Loss: 3.904139
+    ## Epoch 200 - Loss: 3.885131
+    ## Epoch 250 - Loss: 3.860893
+    ## Epoch 300 - Loss: 3.834231
 
 ``` r
 summary(mod)
@@ -84,18 +84,18 @@ summary(mod)
 
     ## 
 
-    ## ── Summary of survdnn model ──────────────────────────────────────────────────────────────────
+    ## ── Summary of survdnn model ────────────────────────────────
 
     ## 
     ## Formula:
     ##   Surv(time, status) ~ age + karno + celltype
-    ## <environment: 0x60123e5236b0>
+    ## <environment: 0x601199a5d900>
     ## 
     ## Model architecture:
     ##   Hidden layers:  32 : 16 
     ##   Activation:  relu 
     ##   Dropout:  0.3 
-    ##   Final loss:  3.893920 
+    ##   Final loss:  3.834231 
     ## 
     ## Training summary:
     ##   Epochs:  300 
@@ -128,10 +128,10 @@ mod1 <- survdnn(
   )
 ```
 
-    ## Epoch 50 - Loss: 3.960144
-    ## Epoch 100 - Loss: 3.932992
-    ## Epoch 150 - Loss: 3.896803
-    ## Epoch 200 - Loss: 3.837747
+    ## Epoch 50 - Loss: 3.911210
+    ## Epoch 100 - Loss: 3.883241
+    ## Epoch 150 - Loss: 3.874349
+    ## Epoch 200 - Loss: 3.812633
 
 ``` r
 # Accelerated Failure Time
@@ -143,12 +143,12 @@ mod2 <- survdnn(
   )
 ```
 
-    ## Epoch 50 - Loss: 17.780495
-    ## Epoch 100 - Loss: 17.336510
-    ## Epoch 150 - Loss: 17.183359
-    ## Epoch 200 - Loss: 16.611074
-    ## Epoch 250 - Loss: 16.427694
-    ## Epoch 300 - Loss: 15.980856
+    ## Epoch 50 - Loss: 17.005127
+    ## Epoch 100 - Loss: 16.583397
+    ## Epoch 150 - Loss: 15.967889
+    ## Epoch 200 - Loss: 15.324314
+    ## Epoch 250 - Loss: 15.524298
+    ## Epoch 300 - Loss: 14.680712
 
 ``` r
 # Deep time-dependent Cox (Coxtime)
@@ -160,8 +160,8 @@ mod3 <- survdnn(
   )
 ```
 
-    ## Epoch 50 - Loss: 5.174003
-    ## Epoch 100 - Loss: 5.312660
+    ## Epoch 50 - Loss: 4.894759
+    ## Epoch 100 - Loss: 4.836847
 
 ------------------------------------------------------------------------
 
@@ -180,24 +180,24 @@ cv_results <- cv_survdnn(
 )
 ```
 
-    ## Epoch 50 - Loss: 3.758594
-    ## Epoch 100 - Loss: 3.658200
-    ## Epoch 150 - Loss: 3.685151
-    ## Epoch 200 - Loss: 3.635872
-    ## Epoch 250 - Loss: 3.623964
-    ## Epoch 300 - Loss: 3.580174
-    ## Epoch 50 - Loss: 3.616315
-    ## Epoch 100 - Loss: 3.597428
-    ## Epoch 150 - Loss: 3.625255
-    ## Epoch 200 - Loss: 3.597746
-    ## Epoch 250 - Loss: 3.548657
-    ## Epoch 300 - Loss: 3.519047
-    ## Epoch 50 - Loss: 3.597470
-    ## Epoch 100 - Loss: 3.568670
-    ## Epoch 150 - Loss: 3.458062
-    ## Epoch 200 - Loss: 3.579578
-    ## Epoch 250 - Loss: 3.479793
-    ## Epoch 300 - Loss: 3.500006
+    ## Epoch 50 - Loss: 3.644217
+    ## Epoch 100 - Loss: 3.637395
+    ## Epoch 150 - Loss: 3.620273
+    ## Epoch 200 - Loss: 3.581555
+    ## Epoch 250 - Loss: 3.479215
+    ## Epoch 300 - Loss: 3.569111
+    ## Epoch 50 - Loss: 3.616415
+    ## Epoch 100 - Loss: 3.533522
+    ## Epoch 150 - Loss: 3.551425
+    ## Epoch 200 - Loss: 3.595720
+    ## Epoch 250 - Loss: 3.567378
+    ## Epoch 300 - Loss: 3.519440
+    ## Epoch 50 - Loss: 3.581872
+    ## Epoch 100 - Loss: 3.628656
+    ## Epoch 150 - Loss: 3.599951
+    ## Epoch 200 - Loss: 3.506192
+    ## Epoch 250 - Loss: 3.621629
+    ## Epoch 300 - Loss: 3.483367
 
 ``` r
 print(cv_results)
@@ -206,12 +206,12 @@ print(cv_results)
     ## # A tibble: 6 × 3
     ##    fold metric value
     ##   <int> <chr>  <dbl>
-    ## 1     1 cindex 0.367
-    ## 2     1 ibs    0.260
-    ## 3     2 cindex 0.702
-    ## 4     2 ibs    0.199
-    ## 5     3 cindex 0.700
-    ## 6     3 ibs    0.195
+    ## 1     1 cindex 0.631
+    ## 2     1 ibs    0.225
+    ## 3     2 cindex 0.585
+    ## 4     2 ibs    0.215
+    ## 5     3 cindex 0.665
+    ## 6     3 ibs    0.191
 
 ------------------------------------------------------------------------
 
@@ -238,170 +238,170 @@ tune_res <- tune_survdnn(
   )
 ```
 
-    ## Epoch 50 - Loss: 15.031239
-    ## Epoch 100 - Loss: 12.059148
-    ## Epoch 50 - Loss: 14.047791
-    ## Epoch 100 - Loss: 9.870238
-    ## Epoch 50 - Loss: 15.015196
-    ## Epoch 100 - Loss: 11.471657
-    ## Epoch 50 - Loss: 3.376603
-    ## Epoch 100 - Loss: 3.357517
-    ## Epoch 50 - Loss: 3.434321
-    ## Epoch 100 - Loss: 3.393324
-    ## Epoch 50 - Loss: 3.465878
-    ## Epoch 100 - Loss: 3.370239
-    ## Epoch 50 - Loss: 4.238775
-    ## Epoch 100 - Loss: 4.172030
-    ## Epoch 50 - Loss: 4.403038
-    ## Epoch 100 - Loss: 4.324567
-    ## Epoch 50 - Loss: 4.416329
-    ## Epoch 100 - Loss: 4.345415
-    ## Epoch 50 - Loss: 13.701369
-    ## Epoch 100 - Loss: 10.450718
-    ## Epoch 150 - Loss: 7.602640
-    ## Epoch 200 - Loss: 5.344359
-    ## Epoch 250 - Loss: 2.948162
-    ## Epoch 300 - Loss: 1.992957
-    ## Epoch 50 - Loss: 15.679486
-    ## Epoch 100 - Loss: 11.792761
-    ## Epoch 150 - Loss: 8.836067
-    ## Epoch 200 - Loss: 6.483096
-    ## Epoch 250 - Loss: 4.196073
-    ## Epoch 300 - Loss: 3.214763
-    ## Epoch 50 - Loss: 17.787132
-    ## Epoch 100 - Loss: 13.893139
-    ## Epoch 150 - Loss: 10.362624
-    ## Epoch 200 - Loss: 7.857927
-    ## Epoch 250 - Loss: 5.187366
-    ## Epoch 300 - Loss: 3.526726
-    ## Epoch 50 - Loss: 3.443206
-    ## Epoch 100 - Loss: 3.433463
-    ## Epoch 150 - Loss: 3.337879
-    ## Epoch 200 - Loss: 3.346363
-    ## Epoch 250 - Loss: 3.314461
-    ## Epoch 300 - Loss: 3.298452
-    ## Epoch 50 - Loss: 3.449481
-    ## Epoch 100 - Loss: 3.400246
-    ## Epoch 150 - Loss: 3.307863
-    ## Epoch 200 - Loss: 3.290303
-    ## Epoch 250 - Loss: 3.360913
-    ## Epoch 300 - Loss: 3.246186
-    ## Epoch 50 - Loss: 3.529677
-    ## Epoch 100 - Loss: 3.493235
-    ## Epoch 150 - Loss: 3.415110
-    ## Epoch 200 - Loss: 3.355523
-    ## Epoch 250 - Loss: 3.354323
-    ## Epoch 300 - Loss: 3.334403
-    ## Epoch 50 - Loss: 4.423283
-    ## Epoch 100 - Loss: 4.326978
-    ## Epoch 150 - Loss: 4.274966
-    ## Epoch 200 - Loss: 4.203520
-    ## Epoch 250 - Loss: 4.176342
-    ## Epoch 300 - Loss: 4.155508
-    ## Epoch 50 - Loss: 4.340446
-    ## Epoch 100 - Loss: 4.244659
-    ## Epoch 150 - Loss: 4.172086
-    ## Epoch 200 - Loss: 4.076862
-    ## Epoch 250 - Loss: 4.084023
-    ## Epoch 300 - Loss: 4.018843
-    ## Epoch 50 - Loss: 4.537025
-    ## Epoch 100 - Loss: 4.418490
-    ## Epoch 150 - Loss: 4.327679
-    ## Epoch 200 - Loss: 4.265956
-    ## Epoch 250 - Loss: 4.242814
-    ## Epoch 300 - Loss: 4.236832
-    ## Epoch 50 - Loss: 17.805256
-    ## Epoch 100 - Loss: 13.990833
-    ## Epoch 50 - Loss: 12.508526
-    ## Epoch 100 - Loss: 9.548292
-    ## Epoch 50 - Loss: 11.458351
-    ## Epoch 100 - Loss: 8.579316
-    ## Epoch 50 - Loss: 3.437221
-    ## Epoch 100 - Loss: 3.354287
-    ## Epoch 50 - Loss: 3.397689
-    ## Epoch 100 - Loss: 3.326006
-    ## Epoch 50 - Loss: 3.456657
-    ## Epoch 100 - Loss: 3.396078
-    ## Epoch 50 - Loss: 4.126331
-    ## Epoch 100 - Loss: 4.076169
-    ## Epoch 50 - Loss: 4.233914
-    ## Epoch 100 - Loss: 4.109847
-    ## Epoch 50 - Loss: 4.308795
-    ## Epoch 100 - Loss: 4.129897
-    ## Epoch 50 - Loss: 15.970187
-    ## Epoch 100 - Loss: 12.083906
-    ## Epoch 150 - Loss: 9.287158
-    ## Epoch 200 - Loss: 6.809984
-    ## Epoch 250 - Loss: 3.800620
-    ## Epoch 300 - Loss: 2.723067
-    ## Epoch 50 - Loss: 13.671493
-    ## Epoch 100 - Loss: 10.966175
-    ## Epoch 150 - Loss: 7.848323
-    ## Epoch 200 - Loss: 5.523075
-    ## Epoch 250 - Loss: 3.360212
-    ## Epoch 300 - Loss: 2.584748
-    ## Epoch 50 - Loss: 15.246948
-    ## Epoch 100 - Loss: 11.272776
-    ## Epoch 150 - Loss: 8.110893
-    ## Epoch 200 - Loss: 5.374218
-    ## Epoch 250 - Loss: 3.830412
-    ## Epoch 300 - Loss: 3.834162
-    ## Epoch 50 - Loss: 3.345079
-    ## Epoch 100 - Loss: 3.205394
-    ## Epoch 150 - Loss: 3.264040
-    ## Epoch 200 - Loss: 3.160997
-    ## Epoch 250 - Loss: 3.164060
-    ## Epoch 300 - Loss: 3.035522
-    ## Epoch 50 - Loss: 3.425659
-    ## Epoch 100 - Loss: 3.414891
-    ## Epoch 150 - Loss: 3.286443
-    ## Epoch 200 - Loss: 3.291998
-    ## Epoch 250 - Loss: 3.266540
-    ## Epoch 300 - Loss: 3.289023
-    ## Epoch 50 - Loss: 3.376144
-    ## Epoch 100 - Loss: 3.346564
-    ## Epoch 150 - Loss: 3.312074
-    ## Epoch 200 - Loss: 3.289537
-    ## Epoch 250 - Loss: 3.212528
-    ## Epoch 300 - Loss: 3.266787
-    ## Epoch 50 - Loss: 4.174260
-    ## Epoch 100 - Loss: 4.140068
-    ## Epoch 150 - Loss: 4.016115
-    ## Epoch 200 - Loss: 4.087175
-    ## Epoch 250 - Loss: 4.005622
-    ## Epoch 300 - Loss: 3.987650
-    ## Epoch 50 - Loss: 4.430435
-    ## Epoch 100 - Loss: 4.237810
-    ## Epoch 150 - Loss: 4.187978
-    ## Epoch 200 - Loss: 4.173541
-    ## Epoch 250 - Loss: 4.116416
-    ## Epoch 300 - Loss: 4.071148
-    ## Epoch 50 - Loss: 4.222456
-    ## Epoch 100 - Loss: 4.134351
-    ## Epoch 150 - Loss: 4.103641
-    ## Epoch 200 - Loss: 4.079398
-    ## Epoch 250 - Loss: 4.105011
-    ## Epoch 300 - Loss: 4.047970
+    ## Epoch 50 - Loss: 14.727397
+    ## Epoch 100 - Loss: 11.155166
+    ## Epoch 50 - Loss: 12.910063
+    ## Epoch 100 - Loss: 9.430183
+    ## Epoch 50 - Loss: 13.047706
+    ## Epoch 100 - Loss: 10.300708
+    ## Epoch 50 - Loss: 3.505261
+    ## Epoch 100 - Loss: 3.368402
+    ## Epoch 50 - Loss: 3.478866
+    ## Epoch 100 - Loss: 3.420742
+    ## Epoch 50 - Loss: 3.475290
+    ## Epoch 100 - Loss: 3.459158
+    ## Epoch 50 - Loss: 4.202677
+    ## Epoch 100 - Loss: 4.167446
+    ## Epoch 50 - Loss: 4.420293
+    ## Epoch 100 - Loss: 4.350584
+    ## Epoch 50 - Loss: 4.417453
+    ## Epoch 100 - Loss: 4.304501
+    ## Epoch 50 - Loss: 14.541389
+    ## Epoch 100 - Loss: 10.945264
+    ## Epoch 150 - Loss: 8.473359
+    ## Epoch 200 - Loss: 5.348104
+    ## Epoch 250 - Loss: 4.317372
+    ## Epoch 300 - Loss: 3.172563
+    ## Epoch 50 - Loss: 10.939583
+    ## Epoch 100 - Loss: 7.925574
+    ## Epoch 150 - Loss: 5.244921
+    ## Epoch 200 - Loss: 3.448621
+    ## Epoch 250 - Loss: 2.475841
+    ## Epoch 300 - Loss: 1.948184
+    ## Epoch 50 - Loss: 15.980975
+    ## Epoch 100 - Loss: 12.818171
+    ## Epoch 150 - Loss: 9.496651
+    ## Epoch 200 - Loss: 6.914639
+    ## Epoch 250 - Loss: 3.792582
+    ## Epoch 300 - Loss: 3.371604
+    ## Epoch 50 - Loss: 3.372404
+    ## Epoch 100 - Loss: 3.362326
+    ## Epoch 150 - Loss: 3.386676
+    ## Epoch 200 - Loss: 3.335338
+    ## Epoch 250 - Loss: 3.221668
+    ## Epoch 300 - Loss: 3.375111
+    ## Epoch 50 - Loss: 3.388513
+    ## Epoch 100 - Loss: 3.313547
+    ## Epoch 150 - Loss: 3.302353
+    ## Epoch 200 - Loss: 3.282830
+    ## Epoch 250 - Loss: 3.273268
+    ## Epoch 300 - Loss: 3.289845
+    ## Epoch 50 - Loss: 3.459574
+    ## Epoch 100 - Loss: 3.397954
+    ## Epoch 150 - Loss: 3.356992
+    ## Epoch 200 - Loss: 3.395827
+    ## Epoch 250 - Loss: 3.295613
+    ## Epoch 300 - Loss: 3.381113
+    ## Epoch 50 - Loss: 4.379249
+    ## Epoch 100 - Loss: 4.278788
+    ## Epoch 150 - Loss: 4.234133
+    ## Epoch 200 - Loss: 4.236159
+    ## Epoch 250 - Loss: 4.138520
+    ## Epoch 300 - Loss: 4.119393
+    ## Epoch 50 - Loss: 4.571877
+    ## Epoch 100 - Loss: 4.436663
+    ## Epoch 150 - Loss: 4.330639
+    ## Epoch 200 - Loss: 4.276153
+    ## Epoch 250 - Loss: 4.215656
+    ## Epoch 300 - Loss: 4.166717
+    ## Epoch 50 - Loss: 4.413413
+    ## Epoch 100 - Loss: 4.376058
+    ## Epoch 150 - Loss: 4.226744
+    ## Epoch 200 - Loss: 4.158085
+    ## Epoch 250 - Loss: 4.117296
+    ## Epoch 300 - Loss: 4.089604
+    ## Epoch 50 - Loss: 16.398582
+    ## Epoch 100 - Loss: 12.791593
+    ## Epoch 50 - Loss: 13.004353
+    ## Epoch 100 - Loss: 9.463613
+    ## Epoch 50 - Loss: 14.800050
+    ## Epoch 100 - Loss: 12.186926
+    ## Epoch 50 - Loss: 3.356088
+    ## Epoch 100 - Loss: 3.246735
+    ## Epoch 50 - Loss: 3.427070
+    ## Epoch 100 - Loss: 3.348615
+    ## Epoch 50 - Loss: 3.394627
+    ## Epoch 100 - Loss: 3.346736
+    ## Epoch 50 - Loss: 4.202281
+    ## Epoch 100 - Loss: 4.121673
+    ## Epoch 50 - Loss: 4.240664
+    ## Epoch 100 - Loss: 4.142388
+    ## Epoch 50 - Loss: 4.199209
+    ## Epoch 100 - Loss: 4.113322
+    ## Epoch 50 - Loss: 13.827906
+    ## Epoch 100 - Loss: 10.583267
+    ## Epoch 150 - Loss: 7.797911
+    ## Epoch 200 - Loss: 5.747877
+    ## Epoch 250 - Loss: 3.828708
+    ## Epoch 300 - Loss: 2.490148
+    ## Epoch 50 - Loss: 12.812648
+    ## Epoch 100 - Loss: 9.808009
+    ## Epoch 150 - Loss: 7.727947
+    ## Epoch 200 - Loss: 4.772999
+    ## Epoch 250 - Loss: 2.606256
+    ## Epoch 300 - Loss: 2.158249
+    ## Epoch 50 - Loss: 16.199535
+    ## Epoch 100 - Loss: 13.163276
+    ## Epoch 150 - Loss: 9.736091
+    ## Epoch 200 - Loss: 7.939382
+    ## Epoch 250 - Loss: 5.271013
+    ## Epoch 300 - Loss: 3.729478
+    ## Epoch 50 - Loss: 3.233447
+    ## Epoch 100 - Loss: 3.245439
+    ## Epoch 150 - Loss: 3.173748
+    ## Epoch 200 - Loss: 3.103307
+    ## Epoch 250 - Loss: 3.181788
+    ## Epoch 300 - Loss: 3.040456
+    ## Epoch 50 - Loss: 3.356755
+    ## Epoch 100 - Loss: 3.319529
+    ## Epoch 150 - Loss: 3.336454
+    ## Epoch 200 - Loss: 3.356863
+    ## Epoch 250 - Loss: 3.292748
+    ## Epoch 300 - Loss: 3.273286
+    ## Epoch 50 - Loss: 3.467583
+    ## Epoch 100 - Loss: 3.245041
+    ## Epoch 150 - Loss: 3.293297
+    ## Epoch 200 - Loss: 3.385828
+    ## Epoch 250 - Loss: 3.308768
+    ## Epoch 300 - Loss: 3.283088
+    ## Epoch 50 - Loss: 4.201644
+    ## Epoch 100 - Loss: 4.079730
+    ## Epoch 150 - Loss: 4.049956
+    ## Epoch 200 - Loss: 4.041712
+    ## Epoch 250 - Loss: 4.014086
+    ## Epoch 300 - Loss: 3.999468
+    ## Epoch 50 - Loss: 4.206083
+    ## Epoch 100 - Loss: 4.121191
+    ## Epoch 150 - Loss: 4.122781
+    ## Epoch 200 - Loss: 4.012592
+    ## Epoch 250 - Loss: 4.034368
+    ## Epoch 300 - Loss: 3.980411
+    ## Epoch 50 - Loss: 4.314287
+    ## Epoch 100 - Loss: 4.190366
+    ## Epoch 150 - Loss: 4.111125
+    ## Epoch 200 - Loss: 4.084428
+    ## Epoch 250 - Loss: 4.055722
+    ## Epoch 300 - Loss: 4.067462
 
 ``` r
 print(tune_res)
 ```
 
     ## # A tibble: 12 × 8
-    ##    hidden       lr activation epochs loss    metric  mean      sd
-    ##    <list>    <dbl> <chr>       <dbl> <chr>   <chr>  <dbl>   <dbl>
-    ##  1 <dbl [1]> 0.001 relu          100 cox     cindex 0.720 0.0593 
-    ##  2 <dbl [2]> 0.001 relu          100 cox     cindex 0.715 0.0251 
-    ##  3 <dbl [1]> 0.001 relu          300 aft     cindex 0.712 0.00589
-    ##  4 <dbl [2]> 0.001 relu          300 cox     cindex 0.712 0.0461 
-    ##  5 <dbl [1]> 0.001 relu          300 cox     cindex 0.704 0.0318 
-    ##  6 <dbl [1]> 0.001 relu          300 coxtime cindex 0.704 0.0178 
-    ##  7 <dbl [2]> 0.001 relu          300 aft     cindex 0.692 0.0306 
-    ##  8 <dbl [1]> 0.001 relu          100 coxtime cindex 0.682 0.110  
-    ##  9 <dbl [2]> 0.001 relu          300 coxtime cindex 0.670 0.0779 
-    ## 10 <dbl [2]> 0.001 relu          100 aft     cindex 0.669 0.0584 
-    ## 11 <dbl [2]> 0.001 relu          100 coxtime cindex 0.604 0.0323 
-    ## 12 <dbl [1]> 0.001 relu          100 aft     cindex 0.559 0.0958
+    ##    hidden       lr activation epochs loss    metric  mean     sd
+    ##    <list>    <dbl> <chr>       <dbl> <chr>   <chr>  <dbl>  <dbl>
+    ##  1 <dbl [1]> 0.001 relu          100 cox     cindex 0.729 0.0527
+    ##  2 <dbl [2]> 0.001 relu          300 cox     cindex 0.714 0.0614
+    ##  3 <dbl [2]> 0.001 relu          100 cox     cindex 0.712 0.0136
+    ##  4 <dbl [1]> 0.001 relu          300 cox     cindex 0.711 0.0269
+    ##  5 <dbl [2]> 0.001 relu          300 aft     cindex 0.699 0.0382
+    ##  6 <dbl [2]> 0.001 relu          100 aft     cindex 0.694 0.0118
+    ##  7 <dbl [1]> 0.001 relu          100 coxtime cindex 0.688 0.0843
+    ##  8 <dbl [1]> 0.001 relu          300 coxtime cindex 0.688 0.0610
+    ##  9 <dbl [1]> 0.001 relu          300 aft     cindex 0.686 0.0603
+    ## 10 <dbl [2]> 0.001 relu          300 coxtime cindex 0.662 0.104 
+    ## 11 <dbl [2]> 0.001 relu          100 coxtime cindex 0.628 0.0617
+    ## 12 <dbl [1]> 0.001 relu          100 aft     cindex 0.609 0.0510
 
 ------------------------------------------------------------------------
 
@@ -439,6 +439,16 @@ help(package = "survdnn")
 # Run all tests
 devtools::test()
 ```
+
+------------------------------------------------------------------------
+
+## Availability
+
+The `survdnn` R package is available at:
+<https://github.com/ielbadisy/survdnn>  
+A stable version has been archived at Zenodo:
+<https://doi.org/10.5281/zenodo.XXXXXXX>  
+The package is currently under submission to CRAN.
 
 ------------------------------------------------------------------------
 
