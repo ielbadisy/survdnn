@@ -63,6 +63,8 @@ df <- data.frame(
   x1 = rnorm(100),
   x2 = rbinom(100, 1, 0.5)
 )
-mod <- survdnn(Surv(time, status) ~ x1 + x2, data = df, epochs = 50, loss = "cox", verbose = FALSE)
+mod <- survdnn(Surv(time, status) ~ x1 + x2, data = df, epochs = 50
+
+, loss = "cox", verbose = FALSE)
 mod$final_loss
 }
