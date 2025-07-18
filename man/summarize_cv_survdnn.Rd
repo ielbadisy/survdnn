@@ -30,7 +30,7 @@ res <- cv_survdnn(
   folds = 3,
   .seed = 42,
   hidden = c(16, 8),
-  epochs = 50
+  epochs = 5
 )
 summarize_cv_survdnn(res)
 }
