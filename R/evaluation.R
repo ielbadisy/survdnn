@@ -81,7 +81,7 @@ evaluate_survdnn <- function(model, metrics = c("cindex", "brier", "ibs"), times
 #'   folds = 3,
 #'   .seed = 42,
 #'   hidden = c(16, 8),
-#'   epochs = 200
+#'   epochs = 50
 #' )
 cv_survdnn <- function(formula, data, times,
                        metrics = c("cindex", "ibs"),
@@ -135,7 +135,7 @@ cv_survdnn <- function(formula, data, times,
 #'   folds = 3,
 #'   .seed = 42,
 #'   hidden = c(16, 8),
-#'   epochs = 200
+#'   epochs = 50
 #' )
 #' summarize_cv_survdnn(res)
 summarize_cv_survdnn <- function(cv_results, by_time = TRUE, conf_level = 0.95) {
