@@ -15,10 +15,12 @@
 #' @examples
 #' library(survival)
 #' data(veteran)
+#' \donttest{
 #' mod <- survdnn(Surv(time, status) ~ age + karno + celltype,
 #'                data = veteran, epochs = 100, verbose = FALSE)
 #' evaluate_survdnn(mod, metrics = c("cindex", "ibs"), times = c(30, 90, 180))
 #' evaluate_survdnn(mod, metrics = "brier", times = c(30, 90, 180))
+#' }
 evaluate_survdnn <- function(model, metrics = c("cindex", "brier", "ibs"), times, newdata = NULL) {
   stopifnot(inherits(model, "survdnn"))
   if (missing(times)) stop("You must provide `times` for evaluation.")

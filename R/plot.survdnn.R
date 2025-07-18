@@ -22,9 +22,11 @@
 #' library(survival)
 #' data(veteran)
 #' set.seed(42)
+#' \donttest{
 #' mod <- survdnn(Surv(time, status) ~ age + karno + celltype, data = veteran,
 #'                hidden = c(16, 8), epochs = 100, verbose = FALSE)
 #' plot(mod, group_by = "celltype", times = 1:300)
+#' }
 plot.survdnn <- function(x, newdata = NULL, times = 1:365,
                          group_by = NULL,
                          plot_mean_only = FALSE,
