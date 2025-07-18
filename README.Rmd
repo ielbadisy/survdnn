@@ -58,7 +58,7 @@ mod <- survdnn(
   Surv(time, status) ~ age + karno + celltype,
   data = veteran,
   hidden = c(32, 16),
-  epochs = 300,
+  epochs = 100,
   loss = "cox",
   verbose = TRUE
 )
@@ -82,7 +82,7 @@ mod1 <- survdnn(
   Surv(time, status) ~ age + karno,
   data = veteran,
   loss = "cox",
-  epochs = 200
+  epochs = 100
   )
 ```
 
@@ -92,7 +92,7 @@ mod2 <- survdnn(
   Surv(time, status) ~ age + karno,
   data = veteran,
   loss = "aft",
-  epochs = 300
+  epochs = 100
   )
 ```
 
@@ -120,7 +120,7 @@ cv_results <- cv_survdnn(
   folds = 3,
   hidden = c(16, 8),
   loss = "cox",
-  epochs = 300
+  epochs = 100
 )
 print(cv_results)
 ```
@@ -129,7 +129,7 @@ print(cv_results)
 
 ## Hyperparameter Tuning
 
-```{r}
+```{r, eval = TRUE}
 grid <- list(
   hidden     = list(c(16), c(32, 16)),
   lr         = c(1e-3),
