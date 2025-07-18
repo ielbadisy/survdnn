@@ -33,7 +33,7 @@ library(survival)
 data(veteran)
 \donttest{
 mod <- survdnn(Surv(time, status) ~ age + karno + celltype,
-               data = veteran, epochs = 100, verbose = FALSE)
+               data = veteran, epochs = 5, verbose = FALSE)
 evaluate_survdnn(mod, metrics = c("cindex", "ibs"), times = c(30, 90, 180))
 evaluate_survdnn(mod, metrics = "brier", times = c(30, 90, 180))
 }

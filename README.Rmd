@@ -68,7 +68,7 @@ mod <- survdnn(
 summary(mod)
 ```
 
-```{r}
+```{r, eval = FALSE}
 plot(mod, group_by = "celltype", times = 1:300)
 ```
 
@@ -111,7 +111,7 @@ mod3 <- survdnn(
 
 ## Cross-Validation
 
-```{r}
+```{r, eval = FALSE}
 cv_results <- cv_survdnn(
   Surv(time, status) ~ age + karno + celltype,
   data = veteran,
@@ -129,7 +129,7 @@ print(cv_results)
 
 ## Hyperparameter Tuning
 
-```{r, eval = TRUE}
+```{r, eval = FALSE}
 grid <- list(
   hidden     = list(c(16), c(32, 16)),
   lr         = c(1e-3),
