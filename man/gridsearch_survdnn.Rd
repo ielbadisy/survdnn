@@ -36,7 +36,7 @@ A tibble with configurations and their validation metrics
 Performs grid search over user-specified hyperparameters and evaluates performance on a validation set.
 }
 \examples{
-\dontrun{
+\donttest{
 library(survdnn)
 library(survival)
 set.seed(123)

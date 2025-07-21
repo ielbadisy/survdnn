@@ -14,7 +14,7 @@
 #' @export
 #'
 #' @examples
-#' \dontrun{
+#' \donttest{
 #' library(survdnn)
 #' library(survival)
 #' set.seed(123)
