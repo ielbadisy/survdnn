@@ -13,6 +13,14 @@
 This is a new package, so there are no downstream reverse dependencies.
 
 ## Comments
+
+
+The following issues raised during initial review have been addressed:
+
+- Added appropriate method references in the DESCRIPTION using CRAN-compliant <doi:...> syntax.
+
+- Replaced \\dontrun{} with \\donttest{} in examples and unwrapped examples that run in under 5 seconds (gridsearch_survdnn.Rd).
+
 This is the first CRAN release of `survdnn`, a package for deep neural network-based survival analysis using the `torch` backend in R. It includes support for several common loss functions (Cox, CoxL2 AFT, coxtime), a formula interface, and tools for model evaluation and tuning.
 
 All functions are documented with examples. The package passes all checks and is tested on multiple platforms.
