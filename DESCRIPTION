@@ -10,7 +10,7 @@ Description: Provides deep learning models for right-censored survival data usin
     Supports multiple loss functions, including Cox partial likelihood, L2-penalized Cox, time-dependent Cox, 
     and accelerated failure time (AFT) loss. Offers a formula-based interface, built-in support for cross-validation, 
     hyperparameter tuning, survival curve plotting, and evaluation metrics such as the C-index, Brier score, 
-    and integrated Brier score.
+    and integrated Brier score. For methodological details, see Kvamme et al. (2019) <https://www.jmlr.org/papers/v20/18-424.html>.
 License: MIT + file LICENSE
 Encoding: UTF-8
 LazyData: true
