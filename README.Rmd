@@ -33,14 +33,18 @@ output: github_document
 ## Installation
 
 ```{r, eval = FALSE}
+# Install from CRAN
+install.packages("surdnn")
+
+
 # Install from GitHub
-# install.packages("remotes")
+install.packages("remotes")
 remotes::install_github("ielbadisy/survdnn")
 
 # Or clone and install locally
-# git clone https://github.com/ielbadisy/survdnn.git
-# setwd("survdnn")
-# devtools::install()
+git clone https://github.com/ielbadisy/survdnn.git
+setwd("survdnn")
+devtools::install()
 ```
 
 ---
@@ -61,7 +65,7 @@ mod <- survdnn(
   epochs = 100,
   loss = "cox",
   verbose = TRUE
-)
+  )
 ```
 
 ```{r}
@@ -121,7 +125,7 @@ cv_results <- cv_survdnn(
   hidden = c(16, 8),
   loss = "cox",
   epochs = 100
-)
+  )
 print(cv_results)
 ```
 
@@ -190,9 +194,7 @@ devtools::test()
 
 ## Availability 
 
-The `survdnn` R package is available at: https://github.com/ielbadisy/survdnn  
-
-The package is currently under submission to CRAN.
+The `survdnn` R package is available on CRAN or at: https://github.com/ielbadisy/survdnn  
 
 ---
 
