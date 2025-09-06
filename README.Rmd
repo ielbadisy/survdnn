@@ -192,6 +192,23 @@ devtools::test()
 ---
 
 
+
+---
+
+
+---
+
+## Reproducibility
+
+By default, Torch initializes model weights and shuffles minibatches with random draws, so results may differ at each run.  
+Unlike `set.seed()`, which only controls R’s RNG, `{torch}` uses its own RNG implemented in C++/CUDA. To ensure reproducibility, set the Torch seed before training:
+
+```{r}
+torch::torch_manual_seed(123)
+```
+
+---
+
 ## Availability 
 
 The `survdnn` R package is available on CRAN or at: https://github.com/ielbadisy/survdnn  

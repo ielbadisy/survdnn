@@ -75,8 +75,8 @@ mod <- survdnn(
   )
 ```
 
-    ## Epoch 50 - Loss: 3.933090
-    ## Epoch 100 - Loss: 3.858984
+    ## Epoch 50 - Loss: 3.953353
+    ## Epoch 100 - Loss: 3.931486
 
 ``` r
 summary(mod)
@@ -84,18 +84,18 @@ summary(mod)
 
     ## 
 
-    ## ── Summary of survdnn model ──────────────────────────────────────────────────────────────────────────
+    ## ── Summary of survdnn mod
 
     ## 
     ## Formula:
     ##   Surv(time, status) ~ age + karno + celltype
-    ## <environment: 0x57d73a0ad3e0>
+    ## <environment: 0x63431bf25e10>
     ## 
     ## Model architecture:
     ##   Hidden layers:  32 : 16 
     ##   Activation:  relu 
     ##   Dropout:  0.3 
-    ##   Final loss:  3.858984 
+    ##   Final loss:  3.931486 
     ## 
     ## Training summary:
     ##   Epochs:  100 
@@ -126,8 +126,8 @@ mod1 <- survdnn(
   )
 ```
 
-    ## Epoch 50 - Loss: 3.919740
-    ## Epoch 100 - Loss: 3.919716
+    ## Epoch 50 - Loss: 4.081914
+    ## Epoch 100 - Loss: 4.007797
 
 ``` r
 # Accelerated Failure Time
@@ -139,8 +139,8 @@ mod2 <- survdnn(
   )
 ```
 
-    ## Epoch 50 - Loss: 17.547979
-    ## Epoch 100 - Loss: 17.413593
+    ## Epoch 50 - Loss: 17.466137
+    ## Epoch 100 - Loss: 17.236593
 
 ``` r
 # Deep time-dependent Cox (Coxtime)
@@ -152,8 +152,8 @@ mod3 <- survdnn(
   )
 ```
 
-    ## Epoch 50 - Loss: 4.953788
-    ## Epoch 100 - Loss: 4.839940
+    ## Epoch 50 - Loss: 4.810577
+    ## Epoch 100 - Loss: 4.830978
 
 ------------------------------------------------------------------------
 
@@ -234,6 +234,24 @@ help(package = "survdnn")
 ``` r
 # Run all tests
 devtools::test()
+```
+
+------------------------------------------------------------------------
+
+------------------------------------------------------------------------
+
+------------------------------------------------------------------------
+
+## Reproducibility
+
+By default, Torch initializes model weights and shuffles minibatches
+with random draws, so results may differ at each run.  
+Unlike `set.seed()`, which only controls R’s RNG, `{torch}` uses its own
+RNG implemented in C++/CUDA. To ensure reproducibility, set the Torch
+seed before training:
+
+``` r
+torch::torch_manual_seed(123)
 ```
 
 ------------------------------------------------------------------------
