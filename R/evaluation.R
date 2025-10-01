@@ -13,6 +13,7 @@
 #' @export
 #'
 #' @examples
+#' if (torch::torch_is_installed()) {
 #' library(survival)
 #' data(veteran)
 #' \donttest{
@@ -20,6 +21,7 @@
 #'                data = veteran, epochs = 5, verbose = FALSE)
 #' evaluate_survdnn(mod, metrics = c("cindex", "ibs"), times = c(30, 90, 180))
 #' evaluate_survdnn(mod, metrics = "brier", times = c(30, 90, 180))
+#' }
 #' }
 evaluate_survdnn <- function(model, metrics = c("cindex", "brier", "ibs"), times, newdata = NULL) {
   stopifnot(inherits(model, "survdnn"))
@@ -73,6 +75,7 @@ evaluate_survdnn <- function(model, metrics = c("cindex", "brier", "ibs"), times
 #' @export
 #'
 #' @examples
+#' if (torch::torch_is_installed()) {
 #' library(survival)
 #' data(veteran)
 #' cv_survdnn(
@@ -85,6 +88,7 @@ evaluate_survdnn <- function(model, metrics = c("cindex", "brier", "ibs"), times
 #'   hidden = c(16, 8),
 #'   epochs = 5
 #' )
+#' }
 cv_survdnn <- function(formula, data, times,
                        metrics = c("cindex", "ibs"),
                        folds = 5,
@@ -127,6 +131,7 @@ cv_survdnn <- function(formula, data, times,
 #' @export
 #'
 #' @examples
+#' if (torch::torch_is_installed()) {
 #' library(survival)
 #' data(veteran)
 #' res <- cv_survdnn(
@@ -140,6 +145,7 @@ cv_survdnn <- function(formula, data, times,
 #'   epochs = 5
 #' )
 #' summarize_cv_survdnn(res)
+#' }
 summarize_cv_survdnn <- function(cv_results, by_time = TRUE, conf_level = 0.95) {
   stopifnot(all(c("fold", "metric", "value") %in% names(cv_results)))
 

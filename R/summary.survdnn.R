@@ -11,6 +11,7 @@
 #' @export
 #'
 #' @examples
+#' if (torch::torch_is_installed()) {
 #' set.seed(42)
 #' sim_data <- data.frame(
 #'   age = rnorm(100, 60, 10),
@@ -21,6 +22,7 @@
 #' )
 #' mod <- survdnn(Surv(time, status) ~ age + sex + trt, data = sim_data, epochs = 50, verbose = FALSE)
 #' summary(mod)
+#' }
 summary.survdnn <- function(object, ...) {
   stopifnot(inherits(object, "survdnn"))
 
