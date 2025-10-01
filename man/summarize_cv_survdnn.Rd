@@ -20,6 +20,7 @@ A tibble summarizing mean, sd, and confidence bounds per metric (and per time if
 Computes mean, standard deviation, and confidence intervals for metrics from cross-validation.
 }
 \examples{
+if (torch::torch_is_installed()) {
 library(survival)
 data(veteran)
 res <- cv_survdnn(
@@ -33,4 +34,5 @@ res <- cv_survdnn(
   epochs = 5
 )
 summarize_cv_survdnn(res)
+}
 }

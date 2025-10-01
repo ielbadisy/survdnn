@@ -19,9 +19,11 @@ Pretty prints a fitted `survdnn` model. Displays the formula,
 network architecture, training configuration, and final training loss.
 }
 \examples{
+if (torch::torch_is_installed()) {
 library(survival)
 data(veteran, package = "survival")
 mod <- survdnn(Surv(time, status) ~
 age + karno + celltype, data = veteran, epochs = 20, verbose = FALSE)
 print(mod)
+}
 }

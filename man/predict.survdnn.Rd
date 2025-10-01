@@ -32,6 +32,7 @@ Generate predictions from a fitted `survdnn` model for new data. Supports linear
 survival probabilities at specified time points, or cumulative risk estimates.
 }
 \examples{
+if (torch::torch_is_installed()) {
 library(survival)
 data(veteran, package = "survival")
 
@@ -47,4 +48,5 @@ predict(mod, newdata = veteran, type = "survival", times = c(30, 90, 180))[1:5, 
 
 # Cumulative risk at 180 days
 predict(mod, newdata = veteran, type = "risk", times = 180)[1:5]
+}
 }

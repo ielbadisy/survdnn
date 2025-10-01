@@ -36,23 +36,21 @@ A tibble with configurations and their validation metrics
 Performs grid search over user-specified hyperparameters and evaluates performance on a validation set.
 }
 \examples{
+if (torch::torch_is_installed()) {
 \donttest{
 library(survdnn)
 library(survival)
 set.seed(123)
-
 # Simulate small dataset
 n <- 300
 x1 <- rnorm(n); x2 <- rbinom(n, 1, 0.5)
 time <- rexp(n, rate = 0.1)
 status <- rbinom(n, 1, 0.7)
 df <- data.frame(time, status, x1, x2)
-
 # Split into training and validation
 idx <- sample(seq_len(n), 0.7 * n)
 train <- df[idx, ]
 valid <- df[-idx, ]
-
 # Define formula and param grid
 formula <- Surv(time, status) ~ x1 + x2
 param_grid <- list(
@@ -62,7 +60,6 @@ param_grid <- list(
   epochs     = c(100),
   loss       = c("cox", "coxtime")
 )
-
 # Run grid search
 results <- gridsearch_survdnn(
   formula = formula,
@@ -72,9 +69,9 @@ results <- gridsearch_survdnn(
   metrics = c("cindex", "ibs"),
   param_grid = param_grid
 )
-
 # View summary
 dplyr::group_by(results, hidden, lr, activation, epochs, loss, metric) |>
   dplyr::summarise(mean = mean(value, na.rm = TRUE), .groups = "drop")
+}
 }
 }
