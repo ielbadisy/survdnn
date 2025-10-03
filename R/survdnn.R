@@ -15,7 +15,9 @@
 #' @export
 #'
 #' @examples
+#' if (torch::torch_is_installed()) {
 #' net <- build_dnn(10, hidden = c(64, 32), activation = "relu")
+#' }
 build_dnn <- function(input_dim, hidden, activation = "relu", output_dim = 1L) {
   layers <- list()
   in_features <- input_dim
@@ -81,6 +83,7 @@ build_dnn <- function(input_dim, hidden, activation = "relu", output_dim = 1L) {
 #' @export
 #'
 #' @examples
+#' if (torch::torch_is_installed()) {
 #' set.seed(123)
 #' df <- data.frame(
 #'   time = rexp(100, rate = 0.1),
@@ -92,6 +95,7 @@ build_dnn <- function(input_dim, hidden, activation = "relu", output_dim = 1L) {
 #' 
 #' , loss = "cox", verbose = FALSE)
 #' mod$final_loss
+#' }
 survdnn <- function(formula, data,
                     hidden = c(32L, 16L),
                     activation = "relu",

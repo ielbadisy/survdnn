@@ -2,6 +2,8 @@ library(testthat)
 library(torch)
 
 test_that("cox_loss returns scalar tensor", {
+  skip_if_not(torch_is_installed())
+
   time <- torch_tensor(runif(20, 1, 100))
   status <- torch_tensor(sample(0:1, 20, replace = TRUE))
   y <- torch_stack(list(time, status), dim = 2)
@@ -13,6 +15,8 @@ test_that("cox_loss returns scalar tensor", {
 })
 
 test_that("cox_l2_loss returns penalized scalar tensor", {
+  skip_if_not(torch_is_installed())
+
   time <- torch_tensor(runif(20, 1, 100))
   status <- torch_tensor(sample(0:1, 20, replace = TRUE))
   y <- torch_stack(list(time, status), dim = 2)
@@ -26,6 +30,8 @@ test_that("cox_l2_loss returns penalized scalar tensor", {
 
 
 test_that("aft_loss returns scalar tensor (uncensored only)", {
+  skip_if_not(torch_is_installed())
+
   time <- torch_tensor(runif(20, 1, 100))
   status <- torch_tensor(sample(0:1, 20, replace = TRUE))
   y <- torch_stack(list(time, status), dim = 2)
@@ -37,6 +43,8 @@ test_that("aft_loss returns scalar tensor (uncensored only)", {
 })
 
 test_that("aft_loss returns 0 for fully censored data", {
+  skip_if_not(torch_is_installed())
+
   time <- torch_tensor(runif(10, 1, 100))
   status <- torch_tensor(torch_zeros(10))
   y <- torch_stack(list(time, status), dim = 2)
@@ -50,7 +58,7 @@ test_that("aft_loss returns 0 for fully censored data", {
 
 
 test_that("coxtime_loss implements partial likelihood faithfully", {
-  skip_if_not(torch::torch_is_installed())
+  skip_if_not(torch_is_installed())
 
   n <- 50
   pred <- torch_randn(c(n, 1))

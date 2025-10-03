@@ -47,6 +47,7 @@ Curves can be grouped by a categorical variable in `newdata` and
 optionally display only the group-wise means or overlay them.
 }
 \examples{
+if (torch::torch_is_installed()) {
 library(survival)
 data(veteran)
 set.seed(42)
@@ -54,5 +55,6 @@ set.seed(42)
 mod <- survdnn(Surv(time, status) ~ age + karno + celltype, data = veteran,
                hidden = c(16, 8), epochs = 100, verbose = FALSE)
 plot(mod, group_by = "celltype", times = 1:300)
+}
 }
 }

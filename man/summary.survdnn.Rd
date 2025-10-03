@@ -20,6 +20,7 @@ training configuration, and data characteristics. The summary is printed automat
 a styled header and sectioned output using \{cli\} and base formatting. The object is returned invisibly.
 }
 \examples{
+if (torch::torch_is_installed()) {
 set.seed(42)
 sim_data <- data.frame(
   age = rnorm(100, 60, 10),
@@ -30,4 +31,5 @@ sim_data <- data.frame(
 )
 mod <- survdnn(Surv(time, status) ~ age + sex + trt, data = sim_data, epochs = 50, verbose = FALSE)
 summary(mod)
+}
 }

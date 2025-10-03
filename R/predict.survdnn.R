@@ -21,6 +21,7 @@
 #' @export
 #'
 #' @examples
+#' if (torch::torch_is_installed()) {
 #' library(survival)
 #' data(veteran, package = "survival")
 #'
@@ -36,6 +37,7 @@
 #'
 #' # Cumulative risk at 180 days
 #' predict(mod, newdata = veteran, type = "risk", times = 180)[1:5]
+#' }
 
 predict.survdnn <- function(object, newdata, times = NULL,
                             type = c("survival", "lp", "risk"), ...) {

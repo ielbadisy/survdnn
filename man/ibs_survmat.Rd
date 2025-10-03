@@ -22,6 +22,7 @@ Computes the Integrated Brier Score (IBS) over a set of evaluation time points,
 using trapezoidal integration and IPCW adjustment for right-censoring.
 }
 \examples{
+if (torch::torch_is_installed()) {
 set.seed(123)
 library(survival)
 data(veteran, package = "survival")
@@ -32,4 +33,5 @@ age + karno + celltype, data = train, epochs = 50, verbose = FALSE)
 pred <- predict(mod, newdata = test, times = c(30, 90, 180), type = "survival")
 y_test <- model.response(model.frame(mod$formula, test))
 ibs_survmat(y_test, sp_matrix = pred, times = c(30, 90, 180))
+}
 }

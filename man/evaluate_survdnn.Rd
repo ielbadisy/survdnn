@@ -29,6 +29,7 @@ Supported metrics include the concordance index (`"cindex"`), Brier score (`"bri
 and integrated Brier score (`"ibs"`).
 }
 \examples{
+if (torch::torch_is_installed()) {
 library(survival)
 data(veteran)
 \donttest{
@@ -36,5 +37,6 @@ mod <- survdnn(Surv(time, status) ~ age + karno + celltype,
                data = veteran, epochs = 5, verbose = FALSE)
 evaluate_survdnn(mod, metrics = c("cindex", "ibs"), times = c(30, 90, 180))
 evaluate_survdnn(mod, metrics = "brier", times = c(30, 90, 180))
+}
 }
 }

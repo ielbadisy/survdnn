@@ -107,4 +107,3 @@ coxtime_loss <- function(pred, true) {
   loss <- torch_mean(loss_terms)
   return(loss)
 }
-
