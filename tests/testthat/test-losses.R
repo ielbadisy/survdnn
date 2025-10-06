@@ -1,5 +1,3 @@
-library(testthat)
-library(torch)
 
 test_that("cox_loss returns scalar tensor", {
   skip_if_not(torch_is_installed())
