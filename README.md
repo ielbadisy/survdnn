@@ -75,8 +75,8 @@ mod <- survdnn(
   )
 ```
 
-    ## Epoch 50 - Loss: 3.953353
-    ## Epoch 100 - Loss: 3.931486
+    ## Epoch 50 - Loss: 3.898330
+    ## Epoch 100 - Loss: 3.834461
 
 ``` r
 summary(mod)
@@ -84,18 +84,18 @@ summary(mod)
 
     ## 
 
-    ## ── Summary of survdnn mod
+    ## ── Summary of survdnn model ─────────────────────────────────────────────────────────────────────
 
     ## 
     ## Formula:
     ##   Surv(time, status) ~ age + karno + celltype
-    ## <environment: 0x63431bf25e10>
+    ## <environment: 0x57f5687daa00>
     ## 
     ## Model architecture:
     ##   Hidden layers:  32 : 16 
     ##   Activation:  relu 
     ##   Dropout:  0.3 
-    ##   Final loss:  3.931486 
+    ##   Final loss:  3.834461 
     ## 
     ## Training summary:
     ##   Epochs:  100 
@@ -126,8 +126,8 @@ mod1 <- survdnn(
   )
 ```
 
-    ## Epoch 50 - Loss: 4.081914
-    ## Epoch 100 - Loss: 4.007797
+    ## Epoch 50 - Loss: 3.991873
+    ## Epoch 100 - Loss: 3.937163
 
 ``` r
 # Accelerated Failure Time
@@ -139,8 +139,8 @@ mod2 <- survdnn(
   )
 ```
 
-    ## Epoch 50 - Loss: 17.466137
-    ## Epoch 100 - Loss: 17.236593
+    ## Epoch 50 - Loss: 18.660992
+    ## Epoch 100 - Loss: 18.260056
 
 ``` r
 # Deep time-dependent Cox (Coxtime)
@@ -152,8 +152,8 @@ mod3 <- survdnn(
   )
 ```
 
-    ## Epoch 50 - Loss: 4.810577
-    ## Epoch 100 - Loss: 4.830978
+    ## Epoch 50 - Loss: 4.899240
+    ## Epoch 100 - Loss: 4.835490
 
 ------------------------------------------------------------------------
 
@@ -235,10 +235,6 @@ help(package = "survdnn")
 # Run all tests
 devtools::test()
 ```
-
-------------------------------------------------------------------------
-
-------------------------------------------------------------------------
 
 ------------------------------------------------------------------------
 
