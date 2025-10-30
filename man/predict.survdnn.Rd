@@ -32,7 +32,7 @@ Generate predictions from a fitted `survdnn` model for new data. Supports linear
 survival probabilities at specified time points, or cumulative risk estimates.
 }
 \examples{
-if (torch::torch_is_installed()) {
+\donttest{
 library(survival)
 data(veteran, package = "survival")
 

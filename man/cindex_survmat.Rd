@@ -23,7 +23,7 @@ Computes the time-dependent concordance index (C-index) from a predicted surviva
 at a fixed time point. The risk is computed as `1 - S(t_star)`.
 }
 \examples{
-if (torch::torch_is_installed()) {
+\donttest{
 library(survival)
 data(veteran, package = "survival")
 mod <- survdnn(Surv(time, status) ~

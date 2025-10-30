@@ -19,7 +19,7 @@ Pretty prints a fitted `survdnn` model. Displays the formula,
 network architecture, training configuration, and final training loss.
 }
 \examples{
-if (torch::torch_is_installed()) {
+\donttest{
 library(survival)
 data(veteran, package = "survival")
 mod <- survdnn(Surv(time, status) ~

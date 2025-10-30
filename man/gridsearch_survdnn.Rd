@@ -36,7 +36,6 @@ A tibble with configurations and their validation metrics
 Performs grid search over user-specified hyperparameters and evaluates performance on a validation set.
 }
 \examples{
-if (torch::torch_is_installed()) {
 \donttest{
 library(survdnn)
 library(survival)
@@ -72,6 +71,5 @@ results <- gridsearch_survdnn(
 # View summary
 dplyr::group_by(results, hidden, lr, activation, epochs, loss, metric) |>
   dplyr::summarise(mean = mean(value, na.rm = TRUE), .groups = "drop")
-}
 }
 }

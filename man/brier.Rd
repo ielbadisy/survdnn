@@ -20,7 +20,7 @@ A single numeric value representing the Brier score.
 Computes the Brier score at a fixed time point using inverse probability of censoring weights (IPCW).
 }
 \examples{
-if (torch::torch_is_installed()) {
+\donttest{
 library(survival)
 data(veteran, package = "survival")
 mod <- survdnn(Surv(time, status) ~

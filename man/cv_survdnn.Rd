@@ -36,7 +36,7 @@ A tibble containing metric values per fold and (optionally) per time point.
 Performs cross-validation for a `survdnn` model using the specified evaluation metrics.
 }
 \examples{
-if (torch::torch_is_installed()) {
+\donttest{
 library(survival)
 data(veteran)
 cv_survdnn(

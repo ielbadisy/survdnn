@@ -56,7 +56,7 @@ Trains a deep neural network (DNN) to model right-censored survival data
 using one of the predefined loss functions: Cox, AFT, or Coxtime.
 }
 \examples{
-if (torch::torch_is_installed()) {
+\donttest{
 set.seed(123)
 df <- data.frame(
   time = rexp(100, rate = 0.1),

@@ -25,7 +25,7 @@ activation functions, and dropout. Used internally by [survdnn()] to
 define the model architecture.
 }
 \examples{
-if (torch::torch_is_installed()) {
+\donttest{
 net <- build_dnn(10, hidden = c(64, 32), activation = "relu")
 }
 }

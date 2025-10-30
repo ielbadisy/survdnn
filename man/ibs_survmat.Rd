@@ -22,7 +22,7 @@ Computes the Integrated Brier Score (IBS) over a set of evaluation time points,
 using trapezoidal integration and IPCW adjustment for right-censoring.
 }
 \examples{
-if (torch::torch_is_installed()) {
+\donttest{
 set.seed(123)
 library(survival)
 data(veteran, package = "survival")

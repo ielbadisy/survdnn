@@ -47,7 +47,7 @@ Curves can be grouped by a categorical variable in `newdata` and
 optionally display only the group-wise means or overlay them.
 }
 \examples{
-if (torch::torch_is_installed()) {
+\donttest{
 library(survival)
 data(veteran)
 set.seed(42)

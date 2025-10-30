@@ -29,7 +29,7 @@ Supported metrics include the concordance index (`"cindex"`), Brier score (`"bri
 and integrated Brier score (`"ibs"`).
 }
 \examples{
-if (torch::torch_is_installed()) {
+\donttest{
 library(survival)
 data(veteran)
 \donttest{
