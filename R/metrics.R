@@ -13,7 +13,7 @@
 #' @export
 #'
 #' @examples
-#' if (torch::torch_is_installed()) {
+#' \donttest{
 #' library(survival)
 #' data(veteran, package = "survival")
 #' mod <- survdnn(Surv(time, status) ~
@@ -91,7 +91,7 @@ cindex_survmat <- function(object, predicted, t_star = NULL) {
 #' @export
 #'
 #' @examples
-#' if (torch::torch_is_installed()) {
+#' \donttest{
 #' library(survival)
 #' data(veteran, package = "survival")
 #' mod <- survdnn(Surv(time, status) ~
@@ -156,7 +156,7 @@ brier <- function(object, pre_sp, t_star) {
 #' @export
 #'
 #' @examples
-#' if (torch::torch_is_installed()) {
+#' \donttest{
 #' set.seed(123)
 #' library(survival)
 #' data(veteran, package = "survival")

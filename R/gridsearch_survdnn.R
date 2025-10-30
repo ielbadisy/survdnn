@@ -14,7 +14,6 @@
 #' @export
 #'
 #' @examples
-#' if (torch::torch_is_installed()) {
 #' \donttest{
 #' library(survdnn)
 #' library(survival)
@@ -50,7 +49,6 @@
 #' # View summary
 #' dplyr::group_by(results, hidden, lr, activation, epochs, loss, metric) |>
 #'   dplyr::summarise(mean = mean(value, na.rm = TRUE), .groups = "drop")
-#' }
 #' }
 gridsearch_survdnn <- function(formula, train, valid, times,
                                metrics = c("cindex", "ibs"),

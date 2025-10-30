@@ -10,7 +10,7 @@
 #' @export
 #'
 #' @examples
-#' if (torch::torch_is_installed()) {
+#' \donttest{
 #' library(survival)
 #' data(veteran, package = "survival")
 #' mod <- survdnn(Surv(time, status) ~

@@ -11,7 +11,7 @@
 #' @export
 #'
 #' @examples
-#' if (torch::torch_is_installed()) {
+#' \donttest{
 #' set.seed(42)
 #' sim_data <- data.frame(
 #'   age = rnorm(100, 60, 10),

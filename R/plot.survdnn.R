@@ -19,7 +19,7 @@
 #' @export
 #'
 #' @examples
-#' if (torch::torch_is_installed()) {
+#' \donttest{
 #' library(survival)
 #' data(veteran)
 #' set.seed(42)

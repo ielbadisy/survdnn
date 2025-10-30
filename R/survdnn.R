@@ -15,7 +15,7 @@
 #' @export
 #'
 #' @examples
-#' if (torch::torch_is_installed()) {
+#' \donttest{
 #' net <- build_dnn(10, hidden = c(64, 32), activation = "relu")
 #' }
 build_dnn <- function(input_dim, hidden, activation = "relu", output_dim = 1L) {
@@ -83,7 +83,7 @@ build_dnn <- function(input_dim, hidden, activation = "relu", output_dim = 1L) {
 #' @export
 #'
 #' @examples
-#' if (torch::torch_is_installed()) {
+#' \donttest{
 #' set.seed(123)
 #' df <- data.frame(
 #'   time = rexp(100, rate = 0.1),

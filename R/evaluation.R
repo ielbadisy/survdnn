@@ -13,7 +13,7 @@
 #' @export
 #'
 #' @examples
-#' if (torch::torch_is_installed()) {
+#' \donttest{
 #' library(survival)
 #' data(veteran)
 #' \donttest{
@@ -75,7 +75,7 @@ evaluate_survdnn <- function(model, metrics = c("cindex", "brier", "ibs"), times
 #' @export
 #'
 #' @examples
-#' if (torch::torch_is_installed()) {
+#' \donttest{
 #' library(survival)
 #' data(veteran)
 #' cv_survdnn(
@@ -131,7 +131,7 @@ cv_survdnn <- function(formula, data, times,
 #' @export
 #'
 #' @examples
-#' if (torch::torch_is_installed()) {
+#' \donttest{
 #' library(survival)
 #' data(veteran)
 #' res <- cv_survdnn(
