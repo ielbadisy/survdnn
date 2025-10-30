@@ -10,24 +10,22 @@
     "n", "se", "hidden", "lr", "activation", "epochs", "loss_name", ".loss_fn"
   ))
 
-  # CRAN policy: do not auto-install or download anything on load.
-  # only perform a harmless check if torch is both available and installed!
-  if (requireNamespace("torch", quietly = TRUE) && torch::torch_is_installed()) {
-    try(torch::torch_tensor(0), silent = TRUE)
-  }
+  # IMPORTANT: never load or probe torch here (because CRAN/Windows may segfault).
+  # No torch checks, no tensor creation on load.
 }
 
 ## handles user-facing messaging
 .onAttach <- function(libname, pkgname) {
-  if (!requireNamespace("torch", quietly = TRUE)) return()
+  # Do NOT load torch or call torch::torch_is_installed() here.
+  # friendly hint that doesn't load the namespace:
+  torch_pkg_present <- nzchar(system.file(package = "torch"))
 
-  if (!torch::torch_is_installed() && interactive()) {
-    msg <- paste0(
-      cli::rule("Torch Backend Not Installed", line_col = "red"),
-      "\nThis package requires torch for deep learning operations.",
-      "\nInstall manually with: ", cli::col_yellow("torch::install_torch()"),
-      "\nDocs: https://torch.mlverse.org/docs/articles/installation.html"
+  if (interactive() && !torch_pkg_present) {
+    packageStartupMessage(
+      "Optional dependency 'torch' not found. ",
+      "Install the R package 'torch' and then run torch::install_torch() ",
+      "to use deep-learning features."
     )
-    packageStartupMessage(msg)
   }
+  invisible()
 }
