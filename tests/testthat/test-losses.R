@@ -26,15 +26,13 @@ test_that("cox_l2_loss returns penalized scalar tensor", {
 })
 
 
-
 test_that("aft_loss returns scalar tensor (uncensored only)", {
   skip_if_not(torch_is_installed())
 
-  time <- torch_tensor(runif(20, 1, 100))
+  time   <- torch_tensor(runif(20, 1, 100))
   status <- torch_tensor(sample(0:1, 20, replace = TRUE))
-  y <- torch_stack(list(time, status), dim = 2)
-  pred <- torch_randn(20, 1)
-
+  y      <- torch_stack(list(time, status), dim = 2)
+  pred   <- torch_randn(20, 1)
   loss <- aft_loss(pred, y)
   expect_true(inherits(loss, "torch_tensor"))
   expect_equal(loss$numel(), 1)
@@ -43,15 +41,36 @@ test_that("aft_loss returns scalar tensor (uncensored only)", {
 test_that("aft_loss returns 0 for fully censored data", {
   skip_if_not(torch_is_installed())
 
-  time <- torch_tensor(runif(10, 1, 100))
-  status <- torch_tensor(torch_zeros(10))
-  y <- torch_stack(list(time, status), dim = 2)
-  pred <- torch_randn(10, 1)
+  time   <- torch_tensor(runif(10, 1, 100))
+  status <- torch_zeros(10)
+  y      <- torch_stack(list(time, status), dim = 2)
+  pred   <- torch_randn(10, 1)
 
   loss <- aft_loss(pred, y)
+
   expect_equal(as.numeric(loss), 0)
+  expect_true(inherits(loss, "torch_tensor"))
+  expect_equal(loss$numel(), 1)
 })
 
+test_that("aft_loss fully censored returns 0 on same device as pred (if CUDA available)", {
+  skip_if_not(torch_is_installed())
+  skip_if_not(cuda_is_available())
+
+  device <- torch_device("cuda")
+
+  time   <- torch_tensor(runif(10, 1, 100), device = device)
+  status <- torch_zeros(10, device = device)
+  y      <- torch_stack(list(time, status), dim = 2)
+  pred   <- torch_randn(10, 1, device = device)
+
+  loss <- aft_loss(pred, y)
+
+  expect_equal(as.numeric(loss$to(device = "cpu")), 0)
+  expect_true(inherits(loss, "torch_tensor"))
+  expect_equal(loss$numel(), 1)
+  expect_equal(loss$device$type, pred$device$type)
+})
 
 
 

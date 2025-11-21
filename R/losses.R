@@ -59,7 +59,7 @@ aft_loss <- function(pred, true) {
   n_events <- as.numeric(torch_sum(event_mask))
 
   if (n_events == 0) {
-    return(torch_tensor(0, dtype = torch_float()))
+    return(torch_zeros_like(pred[1, 1])) ## this ensure the returned loss has the same device as pred & has the same dtype as pred (CPU/CUDA/MPS)
   }
 
   pred_event <- pred[event_mask, 1]
