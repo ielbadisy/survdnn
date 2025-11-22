@@ -29,3 +29,21 @@
   }
   invisible()
 }
+
+
+## set R + torch seeds safely
+survdnn_set_seed <- function(.seed = NULL) {
+  if (is.null(.seed)) return(invisible(NULL))
+
+  # R RNG
+  set.seed(.seed)
+
+  # torch RNG (only if available + backend installed)
+  if (requireNamespace("torch", quietly = TRUE)) {
+    if (isTRUE(torch::torch_is_installed())) {
+      torch::torch_manual_seed(.seed)
+    }
+  }
+
+  invisible(NULL)
+}

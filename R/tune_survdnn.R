@@ -13,7 +13,7 @@ utils::globalVariables(c("loss"))
 #' @param param_grid A named list defining hyperparameter combinations to evaluate.
 #'                   Required names: `hidden`, `lr`, `activation`, `epochs`, `loss`.
 #' @param folds Number of cross-validation folds (default: 3).
-#' @param .seed Optional seed for reproducibility (default: 42).
+#' @param .seed Optional seed for reproducibility.
 #' @param refit Logical. If TRUE, refits the best model on the full dataset.
 #' @param return One of "all", "summary", or "best_model":
 #'   \describe{
@@ -24,12 +24,18 @@ utils::globalVariables(c("loss"))
 #'
 #' @return A tibble or model object depending on the `return` value.
 #' @export
-tune_survdnn <- function(formula, data, times, metrics = "cindex",
-                         param_grid, folds = 3, .seed = 42,
+tune_survdnn <- function(formula, 
+                         data, 
+                         times, 
+                         metrics = "cindex",
+                         param_grid, 
+                         folds = 3, 
+                         .seed = 42,
                          refit = FALSE,
                          return = c("all", "summary", "best_model")) {
   return <- match.arg(return)
-  if (!is.null(.seed)) set.seed(.seed)
+  
+  if (!is.null(.seed)) survdnn_set_seed(.seed)
 
   param_df <- tidyr::crossing(!!!param_grid)
 
@@ -52,7 +58,8 @@ tune_survdnn <- function(formula, data, times, metrics = "cindex",
       lr = lr,
       activation = activation,
       epochs = epochs,
-      loss = loss
+      loss = loss,
+      .seed = .seed
     )
 
     dplyr::bind_cols(config_tbl[rep(1, nrow(cv_tbl)), ], cv_tbl)
