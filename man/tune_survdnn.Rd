@@ -31,7 +31,7 @@ Required names: `hidden`, `lr`, `activation`, `epochs`, `loss`.}
 
 \item{folds}{Number of cross-validation folds (default: 3).}
 
-\item{.seed}{Optional seed for reproducibility (default: 42).}
+\item{.seed}{Optional seed for reproducibility.}
 
 \item{refit}{Logical. If TRUE, refits the best model on the full dataset.}
 

@@ -102,11 +102,14 @@ cv_survdnn <- function(formula, data, times,
   if (!is.data.frame(data)) stop("`data` must be a data frame")
   if (missing(times)) stop("You must provide a `times` vector.")
 
-  if (!is.null(.seed)) set.seed(.seed)
+  if (!is.null(.seed)) survdnn_set_seed(.seed)
 
   vfolds <- rsample::vfold_cv(data, v = folds, strata = all.vars(formula)[1])
 
   results <- purrr::imap_dfr(vfolds$splits, function(split, i) {
+    
+    ## re-seed inside every fold to ensure full reproducibility
+    survdnn_set_seed(.seed)
     train_data <- rsample::analysis(split)
     test_data  <- rsample::assessment(split)
     model <- survdnn(formula, data = train_data, ...)

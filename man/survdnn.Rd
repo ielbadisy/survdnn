@@ -12,7 +12,8 @@ survdnn(
   lr = 1e-04,
   epochs = 300L,
   loss = c("cox", "cox_l2", "aft", "coxtime"),
-  verbose = TRUE
+  verbose = TRUE,
+  .seed = NULL
 )
 }
 \arguments{
@@ -32,6 +33,8 @@ Supported options: `"relu"`, `"leaky_relu"`, `"tanh"`, `"sigmoid"`, `"gelu"`, `"
 \item{loss}{Character name of the loss function to use. One of `"cox"`, `"cox_l2"`, `"aft"`, or `"coxtime"`.}
 
 \item{verbose}{Logical; whether to print loss progress every 50 epochs (default: TRUE).}
+
+\item{.seed}{Optional integer. If provided, sets both R and torch random seeds for reproducible weight initialization, shuffling, and dropout.}
 }
 \value{
 An object of class `"survdnn"` containing:

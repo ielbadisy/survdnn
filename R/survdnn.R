@@ -62,7 +62,8 @@ build_dnn <- function(input_dim, hidden, activation = "relu", output_dim = 1L) {
 #' @param epochs Number of training epochs (default: 300).
 #' @param loss Character name of the loss function to use. One of `"cox"`, `"cox_l2"`, `"aft"`, or `"coxtime"`.
 #' @param verbose Logical; whether to print loss progress every 50 epochs (default: TRUE).
-#'
+#' @param .seed Optional integer. If provided, sets both R and torch random seeds for reproducible weight initialization, shuffling, and dropout.
+
 #' @return An object of class `"survdnn"` containing:
 #' \describe{
 #'   \item{model}{Trained `nn_module` object.}
@@ -102,7 +103,11 @@ survdnn <- function(formula, data,
                     lr = 1e-4,
                     epochs = 300L,
                     loss = c("cox", "cox_l2", "aft", "coxtime"),
-                    verbose = TRUE) {
+                    verbose = TRUE,
+                    .seed = NULL
+                  ) {
+
+  survdnn_set_seed(.seed)
   stopifnot(inherits(formula, "formula"))
   stopifnot(is.data.frame(data))
 
