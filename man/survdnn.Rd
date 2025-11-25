@@ -13,7 +13,8 @@ survdnn(
   epochs = 300L,
   loss = c("cox", "cox_l2", "aft", "coxtime"),
   verbose = TRUE,
-  .seed = NULL
+  .seed = NULL,
+  .device = c("auto", "cpu", "cuda")
 )
 }
 \arguments{
@@ -34,7 +35,12 @@ Supported options: `"relu"`, `"leaky_relu"`, `"tanh"`, `"sigmoid"`, `"gelu"`, `"
 
 \item{verbose}{Logical; whether to print loss progress every 50 epochs (default: TRUE).}
 
-\item{.seed}{Optional integer. If provided, sets both R and torch random seeds for reproducible weight initialization, shuffling, and dropout.}
+\item{.seed}{Optional integer. If provided, sets both R and torch random seeds for reproducible
+weight initialization, shuffling, and dropout.}
+
+\item{.device}{Character string indicating the computation device.
+One of `"auto"`, `"cpu"`, or `"cuda"`. `"auto"` uses CUDA if available,
+otherwise falls back to CPU.}
 }
 \value{
 An object of class `"survdnn"` containing:
@@ -52,24 +58,10 @@ An object of class `"survdnn"` containing:
   \item{hidden}{Hidden layer sizes.}
   \item{lr}{Learning rate.}
   \item{epochs}{Number of training epochs.}
+  \item{device}{Torch device used for training (`torch_device`).}
 }
 }
 \description{
 Trains a deep neural network (DNN) to model right-censored survival data
 using one of the predefined loss functions: Cox, AFT, or Coxtime.
-}
-\examples{
-\donttest{
-set.seed(123)
-df <- data.frame(
-  time = rexp(100, rate = 0.1),
-  status = rbinom(100, 1, 0.7),
-  x1 = rnorm(100),
-  x2 = rbinom(100, 1, 0.5)
-)
-mod <- survdnn(Surv(time, status) ~ x1 + x2, data = df, epochs = 5
-
-, loss = "cox", verbose = FALSE)
-mod$final_loss
-}
 }

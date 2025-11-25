@@ -11,6 +11,7 @@ cv_survdnn(
   metrics = c("cindex", "ibs"),
   folds = 5,
   .seed = NULL,
+  .device = c("auto", "cpu", "cuda"),
   ...
 )
 }
@@ -26,6 +27,8 @@ cv_survdnn(
 \item{folds}{Integer. Number of folds to use.}
 
 \item{.seed}{Optional. Set random seed for reproducibility.}
+
+\item{.device}{Character string indicating the computation device used when fitting the models in each fold. One of `"auto"`, `"cpu"`, or `"cuda"`. `"auto"` uses CUDA if available, otherwise falls back to CPU.}
 
 \item{...}{Additional arguments passed to [survdnn()].}
 }

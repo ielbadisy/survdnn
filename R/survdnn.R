@@ -22,15 +22,16 @@ build_dnn <- function(input_dim, hidden, activation = "relu", output_dim = 1L) {
   layers <- list()
   in_features <- input_dim
 
-  act_fn <- switch(activation,
-                   relu       = torch::nn_relu,
-                   leaky_relu = torch::nn_leaky_relu,
-                   tanh       = torch::nn_tanh,
-                   sigmoid    = torch::nn_sigmoid,
-                   gelu       = torch::nn_gelu,
-                   elu        = torch::nn_elu,
-                   softplus   = torch::nn_softplus,
-                   stop("Unsupported activation function: ", activation)
+  act_fn <- switch(
+    activation,
+    relu       = torch::nn_relu,
+    leaky_relu = torch::nn_leaky_relu,
+    tanh       = torch::nn_tanh,
+    sigmoid    = torch::nn_sigmoid,
+    gelu       = torch::nn_gelu,
+    elu        = torch::nn_elu,
+    softplus   = torch::nn_softplus,
+    stop("Unsupported activation function: ", activation)
   )
 
   for (h in hidden) {
@@ -62,8 +63,12 @@ build_dnn <- function(input_dim, hidden, activation = "relu", output_dim = 1L) {
 #' @param epochs Number of training epochs (default: 300).
 #' @param loss Character name of the loss function to use. One of `"cox"`, `"cox_l2"`, `"aft"`, or `"coxtime"`.
 #' @param verbose Logical; whether to print loss progress every 50 epochs (default: TRUE).
-#' @param .seed Optional integer. If provided, sets both R and torch random seeds for reproducible weight initialization, shuffling, and dropout.
-
+#' @param .seed Optional integer. If provided, sets both R and torch random seeds for reproducible
+#'   weight initialization, shuffling, and dropout.
+#' @param .device Character string indicating the computation device.
+#'   One of `"auto"`, `"cpu"`, or `"cuda"`. `"auto"` uses CUDA if available,
+#'   otherwise falls back to CPU.
+#'
 #' @return An object of class `"survdnn"` containing:
 #' \describe{
 #'   \item{model}{Trained `nn_module` object.}
@@ -79,24 +84,10 @@ build_dnn <- function(input_dim, hidden, activation = "relu", output_dim = 1L) {
 #'   \item{hidden}{Hidden layer sizes.}
 #'   \item{lr}{Learning rate.}
 #'   \item{epochs}{Number of training epochs.}
+#'   \item{device}{Torch device used for training (`torch_device`).}
 #' }
 #'
 #' @export
-#'
-#' @examples
-#' \donttest{
-#' set.seed(123)
-#' df <- data.frame(
-#'   time = rexp(100, rate = 0.1),
-#'   status = rbinom(100, 1, 0.7),
-#'   x1 = rnorm(100),
-#'   x2 = rbinom(100, 1, 0.5)
-#' )
-#' mod <- survdnn(Surv(time, status) ~ x1 + x2, data = df, epochs = 5
-#' 
-#' , loss = "cox", verbose = FALSE)
-#' mod$final_loss
-#' }
 survdnn <- function(formula, data,
                     hidden = c(32L, 16L),
                     activation = "relu",
@@ -104,65 +95,105 @@ survdnn <- function(formula, data,
                     epochs = 300L,
                     loss = c("cox", "cox_l2", "aft", "coxtime"),
                     verbose = TRUE,
-                    .seed = NULL
-                  ) {
+                    .seed = NULL,
+                    .device = c("auto", "cpu", "cuda")) {
 
+  # Reproducibility
   survdnn_set_seed(.seed)
+
+  # Device selection (CPU / CUDA / auto)
+  device <- survdnn_get_device(.device)
+
   stopifnot(inherits(formula, "formula"))
   stopifnot(is.data.frame(data))
 
   loss <- match.arg(loss)
-  loss_fn <- switch(loss,
-                    cox     = cox_loss,
-                    cox_l2  = function(pred, true) cox_l2_loss(pred, true, lambda = 1e-3),
-                    aft     = aft_loss,
-                    coxtime = coxtime_loss)
+  loss_fn <- switch(
+    loss,
+    cox     = cox_loss,
+    cox_l2  = function(pred, true) cox_l2_loss(pred, true, lambda = 1e-3),
+    aft     = aft_loss,
+    coxtime = coxtime_loss
+  )
 
-  environment(formula) <- list2env(list(Surv = survival::Surv), parent = environment(formula))
+  # Ensure Surv is resolvable in the formula environment
+  environment(formula) <- list2env(
+    list(Surv = survival::Surv),
+    parent = environment(formula)
+  )
 
-  mf <- model.frame(formula, data)
-  y <- model.response(mf)
-  x <- model.matrix(attr(mf, "terms"), data = mf)[, -1, drop = FALSE]
-  time <- y[, "time"]
+  mf    <- model.frame(formula, data)
+  y     <- model.response(mf)
+  x     <- model.matrix(attr(mf, "terms"), data = mf)[, -1, drop = FALSE]
+  time  <- y[, "time"]
   status <- y[, "status"]
   x_scaled <- scale(x)
 
   x_tensor <- if (loss == "coxtime") {
-    torch::torch_tensor(cbind(time, x_scaled), dtype = torch::torch_float())
+    torch::torch_tensor(
+      cbind(time, x_scaled),
+      dtype  = torch::torch_float(),
+      device = device
+    )
   } else {
-    torch::torch_tensor(x_scaled, dtype = torch::torch_float())
+    torch::torch_tensor(
+      x_scaled,
+      dtype  = torch::torch_float(),
+      device = device
+    )
   }
 
-  y_tensor <- torch::torch_tensor(cbind(time, status), dtype = torch::torch_float())
+  y_tensor <- torch::torch_tensor(
+    cbind(time, status),
+    dtype  = torch::torch_float(),
+    device = device
+  )
+
   net <- build_dnn(ncol(x_tensor), hidden, activation)
-  optimizer <- torch::optim_adam(net$parameters, lr = lr, weight_decay = 1e-4)
+  net$to(device = device)
+
+  optimizer <- torch::optim_adam(
+    net$parameters,
+    lr = lr,
+    weight_decay = 1e-4
+  )
 
   loss_history <- numeric(epochs)
+
   for (epoch in 1:epochs) {
     net$train()
     optimizer$zero_grad()
-    pred <- net(x_tensor)
+
+    pred     <- net(x_tensor)
     loss_val <- loss_fn(pred, y_tensor)
+
     loss_val$backward()
     optimizer$step()
+
     loss_history[epoch] <- loss_val$item()
-    if (verbose && epoch %% 50 == 0)
+
+    if (verbose && epoch %% 50 == 0) {
       cat(sprintf("Epoch %d - Loss: %.6f\n", epoch, loss_val$item()))
+    }
   }
 
-  structure(list(
-    model = net,
-    formula = formula,
-    data = data,
-    xnames = colnames(x),
-    x_center = attr(x_scaled, "scaled:center"),
-    x_scale = attr(x_scaled, "scaled:scale"),
-    loss_history = loss_history,
-    final_loss = tail(loss_history, 1),
-    loss = loss,
-    activation = activation,
-    hidden = hidden,
-    lr = lr,
-    epochs = epochs
-  ), class = "survdnn")
+  structure(
+    list(
+      model        = net,
+      formula      = formula,
+      data         = data,
+      xnames       = colnames(x),
+      x_center     = attr(x_scaled, "scaled:center"),
+      x_scale      = attr(x_scaled, "scaled:scale"),
+      loss_history = loss_history,
+      final_loss   = tail(loss_history, 1),
+      loss         = loss,
+      activation   = activation,
+      hidden       = hidden,
+      lr           = lr,
+      epochs       = epochs,
+      device       = device
+    ),
+    class = "survdnn"
+  )
 }
