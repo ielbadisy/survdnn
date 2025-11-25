@@ -69,6 +69,8 @@ evaluate_survdnn <- function(model, metrics = c("cindex", "brier", "ibs"), times
 #' @param metrics A character vector: any of `"cindex"`, `"brier"`, `"ibs"`.
 #' @param folds Integer. Number of folds to use.
 #' @param .seed Optional. Set random seed for reproducibility.
+#' @param .device Character string indicating the computation device used when fitting the models in each fold. One of `"auto"`, `"cpu"`, or `"cuda"`. `"auto"` uses CUDA if available, otherwise falls back to CPU.
+
 #' @param ... Additional arguments passed to [survdnn()].
 #'
 #' @return A tibble containing metric values per fold and (optionally) per time point.
@@ -93,7 +95,11 @@ cv_survdnn <- function(formula, data, times,
                        metrics = c("cindex", "ibs"),
                        folds = 5,
                        .seed = NULL,
+                       .device = c("auto", "cpu", "cuda"),
                        ...) {
+  
+  .device <- match.arg(.device)
+  
   if (!requireNamespace("rsample", quietly = TRUE)) {
     stop("Package 'rsample' is required for cross-validation.")
   }
@@ -112,7 +118,11 @@ cv_survdnn <- function(formula, data, times,
     survdnn_set_seed(.seed)
     train_data <- rsample::analysis(split)
     test_data  <- rsample::assessment(split)
-    model <- survdnn(formula, data = train_data, ...)
+    model <- survdnn(formula, 
+                     data = train_data,
+                     .seed   = .seed,
+                     .device = .device,
+                     ...)
     eval_tbl <- evaluate_survdnn(model, metrics = metrics, times = times, newdata = test_data)
     eval_tbl$fold <- i
     eval_tbl

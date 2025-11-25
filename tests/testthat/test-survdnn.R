@@ -30,8 +30,9 @@ test_that("survdnn() fits a model and returns correct structure", {
 
   expect_named(
     mod,
-    c("model", "formula", "data", "xnames", "x_center", "x_scale",
-      "loss_history", "final_loss", "loss", "activation", "hidden", "lr", "epochs"),
+    c("model", "formula", "data", "xnames", "x_center", "x_scale", 
+    "loss_history", "final_loss", "loss", "activation", "hidden",
+    "lr", "epochs", "device"),
     ignore.order = TRUE
   )
 })

@@ -12,6 +12,7 @@ tune_survdnn(
   param_grid,
   folds = 3,
   .seed = 42,
+  .device = c("auto", "cpu", "cuda"),
   refit = FALSE,
   return = c("all", "summary", "best_model")
 )
@@ -32,6 +33,8 @@ Required names: `hidden`, `lr`, `activation`, `epochs`, `loss`.}
 \item{folds}{Number of cross-validation folds (default: 3).}
 
 \item{.seed}{Optional seed for reproducibility.}
+
+\item{.device}{Character string indicating the computation device used when fitting models during cross-validation and refitting. One of `"auto"`, `"cpu"`, or `"cuda"`. `"auto"` uses CUDA if available, otherwise falls back to CPU.}
 
 \item{refit}{Logical. If TRUE, refits the best model on the full dataset.}
 

@@ -9,6 +9,7 @@
 #' @param metrics Evaluation metrics (character vector): any of "cindex", "ibs", "brier"
 #' @param param_grid A named list of hyperparameters (`hidden`, `lr`, `activation`, `epochs`, `loss`)
 #' @param .seed Optional random seed for reproducibility
+#' @param .device Character string indicating the computation device used when fitting models for each hyperparameter configuration. One of `"auto"`, `"cpu"`, or `"cuda"`. `"auto"` uses CUDA if available, otherwise falls back to CPU.
 #'
 #' @return A tibble with configurations and their validation metrics
 #' @export
@@ -50,43 +51,57 @@
 #' dplyr::group_by(results, hidden, lr, activation, epochs, loss, metric) |>
 #'   dplyr::summarise(mean = mean(value, na.rm = TRUE), .groups = "drop")
 #' }
-gridsearch_survdnn <- function(formula, train, valid, times,
-                               metrics = c("cindex", "ibs"),
-                               param_grid, .seed = 42) {
-  if (!is.null(.seed)) set.seed(.seed)
-  param_df <- tidyr::crossing(!!!param_grid)
 
+gridsearch_survdnn <- function(formula, train, valid, times,
+  metrics = c("cindex", "ibs"),
+  param_grid,
+  .seed = 42,
+  .device = c("auto", "cpu", "cuda")) {
+  .device <- match.arg(.device)
+  
+  if (!is.null(.seed)) survdnn_set_seed(.seed)
+  
+  param_df <- tidyr::crossing(!!!param_grid)
+  
+  
   results <- purrr::pmap_dfr(param_df, function(hidden, lr, activation, epochs, loss) {
+    
     message(glue::glue("[survdnn] Training: loss={loss}, activation={activation}, hidden={toString(hidden)}"))
 
-    mod <- survdnn(
-      formula    = formula,
-      data       = train,
-      hidden     = hidden,
-      lr         = lr,
-      activation = activation,
-      epochs     = epochs,
-      loss       = loss,
-      verbose    = FALSE
-    )
+# re-seed inside each config to make results fully reproducible
+survdnn_set_seed(.seed)
 
-    eval_tbl <- evaluate_survdnn(
-      model    = mod,
-      newdata  = valid,
-      metrics  = metrics,
-      times    = times
-    )
+mod <- survdnn(
+  formula    = formula,
+  data       = train,
+  hidden     = hidden,
+  lr         = lr,
+  activation = activation,
+  epochs     = epochs,
+  loss       = loss,
+  verbose    = FALSE,
+  .seed      = .seed,
+  .device    = .device
+)
 
-    config <- tibble::tibble(
-      hidden     = list(hidden),
-      lr         = lr,
-      activation = activation,
-      epochs     = epochs,
-      loss       = loss
-    )
+eval_tbl <- evaluate_survdnn(
+  model    = mod,
+  newdata  = valid,
+  metrics  = metrics,
+  times    = times
+)
 
-    dplyr::bind_cols(config[rep(1, nrow(eval_tbl)), ], eval_tbl)
+config <- tibble::tibble(
+  hidden     = list(hidden),
+  lr         = lr,
+  activation = activation,
+  epochs     = epochs,
+  loss       = loss
+)
+
+dplyr::bind_cols(config[rep(1, nrow(eval_tbl)), ], eval_tbl)
   })
 
-  return(results)
+return(results)
 }
+
