@@ -1,24 +1,30 @@
+
 #' Build a Deep Neural Network for Survival Analysis
 #'
-#' Constructs a multilayer perceptron (MLP) with batch normalization,
-#' activation functions, and dropout. Used internally by [survdnn()] to
-#' define the model architecture.
+#' Constructs a multilayer perceptron (MLP) with optional batch normalization
+#' and dropout. Used internally by [survdnn()] to define the model architecture.
 #'
 #' @param input_dim Integer. Number of input features.
 #' @param hidden Integer vector. Sizes of the hidden layers (e.g., c(32, 16)).
 #' @param activation Character. Name of the activation function to use in each layer.
 #'   Supported options: `"relu"`, `"leaky_relu"`, `"tanh"`, `"sigmoid"`, `"gelu"`, `"elu"`, `"softplus"`.
 #' @param output_dim Integer. Output layer dimension (default = 1).
+#' @param dropout Numeric between 0 and 1. Dropout rate after each hidden layer
+#'   (default = 0.3). Set to 0 to disable dropout.
+#' @param batch_norm Logical; whether to add `nn_batch_norm1d()` after each
+#'   hidden linear layer (default = TRUE).
 #'
 #' @return A `nn_sequential` object representing the network.
 #' @keywords internal
 #' @export
-#'
-#' @examples
-#' \donttest{
-#' net <- build_dnn(10, hidden = c(64, 32), activation = "relu")
-#' }
-build_dnn <- function(input_dim, hidden, activation = "relu", output_dim = 1L) {
+
+build_dnn <- function(input_dim,
+                      hidden,
+                      activation = "relu",
+                      output_dim = 1L,
+                      dropout = 0.3,
+                      batch_norm = TRUE) {
+
   layers <- list()
   in_features <- input_dim
 
@@ -35,12 +41,14 @@ build_dnn <- function(input_dim, hidden, activation = "relu", output_dim = 1L) {
   )
 
   for (h in hidden) {
-    layers <- append(layers, list(
-      torch::nn_linear(in_features, h),
-      torch::nn_batch_norm1d(h),
-      act_fn(),
-      torch::nn_dropout(p = 0.3)
-    ))
+    layers <- append(layers, list(torch::nn_linear(in_features, h)))
+    if (isTRUE(batch_norm)) {
+      layers <- append(layers, list(torch::nn_batch_norm1d(h)))
+    }
+    layers <- append(layers, list(act_fn()))
+    if (!is.null(dropout) && dropout > 0) {
+      layers <- append(layers, list(torch::nn_dropout(p = dropout)))
+    }
     in_features <- h
   }
 
@@ -51,43 +59,29 @@ build_dnn <- function(input_dim, hidden, activation = "relu", output_dim = 1L) {
 
 #' Fit a Deep Neural Network for Survival Analysis
 #'
-#' Trains a deep neural network (DNN) to model right-censored survival data
-#' using one of the predefined loss functions: Cox, AFT, or Coxtime.
+#' Trains a deep neural network (DNN) to model right-censored survival data.
 #'
 #' @param formula A survival formula of the form `Surv(time, status) ~ predictors`.
 #' @param data A data frame containing the variables in the model.
 #' @param hidden Integer vector. Sizes of the hidden layers (default: c(32, 16)).
-#' @param activation Character string specifying the activation function to use in each layer.
-#'   Supported options: `"relu"`, `"leaky_relu"`, `"tanh"`, `"sigmoid"`, `"gelu"`, `"elu"`, `"softplus"`.
+#' @param activation Character string specifying the activation function.
 #' @param lr Learning rate for the Adam optimizer (default: `1e-4`).
 #' @param epochs Number of training epochs (default: 300).
-#' @param loss Character name of the loss function to use. One of `"cox"`, `"cox_l2"`, `"aft"`, or `"coxtime"`.
-#' @param verbose Logical; whether to print loss progress every 50 epochs (default: TRUE).
-#' @param .seed Optional integer. If provided, sets both R and torch random seeds for reproducible
-#'   weight initialization, shuffling, and dropout.
-#' @param .device Character string indicating the computation device.
-#'   One of `"auto"`, `"cpu"`, or `"cuda"`. `"auto"` uses CUDA if available,
-#'   otherwise falls back to CPU.
+#' @param loss Character name of the loss function to use. One of `"cox"`,
+#'   `"cox_l2"`, `"aft"`, or `"coxtime"`.
+#' @param verbose Logical; whether to print loss progress every 50 epochs.
+#' @param dropout Numeric between 0 and 1. Dropout rate applied after each
+#'   hidden layer (default = 0.3). Set to 0 to disable dropout.
+#' @param batch_norm Logical; whether to apply batch normalization after each
+#'   hidden layer (default = TRUE).
+#' @param callbacks Optional list of callback functions to control training
+#'   (e.g., early stopping).
+#' @param .seed Optional integer for full reproducibility.
+#' @param .device Character string: `"auto"`, `"cpu"`, or `"cuda"`.
 #'
-#' @return An object of class `"survdnn"` containing:
-#' \describe{
-#'   \item{model}{Trained `nn_module` object.}
-#'   \item{formula}{Original survival formula.}
-#'   \item{data}{Training data used for fitting.}
-#'   \item{xnames}{Predictor variable names.}
-#'   \item{x_center}{Column means of predictors.}
-#'   \item{x_scale}{Column standard deviations of predictors.}
-#'   \item{loss_history}{Vector of loss values per epoch.}
-#'   \item{final_loss}{Final training loss.}
-#'   \item{loss}{Loss function name used ("cox", "aft", etc.).}
-#'   \item{activation}{Activation function used.}
-#'   \item{hidden}{Hidden layer sizes.}
-#'   \item{lr}{Learning rate.}
-#'   \item{epochs}{Number of training epochs.}
-#'   \item{device}{Torch device used for training (`torch_device`).}
-#' }
-#'
+#' @return A `survdnn` model object.
 #' @export
+
 survdnn <- function(formula, data,
                     hidden = c(32L, 16L),
                     activation = "relu",
@@ -95,14 +89,25 @@ survdnn <- function(formula, data,
                     epochs = 300L,
                     loss = c("cox", "cox_l2", "aft", "coxtime"),
                     verbose = TRUE,
+                    dropout = 0.3,
+                    batch_norm = TRUE,
+                    callbacks = NULL,
                     .seed = NULL,
                     .device = c("auto", "cpu", "cuda")) {
 
-  # Reproducibility
+
   survdnn_set_seed(.seed)
 
-  # Device selection (CPU / CUDA / auto)
   device <- survdnn_get_device(.device)
+
+  if (!is.null(callbacks)) {
+    if (is.function(callbacks)) {
+      callbacks <- list(callbacks)
+    } else if (!is.list(callbacks) || !all(vapply(callbacks, is.function, logical(1)))) {
+      stop("`callbacks` must be NULL, a function, or a list of functions.", call. = FALSE)
+    }
+  }
+  
 
   stopifnot(inherits(formula, "formula"))
   stopifnot(is.data.frame(data))
@@ -149,7 +154,15 @@ survdnn <- function(formula, data,
     device = device
   )
 
-  net <- build_dnn(ncol(x_tensor), hidden, activation)
+  net <- build_dnn(
+    input_dim  = ncol(x_tensor),
+    hidden     = hidden,
+    activation = activation,
+    output_dim = 1L,
+    dropout    = dropout,
+    batch_norm = batch_norm
+  )
+  
   net$to(device = device)
 
   optimizer <- torch::optim_adam(
@@ -159,6 +172,8 @@ survdnn <- function(formula, data,
   )
 
   loss_history <- numeric(epochs)
+  early_stopped <- FALSE
+  last_epoch_run <- epochs
 
   for (epoch in 1:epochs) {
     net$train()
@@ -170,11 +185,31 @@ survdnn <- function(formula, data,
     loss_val$backward()
     optimizer$step()
 
-    loss_history[epoch] <- loss_val$item()
+    current_loss <- loss_val$item()
+    loss_history[epoch] <- current_loss
+    last_epoch_run <- epoch
 
     if (verbose && epoch %% 50 == 0) {
-      cat(sprintf("Epoch %d - Loss: %.6f\n", epoch, loss_val$item()))
+      cat(sprintf("Epoch %d - Loss: %.6f\n", epoch, current_loss))
+      cat("\n")
     }
+
+    ## early stopping on training loss
+    if (!is.null(callbacks)) {
+      for (cb in callbacks) {
+        stop_now <- isTRUE(cb(epoch, current_loss))
+        if (stop_now) {
+          early_stopped <- TRUE
+          break
+        }
+      }
+      if (early_stopped) break
+    }
+  }
+
+  # truncate history if early stopping
+  if (early_stopped && last_epoch_run < epochs) {
+    loss_history <- loss_history[seq_len(last_epoch_run)]
   }
 
   structure(
