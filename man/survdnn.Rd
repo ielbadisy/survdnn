@@ -12,14 +12,7 @@ survdnn(
   lr = 1e-04,
   epochs = 300L,
   loss = c("cox", "cox_l2", "aft", "coxtime"),
-  optimizer = c("adam", "adamw", "sgd", "rmsprop", "adagrad"),
-  optim_args = list(),
-  verbose = TRUE,
-  dropout = 0.3,
-  batch_norm = TRUE,
-  callbacks = NULL,
-  .seed = NULL,
-  .device = c("auto", "cpu", "cuda")
+  verbose = TRUE
 )
 }
 \arguments{
@@ -32,36 +25,13 @@ survdnn(
 \item{activation}{Character string specifying the activation function to use in each layer.
 Supported options: `"relu"`, `"leaky_relu"`, `"tanh"`, `"sigmoid"`, `"gelu"`, `"elu"`, `"softplus"`.}
 
-\item{lr}{Learning rate for the optimizer (default: `1e-4`).}
+\item{lr}{Learning rate for the Adam optimizer (default: `1e-4`).}
 
 \item{epochs}{Number of training epochs (default: 300).}
 
 \item{loss}{Character name of the loss function to use. One of `"cox"`, `"cox_l2"`, `"aft"`, or `"coxtime"`.}
 
-\item{optimizer}{Character string specifying the optimizer to use. One of
-`"adam"`, `"adamw"`, `"sgd"`, `"rmsprop"`, or `"adagrad"`. Defaults to `"adam"`.}
-
-\item{optim_args}{Optional named list of additional arguments passed to the
-underlying torch optimizer (e.g., `list(weight_decay = 1e-4, momentum = 0.9)`).}
-
 \item{verbose}{Logical; whether to print loss progress every 50 epochs (default: TRUE).}
-
-\item{dropout}{Numeric between 0 and 1. Dropout rate applied after each
-hidden layer (default = 0.3). Set to 0 to disable dropout.}
-
-\item{batch_norm}{Logical; whether to add batch normalization after each
-hidden linear layer (default = TRUE).}
-
-\item{callbacks}{Optional list of callback functions. Each callback should have
-signature `function(epoch, current)` and return TRUE if training should stop,
-FALSE otherwise. Used, for example, with [callback_early_stopping()].}
-
-\item{.seed}{Optional integer. If provided, sets both R and torch random seeds for reproducible
-weight initialization, shuffling, and dropout.}
-
-\item{.device}{Character string indicating the computation device.
-One of `"auto"`, `"cpu"`, or `"cuda"`. `"auto"` uses CUDA if available,
-otherwise falls back to CPU.}
 }
 \value{
 An object of class `"survdnn"` containing:
@@ -79,12 +49,24 @@ An object of class `"survdnn"` containing:
   \item{hidden}{Hidden layer sizes.}
   \item{lr}{Learning rate.}
   \item{epochs}{Number of training epochs.}
-  \item{optimizer}{Optimizer name used.}
-  \item{optim_args}{List of optimizer arguments used.}
-  \item{device}{Torch device used for training (`torch_device`).}
 }
 }
 \description{
 Trains a deep neural network (DNN) to model right-censored survival data
 using one of the predefined loss functions: Cox, AFT, or Coxtime.
+}
+\examples{
+\donttest{
+set.seed(123)
+df <- data.frame(
+  time = rexp(100, rate = 0.1),
+  status = rbinom(100, 1, 0.7),
+  x1 = rnorm(100),
+  x2 = rbinom(100, 1, 0.5)
+)
+mod <- survdnn(Surv(time, status) ~ x1 + x2, data = df, epochs = 5
+
+, loss = "cox", verbose = FALSE)
+mod$final_loss
+}
 }

@@ -11,8 +11,7 @@ gridsearch_survdnn(
   times,
   metrics = c("cindex", "ibs"),
   param_grid,
-  .seed = 42,
-  .device = c("auto", "cpu", "cuda")
+  .seed = 42
 )
 }
 \arguments{
@@ -29,8 +28,6 @@ gridsearch_survdnn(
 \item{param_grid}{A named list of hyperparameters (`hidden`, `lr`, `activation`, `epochs`, `loss`)}
 
 \item{.seed}{Optional random seed for reproducibility}
-
-\item{.device}{Character string indicating the computation device used when fitting models for each hyperparameter configuration. One of `"auto"`, `"cpu"`, or `"cuda"`. `"auto"` uses CUDA if available, otherwise falls back to CPU.}
 }
 \value{
 A tibble with configurations and their validation metrics
