@@ -13,7 +13,8 @@ utils::globalVariables(c("loss"))
 #' @param param_grid A named list defining hyperparameter combinations to evaluate.
 #'                   Required names: `hidden`, `lr`, `activation`, `epochs`, `loss`.
 #' @param folds Number of cross-validation folds (default: 3).
-#' @param .seed Optional seed for reproducibility (default: 42).
+#' @param .seed Optional seed for reproducibility.
+#' @param .device Character string indicating the computation device used when fitting models during cross-validation and refitting. One of `"auto"`, `"cpu"`, or `"cuda"`. `"auto"` uses CUDA if available, otherwise falls back to CPU.
 #' @param refit Logical. If TRUE, refits the best model on the full dataset.
 #' @param return One of "all", "summary", or "best_model":
 #'   \describe{
@@ -24,16 +25,26 @@ utils::globalVariables(c("loss"))
 #'
 #' @return A tibble or model object depending on the `return` value.
 #' @export
-tune_survdnn <- function(formula, data, times, metrics = "cindex",
-                         param_grid, folds = 3, .seed = 42,
+tune_survdnn <- function(formula, 
+                         data, 
+                         times, 
+                         metrics = "cindex",
+                         param_grid, 
+                         folds = 3, 
+                         .seed = 42,
+                         .device = c("auto", "cpu", "cuda"),
                          refit = FALSE,
                          return = c("all", "summary", "best_model")) {
-  return <- match.arg(return)
-  if (!is.null(.seed)) set.seed(.seed)
+  
+  return  <- match.arg(return)
+  .device <- match.arg(.device)
+
+  if (!is.null(.seed)) survdnn_set_seed(.seed)
 
   param_df <- tidyr::crossing(!!!param_grid)
 
   all_results <- purrr::pmap_dfr(param_df, function(hidden, lr, activation, epochs, loss) {
+
     config_tbl <- tibble::tibble(
       hidden     = list(hidden),
       lr         = lr,
@@ -44,15 +55,17 @@ tune_survdnn <- function(formula, data, times, metrics = "cindex",
 
     cv_tbl <- cv_survdnn(
       formula = formula,
-      data = data,
-      times = times,
+      data    = data,
+      times   = times,
       metrics = metrics,
-      folds = folds,
-      hidden = hidden,
-      lr = lr,
+      folds   = folds,
+      hidden  = hidden,
+      lr      = lr,
       activation = activation,
-      epochs = epochs,
-      loss = loss
+      epochs     = epochs,
+      loss       = loss,
+      .seed      = .seed,
+      .device    = .device
     )
 
     dplyr::bind_cols(config_tbl[rep(1, nrow(cv_tbl)), ], cv_tbl)
@@ -60,16 +73,19 @@ tune_survdnn <- function(formula, data, times, metrics = "cindex",
 
   summary_tbl <- summarize_tune_survdnn(all_results, by_time = FALSE)
 
-  # Select best model according to first metric
+  ## Select best hyperparameters
   primary_metric <- metrics[1]
+
   best_row_all <- all_results |>
     dplyr::filter(metric == primary_metric) |>
     dplyr::group_by(hidden, lr, activation, epochs, loss) |>
     dplyr::summarise(mean = mean(value, na.rm = TRUE), .groups = "drop") |>
     dplyr::slice_max(order_by = if (primary_metric == "cindex") mean else -mean, n = 1)
 
-  if (nrow(best_row_all) == 0) stop("No valid configuration found for primary metric: ", primary_metric)
+  if (nrow(best_row_all) == 0)
+    stop("No valid configuration found for primary metric: ", primary_metric)
 
+  ## Refitting the best model
   if (refit) {
     message("Refitting best model on full data...")
     best_model <- survdnn(
@@ -79,14 +95,18 @@ tune_survdnn <- function(formula, data, times, metrics = "cindex",
       lr         = best_row_all$lr,
       activation = best_row_all$activation,
       epochs     = best_row_all$epochs,
-      loss       = best_row_all$loss[[1]]
+      loss       = best_row_all$loss[[1]],
+      .seed      = .seed,
+      .device    = .device   
     )
   }
 
-  switch(return,
-         "all" = all_results,
-         "summary" = summary_tbl,
-         "best_model" = if (refit) best_model else dplyr::select(best_row_all, -mean))
+  switch(
+    return,
+    "all"        = all_results,
+    "summary"    = summary_tbl,
+    "best_model" = if (refit) best_model else dplyr::select(best_row_all, -mean)
+  )
 }
 
 

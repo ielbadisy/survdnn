@@ -17,6 +17,7 @@
 #' age + karno + celltype, data = veteran, epochs = 20, verbose = FALSE)
 #' print(mod)
 #' }
+
 print.survdnn <- function(x, ...) {
   stopifnot(inherits(x, "survdnn"))
 
@@ -25,9 +26,13 @@ print.survdnn <- function(x, ...) {
   cli::cli_text("Hidden layers: {.val {paste(x$hidden, collapse = ' : ')}}")
   cli::cli_text("Activation: {.val {x$activation}}")
   cli::cli_text("Learning rate: {.val {x$lr}}")
+
+  if (!is.null(x$optimizer)) {
+    cli::cli_text("Optimizer: {.val {x$optimizer}}")
+  }
+
   cli::cli_text("Loss function: {.val {x$loss}}")
 
-  # safely print final loss if it is numeric
   if (is.numeric(x$final_loss) && length(x$final_loss) == 1 && !is.na(x$final_loss)) {
     cli::cli_text("Final loss: {.val {round(x$final_loss, 4)}} after {.val {x$epochs}} epochs")
   } else {

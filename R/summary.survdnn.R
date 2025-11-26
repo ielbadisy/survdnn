@@ -23,6 +23,8 @@
 #' mod <- survdnn(Surv(time, status) ~ age + sex + trt, data = sim_data, epochs = 50, verbose = FALSE)
 #' summary(mod)
 #' }
+
+
 summary.survdnn <- function(object, ...) {
   stopifnot(inherits(object, "survdnn"))
 
@@ -36,25 +38,25 @@ summary.survdnn <- function(object, ...) {
     model_summary = list(
       hidden_layers = object$hidden,
       activation = object$activation,
-      dropout = 0.3,
+      dropout = if (!is.null(object$dropout)) object$dropout else 0.3,
       final_loss = object$final_loss
     ),
     training_summary = list(
-      epochs = object$epochs,
+      epochs        = object$epochs,
       learning_rate = object$lr,
-      loss_function = object$loss
+      loss_function = object$loss,
+      optimizer     = if (!is.null(object$optimizer)) object$optimizer else "adam"
     ),
     data_summary = list(
       observations = nrow(object$data),
-      predictors = object$xnames,
-      time_range = range(time),
-      event_rate = mean(status)
+      predictors   = object$xnames,
+      time_range   = range(time),
+      event_rate   = mean(status)
     ),
     formula = object$formula
   )
   class(out) <- "summary.survdnn"
 
-  # pretty output
   cli::cli_h1("Summary of survdnn model")
 
   cat("\nFormula:\n  ")
@@ -70,6 +72,7 @@ summary.survdnn <- function(object, ...) {
   cat("  Epochs: ", out$training_summary$epochs, "\n")
   cat("  Learning rate: ", out$training_summary$learning_rate, "\n")
   cat("  Loss function: ", out$training_summary$loss_function, "\n")
+  cat("  Optimizer: ", out$training_summary$optimizer, "\n")
 
   cat("\nData summary:\n")
   cat("  Observations: ", out$data_summary$observations, "\n")
