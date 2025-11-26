@@ -50,8 +50,7 @@ build_dnn <- function(input_dim, hidden, activation = "relu", output_dim = 1L) {
 
 #' Fit a Deep Neural Network for Survival Analysis
 #'
-#' Trains a deep neural network (DNN) to model right-censored survival data
-#' using one of the predefined loss functions: Cox, AFT, or Coxtime.
+#' Trains a deep neural network (DNN) to model right-censored survival data.
 #'
 #' @param formula A survival formula of the form `Surv(time, status) ~ predictors`.
 #' @param data A data frame containing the variables in the model.
@@ -81,51 +80,99 @@ build_dnn <- function(input_dim, hidden, activation = "relu", output_dim = 1L) {
 #' }
 #'
 #' @export
-#'
-#' @examples
-#' \donttest{
-#' set.seed(123)
-#' df <- data.frame(
-#'   time = rexp(100, rate = 0.1),
-#'   status = rbinom(100, 1, 0.7),
-#'   x1 = rnorm(100),
-#'   x2 = rbinom(100, 1, 0.5)
-#' )
-#' mod <- survdnn(Surv(time, status) ~ x1 + x2, data = df, epochs = 5
-#' 
-#' , loss = "cox", verbose = FALSE)
-#' mod$final_loss
-#' }
 survdnn <- function(formula, data,
                     hidden = c(32L, 16L),
                     activation = "relu",
                     lr = 1e-4,
                     epochs = 300L,
                     loss = c("cox", "cox_l2", "aft", "coxtime"),
-                    verbose = TRUE) {
+                    optimizer = c("adam", "adamw", "sgd", "rmsprop", "adagrad"),
+                    optim_args = list(),
+                    verbose = TRUE,
+                    dropout = 0.3,
+                    batch_norm = TRUE,
+                    callbacks = NULL,
+                    .seed = NULL,
+                    .device = c("auto", "cpu", "cuda")) {
+
+  survdnn_set_seed(.seed)
+
+  device <- survdnn_get_device(.device)
+
+  loss      <- match.arg(loss)
+  optimizer <- match.arg(optimizer)
+
+  if (!is.list(optim_args)) {
+    stop("`optim_args` must be a list (possibly empty).", call. = FALSE)
+  }
+
+  if (!is.null(callbacks)) {
+    if (is.function(callbacks)) {
+      callbacks <- list(callbacks)
+    } else if (!is.list(callbacks) || !all(vapply(callbacks, is.function, logical(1)))) {
+      stop("`callbacks` must be NULL, a function, or a list of functions.", call. = FALSE)
+    }
+  }
+
   stopifnot(inherits(formula, "formula"))
   stopifnot(is.data.frame(data))
 
-  loss <- match.arg(loss)
-  loss_fn <- switch(loss,
-                    cox     = cox_loss,
-                    cox_l2  = function(pred, true) cox_l2_loss(pred, true, lambda = 1e-3),
-                    aft     = aft_loss,
-                    coxtime = coxtime_loss)
+  loss_fn <- switch(
+    loss,
+    cox     = cox_loss,
+    cox_l2  = function(pred, true) cox_l2_loss(pred, true, lambda = 1e-3),
+    aft     = aft_loss,
+    coxtime = coxtime_loss
+  )
 
-  environment(formula) <- list2env(list(Surv = survival::Surv), parent = environment(formula))
+  environment(formula) <- list2env(
+    list(Surv = survival::Surv),
+    parent = environment(formula)
+  )
 
-  mf <- model.frame(formula, data)
-  y <- model.response(mf)
-  x <- model.matrix(attr(mf, "terms"), data = mf)[, -1, drop = FALSE]
-  time <- y[, "time"]
-  status <- y[, "status"]
-  x_scaled <- scale(x)
+  mf        <- model.frame(formula, data)
+  y         <- model.response(mf)
+  x         <- model.matrix(attr(mf, "terms"), data = mf)[, -1, drop = FALSE]
+  time      <- y[, "time"]
+  status    <- y[, "status"]
+  x_scaled  <- scale(x)
 
   x_tensor <- if (loss == "coxtime") {
     torch::torch_tensor(cbind(time, x_scaled), dtype = torch::torch_float())
   } else {
-    torch::torch_tensor(x_scaled, dtype = torch::torch_float())
+    torch::torch_tensor(
+      x_scaled,
+      dtype  = torch::torch_float(),
+      device = device
+    )
+  }
+
+  y_tensor <- torch::torch_tensor(
+    cbind(time, status),
+    dtype  = torch::torch_float(),
+    device = device
+  )
+
+  ## build network with dropout + batch_norm controls
+  net <- build_dnn(
+    input_dim  = ncol(x_tensor),
+    hidden     = hidden,
+    activation = activation,
+    output_dim = 1L,
+    dropout    = dropout,
+    batch_norm = batch_norm
+  )
+  net$to(device = device)
+
+  ## build optimizer with dispatcher
+  opt_args <- c(
+    list(params = net$parameters, lr = lr),
+    optim_args
+  )
+
+  ## default weight decay for adam/adamw if not provided
+  if (is.null(optim_args$weight_decay) && optimizer %in% c("adam", "adamw")) {
+    opt_args$weight_decay <- 1e-4
   }
 
   y_tensor <- torch::torch_tensor(cbind(time, status), dtype = torch::torch_float())
@@ -135,29 +182,62 @@ survdnn <- function(formula, data,
   loss_history <- numeric(epochs)
   for (epoch in 1:epochs) {
     net$train()
-    optimizer$zero_grad()
-    pred <- net(x_tensor)
+    optimizer_obj$zero_grad()
+
+    pred     <- net(x_tensor)
     loss_val <- loss_fn(pred, y_tensor)
     loss_val$backward()
-    optimizer$step()
-    loss_history[epoch] <- loss_val$item()
-    if (verbose && epoch %% 50 == 0)
-      cat(sprintf("Epoch %d - Loss: %.6f\n", epoch, loss_val$item()))
+    optimizer_obj$step()
+
+    current_loss        <- loss_val$item()
+    loss_history[epoch] <- current_loss
+    last_epoch_run      <- epoch
+
+    if (verbose && epoch %% 50 == 0) {
+      cat(sprintf("Epoch %d - Loss: %.6f\n", epoch, current_loss))
+      cat("\n")
+    }
+
+    ## callbacks 
+    if (!is.null(callbacks)) {
+      for (cb in callbacks) {
+        stop_now <- isTRUE(cb(epoch, current_loss))
+        if (stop_now) {
+          early_stopped <- TRUE
+          break
+        }
+      }
+      if (early_stopped) break
+    }
   }
 
-  structure(list(
-    model = net,
-    formula = formula,
-    data = data,
-    xnames = colnames(x),
-    x_center = attr(x_scaled, "scaled:center"),
-    x_scale = attr(x_scaled, "scaled:scale"),
-    loss_history = loss_history,
-    final_loss = tail(loss_history, 1),
-    loss = loss,
-    activation = activation,
-    hidden = hidden,
-    lr = lr,
-    epochs = epochs
-  ), class = "survdnn")
+  ## truncate loss history if early stopping
+  if (early_stopped && last_epoch_run < epochs) {
+    loss_history <- loss_history[seq_len(last_epoch_run)]
+  }
+
+  structure(
+    list(
+      model        = net,
+      formula      = formula,
+      data         = data,
+      xnames       = colnames(x),
+      x_center     = attr(x_scaled, "scaled:center"),
+      x_scale      = attr(x_scaled, "scaled:scale"),
+      loss_history = loss_history,
+      final_loss   = tail(loss_history, 1),
+      loss         = loss,
+      activation   = activation,
+      hidden       = hidden,
+      lr           = lr,
+      epochs       = epochs,
+      optimizer    = optimizer,
+      optim_args   = optim_args,
+      device       = device,
+      dropout      = dropout,
+      batch_norm   = batch_norm
+    ),
+    class = "survdnn"
+  )
 }
+
