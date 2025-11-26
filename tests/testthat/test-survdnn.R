@@ -30,30 +30,9 @@ test_that("survdnn() fits a model and returns correct structure", {
 
   expect_named(
     mod,
-<<<<<<< HEAD
     c("model", "formula", "data", "xnames", "x_center", "x_scale", 
     "loss_history", "final_loss", "loss", "activation", "hidden",
     "lr", "epochs", "device"),
-=======
-    c("activation",
-      "batch_norm",
-      "data",
-      "device",
-      "dropout",
-      "epochs",
-      "final_loss",
-      "formula",
-      "hidden",
-      "loss",
-      "loss_history",
-      "lr",
-      "model",
-      "optim_args",
-      "optimizer",
-      "x_center",
-      "x_scale",
-      "xnames"),
->>>>>>> feature/optimizers-from-main
     ignore.order = TRUE
   )
 })
