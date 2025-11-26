@@ -64,6 +64,7 @@ build_dnn <- function(input_dim,
 #' @param formula A survival formula of the form `Surv(time, status) ~ predictors`.
 #' @param data A data frame containing the variables in the model.
 #' @param hidden Integer vector. Sizes of the hidden layers (default: c(32, 16)).
+<<<<<<< HEAD
 #' @param activation Character string specifying the activation function.
 #' @param lr Learning rate for the Adam optimizer (default: `1e-4`).
 #' @param epochs Number of training epochs (default: 300).
@@ -82,12 +83,62 @@ build_dnn <- function(input_dim,
 #' @return A `survdnn` model object.
 #' @export
 
+=======
+#' @param activation Character string specifying the activation function to use in each layer.
+#'   Supported options: `"relu"`, `"leaky_relu"`, `"tanh"`, `"sigmoid"`, `"gelu"`, `"elu"`, `"softplus"`.
+#' @param lr Learning rate for the optimizer (default: `1e-4`).
+#' @param epochs Number of training epochs (default: 300).
+#' @param loss Character name of the loss function to use. One of `"cox"`, `"cox_l2"`, `"aft"`, or `"coxtime"`.
+#' @param optimizer Character string specifying the optimizer to use. One of
+#'   `"adam"`, `"adamw"`, `"sgd"`, `"rmsprop"`, or `"adagrad"`. Defaults to `"adam"`.
+#' @param optim_args Optional named list of additional arguments passed to the
+#'   underlying torch optimizer (e.g., `list(weight_decay = 1e-4, momentum = 0.9)`).
+#' @param verbose Logical; whether to print loss progress every 50 epochs (default: TRUE).
+#' @param dropout Numeric between 0 and 1. Dropout rate applied after each
+#'   hidden layer (default = 0.3). Set to 0 to disable dropout.
+#' @param batch_norm Logical; whether to add batch normalization after each
+#'   hidden linear layer (default = TRUE).
+#' @param callbacks Optional list of callback functions. Each callback should have
+#'   signature `function(epoch, current)` and return TRUE if training should stop,
+#'   FALSE otherwise. Used, for example, with [callback_early_stopping()].
+#' @param .seed Optional integer. If provided, sets both R and torch random seeds for reproducible
+#'   weight initialization, shuffling, and dropout.
+#' @param .device Character string indicating the computation device.
+#'   One of `"auto"`, `"cpu"`, or `"cuda"`. `"auto"` uses CUDA if available,
+#'   otherwise falls back to CPU.
+#'
+#' @return An object of class `"survdnn"` containing:
+#' \describe{
+#'   \item{model}{Trained `nn_module` object.}
+#'   \item{formula}{Original survival formula.}
+#'   \item{data}{Training data used for fitting.}
+#'   \item{xnames}{Predictor variable names.}
+#'   \item{x_center}{Column means of predictors.}
+#'   \item{x_scale}{Column standard deviations of predictors.}
+#'   \item{loss_history}{Vector of loss values per epoch.}
+#'   \item{final_loss}{Final training loss.}
+#'   \item{loss}{Loss function name used ("cox", "aft", etc.).}
+#'   \item{activation}{Activation function used.}
+#'   \item{hidden}{Hidden layer sizes.}
+#'   \item{lr}{Learning rate.}
+#'   \item{epochs}{Number of training epochs.}
+#'   \item{optimizer}{Optimizer name used.}
+#'   \item{optim_args}{List of optimizer arguments used.}
+#'   \item{device}{Torch device used for training (`torch_device`).}
+#' }
+#' @export
+>>>>>>> feature/optimizers-from-main
 survdnn <- function(formula, data,
                     hidden = c(32L, 16L),
                     activation = "relu",
                     lr = 1e-4,
                     epochs = 300L,
                     loss = c("cox", "cox_l2", "aft", "coxtime"),
+<<<<<<< HEAD
+=======
+                    optimizer = c("adam", "adamw", "sgd", "rmsprop", "adagrad"),
+                    optim_args = list(),
+>>>>>>> feature/optimizers-from-main
                     verbose = TRUE,
                     dropout = 0.3,
                     batch_norm = TRUE,
@@ -95,11 +146,24 @@ survdnn <- function(formula, data,
                     .seed = NULL,
                     .device = c("auto", "cpu", "cuda")) {
 
+<<<<<<< HEAD
 
+=======
+>>>>>>> feature/optimizers-from-main
   survdnn_set_seed(.seed)
 
   device <- survdnn_get_device(.device)
 
+<<<<<<< HEAD
+=======
+  loss      <- match.arg(loss)
+  optimizer <- match.arg(optimizer)
+
+  if (!is.list(optim_args)) {
+    stop("`optim_args` must be a list (possibly empty).", call. = FALSE)
+  }
+
+>>>>>>> feature/optimizers-from-main
   if (!is.null(callbacks)) {
     if (is.function(callbacks)) {
       callbacks <- list(callbacks)
@@ -107,12 +171,18 @@ survdnn <- function(formula, data,
       stop("`callbacks` must be NULL, a function, or a list of functions.", call. = FALSE)
     }
   }
+<<<<<<< HEAD
   
+=======
+>>>>>>> feature/optimizers-from-main
 
   stopifnot(inherits(formula, "formula"))
   stopifnot(is.data.frame(data))
 
+<<<<<<< HEAD
   loss <- match.arg(loss)
+=======
+>>>>>>> feature/optimizers-from-main
   loss_fn <- switch(
     loss,
     cox     = cox_loss,
@@ -121,18 +191,30 @@ survdnn <- function(formula, data,
     coxtime = coxtime_loss
   )
 
+<<<<<<< HEAD
   # Ensure Surv is resolvable in the formula environment
+=======
+>>>>>>> feature/optimizers-from-main
   environment(formula) <- list2env(
     list(Surv = survival::Surv),
     parent = environment(formula)
   )
 
+<<<<<<< HEAD
   mf    <- model.frame(formula, data)
   y     <- model.response(mf)
   x     <- model.matrix(attr(mf, "terms"), data = mf)[, -1, drop = FALSE]
   time  <- y[, "time"]
   status <- y[, "status"]
   x_scaled <- scale(x)
+=======
+  mf        <- model.frame(formula, data)
+  y         <- model.response(mf)
+  x         <- model.matrix(attr(mf, "terms"), data = mf)[, -1, drop = FALSE]
+  time      <- y[, "time"]
+  status    <- y[, "status"]
+  x_scaled  <- scale(x)
+>>>>>>> feature/optimizers-from-main
 
   x_tensor <- if (loss == "coxtime") {
     torch::torch_tensor(
@@ -154,6 +236,10 @@ survdnn <- function(formula, data,
     device = device
   )
 
+<<<<<<< HEAD
+=======
+  ## build network with dropout + batch_norm controls
+>>>>>>> feature/optimizers-from-main
   net <- build_dnn(
     input_dim  = ncol(x_tensor),
     hidden     = hidden,
@@ -162,6 +248,7 @@ survdnn <- function(formula, data,
     dropout    = dropout,
     batch_norm = batch_norm
   )
+<<<<<<< HEAD
   
   net$to(device = device)
 
@@ -178,23 +265,67 @@ survdnn <- function(formula, data,
   for (epoch in 1:epochs) {
     net$train()
     optimizer$zero_grad()
+=======
+  net$to(device = device)
+
+  ## build optimizer with dispatcher
+  opt_args <- c(
+    list(params = net$parameters, lr = lr),
+    optim_args
+  )
+
+  ## default weight decay for adam/adamw if not provided
+  if (is.null(optim_args$weight_decay) && optimizer %in% c("adam", "adamw")) {
+    opt_args$weight_decay <- 1e-4
+  }
+
+  optimizer_obj <- switch(
+    optimizer,
+    adam    = do.call(torch::optim_adam,    opt_args),
+    adamw   = do.call(torch::optim_adamw,   opt_args),
+    sgd     = do.call(torch::optim_sgd,     opt_args),
+    rmsprop = do.call(torch::optim_rmsprop, opt_args),
+    adagrad = do.call(torch::optim_adagrad, opt_args),
+    stop("Unsupported optimizer: ", optimizer)
+  )
+
+  loss_history   <- numeric(epochs)
+  early_stopped  <- FALSE
+  last_epoch_run <- epochs
+
+  for (epoch in 1:epochs) {
+    net$train()
+    optimizer_obj$zero_grad()
+>>>>>>> feature/optimizers-from-main
 
     pred     <- net(x_tensor)
     loss_val <- loss_fn(pred, y_tensor)
 
     loss_val$backward()
+<<<<<<< HEAD
     optimizer$step()
 
     current_loss <- loss_val$item()
     loss_history[epoch] <- current_loss
     last_epoch_run <- epoch
+=======
+    optimizer_obj$step()
+
+    current_loss        <- loss_val$item()
+    loss_history[epoch] <- current_loss
+    last_epoch_run      <- epoch
+>>>>>>> feature/optimizers-from-main
 
     if (verbose && epoch %% 50 == 0) {
       cat(sprintf("Epoch %d - Loss: %.6f\n", epoch, current_loss))
       cat("\n")
     }
 
+<<<<<<< HEAD
     ## early stopping on training loss
+=======
+    ## callbacks 
+>>>>>>> feature/optimizers-from-main
     if (!is.null(callbacks)) {
       for (cb in callbacks) {
         stop_now <- isTRUE(cb(epoch, current_loss))
@@ -207,7 +338,11 @@ survdnn <- function(formula, data,
     }
   }
 
+<<<<<<< HEAD
   # truncate history if early stopping
+=======
+  ## truncate loss history if early stopping
+>>>>>>> feature/optimizers-from-main
   if (early_stopped && last_epoch_run < epochs) {
     loss_history <- loss_history[seq_len(last_epoch_run)]
   }
@@ -227,8 +362,18 @@ survdnn <- function(formula, data,
       hidden       = hidden,
       lr           = lr,
       epochs       = epochs,
+<<<<<<< HEAD
       device       = device
+=======
+      optimizer    = optimizer,
+      optim_args   = optim_args,
+      device       = device,
+      dropout      = dropout,
+      batch_norm   = batch_norm
+>>>>>>> feature/optimizers-from-main
     ),
     class = "survdnn"
   )
 }
+
+
