@@ -19,7 +19,8 @@ survdnn(
   batch_norm = TRUE,
   callbacks = NULL,
   .seed = NULL,
-  .device = c("auto", "cpu", "cuda")
+  .device = c("auto", "cpu", "cuda"),
+  na_action = c("omit", "fail")
 )
 }
 \arguments{
@@ -62,6 +63,10 @@ weight initialization, shuffling, and dropout.}
 \item{.device}{Character string indicating the computation device.
 One of `"auto"`, `"cpu"`, or `"cuda"`. `"auto"` uses CUDA if available,
 otherwise falls back to CPU.}
+
+\item{na_action}{Character. How to handle missing values in the model variables:
+`"omit"` drops incomplete rows (and reports how many were removed when `verbose=TRUE`);
+`"fail"` stops with an error if any missing values are present.}
 }
 \value{
 An object of class `"survdnn"` containing:

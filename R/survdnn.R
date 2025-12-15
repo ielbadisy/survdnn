@@ -1,4 +1,3 @@
-
 #' Build a Deep Neural Network for Survival Analysis
 #'
 #' Constructs a multilayer perceptron (MLP) with optional batch normalization
@@ -17,7 +16,6 @@
 #' @return A `nn_sequential` object representing the network.
 #' @keywords internal
 #' @export
-
 build_dnn <- function(input_dim,
                       hidden,
                       activation = "relu",
@@ -87,6 +85,9 @@ build_dnn <- function(input_dim,
 #' @param .device Character string indicating the computation device.
 #'   One of `"auto"`, `"cpu"`, or `"cuda"`. `"auto"` uses CUDA if available,
 #'   otherwise falls back to CPU.
+#' @param na_action Character. How to handle missing values in the model variables:
+#'   `"omit"` drops incomplete rows (and reports how many were removed when `verbose=TRUE`);
+#'   `"fail"` stops with an error if any missing values are present.
 #'
 #' @return An object of class `"survdnn"` containing:
 #' \describe{
@@ -121,7 +122,8 @@ survdnn <- function(formula, data,
                     batch_norm = TRUE,
                     callbacks = NULL,
                     .seed = NULL,
-                    .device = c("auto", "cpu", "cuda")) {
+                    .device = c("auto", "cpu", "cuda"),
+                    na_action = c("omit", "fail")) {
 
   survdnn_set_seed(.seed)
 
@@ -129,6 +131,7 @@ survdnn <- function(formula, data,
 
   loss      <- match.arg(loss)
   optimizer <- match.arg(optimizer)
+  na_action <- match.arg(na_action)
 
   if (!is.list(optim_args)) {
     stop("`optim_args` must be a list (possibly empty).", call. = FALSE)
@@ -158,7 +161,22 @@ survdnn <- function(formula, data,
     parent = environment(formula)
   )
 
-  mf        <- model.frame(formula, data)
+  ## explicit missing-data handling
+  n_before <- nrow(data)
+
+  mf <- model.frame(
+    formula,
+    data = data,
+    na.action = if (na_action == "omit") stats::na.omit else stats::na.fail
+  )
+
+  n_after <- nrow(mf)
+  n_removed <- n_before - n_after
+
+  if (n_removed > 0 && isTRUE(verbose) && na_action == "omit") {
+    message(sprintf("Removed %d observations with missing values.", n_removed))
+  }
+
   y         <- model.response(mf)
   x         <- model.matrix(attr(mf, "terms"), data = mf)[, -1, drop = FALSE]
   time      <- y[, "time"]
@@ -240,7 +258,7 @@ survdnn <- function(formula, data,
       cat("\n")
     }
 
-    ## callbacks 
+    ## callbacks
     if (!is.null(callbacks)) {
       for (cb in callbacks) {
         stop_now <- isTRUE(cb(epoch, current_loss))
@@ -277,10 +295,9 @@ survdnn <- function(formula, data,
       optim_args   = optim_args,
       device       = device,
       dropout      = dropout,
-      batch_norm   = batch_norm
+      batch_norm   = batch_norm,
+      na_action    = na_action
     ),
     class = "survdnn"
   )
 }
-
-

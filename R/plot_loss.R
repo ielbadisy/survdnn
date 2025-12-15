@@ -1,3 +1,5 @@
+utils::globalVariables(c("epoch"))
+
 #' Plot Training Loss for a survdnn Model
 #'
 #' Visualize the evolution of the training loss across epochs for a fitted
@@ -11,22 +13,6 @@
 #'
 #' @return A `ggplot` object.
 #' @export
-#'
-#' @examples
-#' \donttest{
-#'  library(survival)
-#'  data(veteran, package = "survival")
-#'
-#'  mod <- survdnn(
-#'    Surv(time, status) ~ age + karno + celltype,
-#'    data   = veteran,
-#'    epochs = 30,
-#'    loss   = "cox",
-#'    verbose = FALSE
-#' )
-#' plot_loss(mod)
-#' }
-
 plot_loss <- function(object,
                       smooth = FALSE,
                       log_y  = FALSE,
