@@ -1,6 +1,7 @@
 test_that("survdnn omits NAs and messages when verbose=TRUE", {
-  skip_if_not_installed("torch")
-  skip_if_not_installed("survival")
+  skip_on_cran()
+  skip_if_not(torch::torch_is_installed())
+
 
   dat <- data.frame(
     time  = c(1, 2, 3, 4),
@@ -21,8 +22,9 @@ test_that("survdnn omits NAs and messages when verbose=TRUE", {
 })
 
 test_that("survdnn fails on NAs when na_action='fail'", {
-  skip_if_not_installed("torch")
-  skip_if_not_installed("survival")
+  skip_on_cran()
+  skip_if_not(torch::torch_is_installed())
+
 
   dat <- data.frame(
     time  = c(1, 2, 3, 4),
@@ -42,8 +44,9 @@ test_that("survdnn fails on NAs when na_action='fail'", {
 })
 
 test_that("evaluate_survdnn respects na_action='fail' on newdata", {
-  skip_if_not_installed("torch")
-  skip_if_not_installed("survival")
+  skip_on_cran()
+  skip_if_not(torch::torch_is_installed())
+
 
   train <- data.frame(
     time  = c(1, 2, 3, 4, 5, 6),
@@ -79,8 +82,9 @@ test_that("evaluate_survdnn respects na_action='fail' on newdata", {
 
 
 test_that("evaluate_survdnn omits incomplete rows when na_action='omit' (no crash)", {
-  skip_if_not_installed("torch")
-  skip_if_not_installed("survival")
+  skip_on_cran()
+  skip_if_not(torch::torch_is_installed())
+
 
   train <- data.frame(
     time   = c(1, 2, 3, 4, 5, 6),
