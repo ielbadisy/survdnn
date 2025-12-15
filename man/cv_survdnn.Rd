@@ -12,6 +12,7 @@ cv_survdnn(
   folds = 5,
   .seed = NULL,
   .device = c("auto", "cpu", "cuda"),
+  na_action = c("omit", "fail"),
   ...
 )
 }
@@ -28,7 +29,12 @@ cv_survdnn(
 
 \item{.seed}{Optional. Set random seed for reproducibility.}
 
-\item{.device}{Character string indicating the computation device used when fitting the models in each fold. One of `"auto"`, `"cpu"`, or `"cuda"`. `"auto"` uses CUDA if available, otherwise falls back to CPU.}
+\item{.device}{Character string indicating the computation device used when fitting the models
+in each fold. One of `"auto"`, `"cpu"`, or `"cuda"`. `"auto"` uses CUDA if available,
+otherwise falls back to CPU.}
+
+\item{na_action}{Character. How to handle missing values within each fold:
+`"omit"` drops incomplete rows; `"fail"` errors if any NA is present.}
 
 \item{...}{Additional arguments passed to [survdnn()].}
 }

@@ -8,35 +8,50 @@
 #' @param metrics A character vector of metric names: `"cindex"`, `"brier"`, `"ibs"`.
 #' @param times A numeric vector of evaluation time points.
 #' @param newdata Optional. A data frame on which to evaluate the model. Defaults to training data.
+#' @param na_action Character. How to handle missing values in evaluation data:
+#'   `"omit"` drops incomplete rows; `"fail"` errors if any NA is present.
+#' @param verbose Logical. If TRUE and `na_action="omit"`, prints a message when rows are removed.
 #'
 #' @return A tibble with evaluation results, containing at least `metric`, `value`, and possibly `time`.
 #' @export
-#'
-#' @examples
-#' \donttest{
-#' library(survival)
-#' data(veteran)
-#' \donttest{
-#' mod <- survdnn(Surv(time, status) ~ age + karno + celltype,
-#'                data = veteran, epochs = 5, verbose = FALSE)
-#' evaluate_survdnn(mod, metrics = c("cindex", "ibs"), times = c(30, 90, 180))
-#' evaluate_survdnn(mod, metrics = "brier", times = c(30, 90, 180))
-#' }
-#' }
-evaluate_survdnn <- function(model, metrics = c("cindex", "brier", "ibs"), times, newdata = NULL) {
+evaluate_survdnn <- function(model,
+                             metrics = c("cindex", "brier", "ibs"),
+                             times,
+                             newdata = NULL,
+                             na_action = c("omit", "fail"),
+                             verbose = FALSE) {
   stopifnot(inherits(model, "survdnn"))
-  if (missing(times)) stop("You must provide `times` for evaluation.")
+  if (missing(times)) stop("You must provide `times` for evaluation.", call. = FALSE)
+
+  na_action <- match.arg(na_action)
 
   allowed_metrics <- c("cindex", "brier", "ibs")
   unknown <- setdiff(metrics, allowed_metrics)
-  if (length(unknown) > 0) stop("Unknown metric(s): ", paste(unknown, collapse = ", "))
+  if (length(unknown) > 0) {
+    stop("Unknown metric(s): ", paste(unknown, collapse = ", "), call. = FALSE)
+  }
 
   data <- if (is.null(newdata)) model$data else newdata
-  sp_matrix <- predict(model, newdata = data, times = times, type = "survival")
+  n_before <- nrow(data)
 
-  mf <- model.frame(model$formula, data)
+  # Build model frame first with explicit NA policy (so y aligns with predictions)
+  mf <- model.frame(
+    model$formula,
+    data = data,
+    na.action = if (na_action == "omit") stats::na.omit else stats::na.fail
+  )
+
+  n_after <- nrow(mf)
+  n_removed <- n_before - n_after
+  if (n_removed > 0 && isTRUE(verbose) && na_action == "omit") {
+    message(sprintf("Removed %d observations with missing values in evaluation data.", n_removed))
+  }
+
   y <- model.response(mf)
-  if (!inherits(y, "Surv")) stop("The response must be a 'Surv' object.")
+  if (!inherits(y, "Surv")) stop("The response must be a 'Surv' object.", call. = FALSE)
+
+  # Predict on the filtered mf to keep row alignment
+  sp_matrix <- predict(model, newdata = mf, times = times, type = "survival")
 
   purrr::map_dfr(metrics, function(metric) {
     if (metric == "brier" && length(times) > 1) {
@@ -48,10 +63,11 @@ evaluate_survdnn <- function(model, metrics = c("cindex", "brier", "ibs"), times
         }, numeric(1))
       )
     } else {
-      val <- switch(metric,
-                    "cindex" = cindex_survmat(y, predicted = sp_matrix, t_star = max(times)),
-                    "brier"  = brier(y, pre_sp = sp_matrix[, 1], t_star = times[1]),
-                    "ibs"    = ibs_survmat(y, sp_matrix, times)
+      val <- switch(
+        metric,
+        "cindex" = cindex_survmat(y, predicted = sp_matrix, t_star = max(times)),
+        "brier"  = brier(y, pre_sp = sp_matrix[, 1], t_star = times[1]),
+        "ibs"    = ibs_survmat(y, sp_matrix, times)
       )
       tibble::tibble(metric = metric, value = val)
     }
@@ -69,8 +85,11 @@ evaluate_survdnn <- function(model, metrics = c("cindex", "brier", "ibs"), times
 #' @param metrics A character vector: any of `"cindex"`, `"brier"`, `"ibs"`.
 #' @param folds Integer. Number of folds to use.
 #' @param .seed Optional. Set random seed for reproducibility.
-#' @param .device Character string indicating the computation device used when fitting the models in each fold. One of `"auto"`, `"cpu"`, or `"cuda"`. `"auto"` uses CUDA if available, otherwise falls back to CPU.
-
+#' @param .device Character string indicating the computation device used when fitting the models
+#'   in each fold. One of `"auto"`, `"cpu"`, or `"cuda"`. `"auto"` uses CUDA if available,
+#'   otherwise falls back to CPU.
+#' @param na_action Character. How to handle missing values within each fold:
+#'   `"omit"` drops incomplete rows; `"fail"` errors if any NA is present.
 #' @param ... Additional arguments passed to [survdnn()].
 #'
 #' @return A tibble containing metric values per fold and (optionally) per time point.
@@ -96,34 +115,50 @@ cv_survdnn <- function(formula, data, times,
                        folds = 5,
                        .seed = NULL,
                        .device = c("auto", "cpu", "cuda"),
+                       na_action = c("omit", "fail"),
                        ...) {
-  
-  .device <- match.arg(.device)
-  
+
+  .device   <- match.arg(.device)
+  na_action <- match.arg(na_action)
+
   if (!requireNamespace("rsample", quietly = TRUE)) {
-    stop("Package 'rsample' is required for cross-validation.")
+    stop("Package 'rsample' is required for cross-validation.", call. = FALSE)
   }
 
-  if (!inherits(formula, "formula")) stop("`formula` must be a survival formula")
-  if (!is.data.frame(data)) stop("`data` must be a data frame")
-  if (missing(times)) stop("You must provide a `times` vector.")
+  if (!inherits(formula, "formula")) stop("`formula` must be a survival formula", call. = FALSE)
+  if (!is.data.frame(data)) stop("`data` must be a data frame", call. = FALSE)
+  if (missing(times)) stop("You must provide a `times` vector.", call. = FALSE)
 
   if (!is.null(.seed)) survdnn_set_seed(.seed)
 
   vfolds <- rsample::vfold_cv(data, v = folds, strata = all.vars(formula)[1])
 
   results <- purrr::imap_dfr(vfolds$splits, function(split, i) {
-    
+
     ## re-seed inside every fold to ensure full reproducibility
     survdnn_set_seed(.seed)
+
     train_data <- rsample::analysis(split)
     test_data  <- rsample::assessment(split)
-    model <- survdnn(formula, 
-                     data = train_data,
-                     .seed   = .seed,
-                     .device = .device,
-                     ...)
-    eval_tbl <- evaluate_survdnn(model, metrics = metrics, times = times, newdata = test_data)
+
+    model <- survdnn(
+      formula,
+      data      = train_data,
+      .seed     = .seed,
+      .device   = .device,
+      na_action = na_action,
+      ...
+    )
+
+    eval_tbl <- evaluate_survdnn(
+      model,
+      metrics   = metrics,
+      times     = times,
+      newdata   = test_data,
+      na_action = na_action,
+      verbose   = FALSE
+    )
+
     eval_tbl$fold <- i
     eval_tbl
   })
