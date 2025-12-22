@@ -9,13 +9,15 @@ output: github_document
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)  
 [![R-CMD-check](https://github.com/ielbadisy/survdnn/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/ielbadisy/survdnn/actions/workflows/R-CMD-check.yaml)
 
----
+
+## About
 
 `survdnn` implements neural network-based models for right-censored survival analysis using the native `torch` backend in R. It supports multiple loss functions including Cox partial likelihood, L2-penalized Cox, Accelerated Failure Time (AFT) objectives, as well as time-dependent extension such as Cox-Time. The package provides a formula interface, supports model evaluation using time-dependent metrics (C-index, Brier score, IBS), cross-validation, and hyperparameter tuning.
 
 ## Review status 
 
 A methodological paper describing the design, implementation, and evaluation of `survdnn` is currently under review at _The R Journal_. 
+
 
 ## Main features
 
@@ -36,7 +38,6 @@ A methodological paper describing the design, implementation, and evaluation of 
 
 - Prediction of survival curves via `predict()` and `plot()`
 
----
 
 ## Installation
 
@@ -55,7 +56,6 @@ setwd("survdnn")
 devtools::install()
 ```
 
----
 
 ## Quick example
 
@@ -82,7 +82,6 @@ summary(mod)
 plot(mod, group_by = "celltype", times = 1:300)
 ```
 
----
 
 ## Loss Functions
 
@@ -120,7 +119,6 @@ mod3 <- survdnn(
   )
 ```
 
----
 
 ## Cross-validation
 
@@ -139,7 +137,7 @@ cv_results <- cv_survdnn(
 print(cv_results)
 ```
 
----
+
 
 ## Hyperparameter tuning
 
@@ -166,13 +164,11 @@ tune_res <- tune_survdnn(
 print(tune_res)
 ```
 
----
+
 
 ## Tuning and refitting the best Model
 
-`tune_survdnn()` can be used also to automatically refit the best-performing model on the full dataset.
-
-This behavior is controlled by the `refit` and `return` arguments. For example:
+`tune_survdnn()` can be used also to automatically refit the best-performing model on the full dataset. This behavior is controlled by the `refit` and `return` arguments. For example:
 
 ```{r, eval = FALSE}
 best_model <- tune_survdnn(
@@ -203,6 +199,7 @@ predict(best_model, veteran, type = "risk", times = 180)
 This makes `tune_survdnn()` suitable for end-to-end workflows, combining model selection and final model fitting.
 
 
+
 ## Plot survival curves
 
 ```{r}
@@ -224,14 +221,12 @@ help(package = "survdnn")
 ?plot.survdnn
 ```
 
-
 ## Testing
 
 ```{r, eval = FALSE}
 # run all tests
 devtools::test()
 ```
-
 
 ## Note on reproducibility
 

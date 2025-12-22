@@ -8,7 +8,7 @@
 MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)  
 [![R-CMD-check](https://github.com/ielbadisy/survdnn/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/ielbadisy/survdnn/actions/workflows/R-CMD-check.yaml)
 
-------------------------------------------------------------------------
+## About
 
 `survdnn` implements neural network-based models for right-censored
 survival analysis using the native `torch` backend in R. It supports
@@ -44,8 +44,6 @@ evaluation of `survdnn` is currently under review at *The R Journal*.
 
 - Prediction of survival curves via `predict()` and `plot()`
 
-------------------------------------------------------------------------
-
 ## Installation
 
 ``` r
@@ -62,8 +60,6 @@ git clone https://github.com/ielbadisy/survdnn.git
 setwd("survdnn")
 devtools::install()
 ```
-
-------------------------------------------------------------------------
 
 ## Quick example
 
@@ -84,17 +80,17 @@ mod <- survdnn(
   )
 ```
 
-    ## Epoch 50 - Loss: 3.988991
+    ## Epoch 50 - Loss: 4.011225
     ## 
-    ## Epoch 100 - Loss: 3.869614
+    ## Epoch 100 - Loss: 3.947906
     ## 
-    ## Epoch 150 - Loss: 3.859638
+    ## Epoch 150 - Loss: 3.943063
     ## 
-    ## Epoch 200 - Loss: 3.822475
+    ## Epoch 200 - Loss: 3.867221
     ## 
-    ## Epoch 250 - Loss: 3.815928
+    ## Epoch 250 - Loss: 3.899364
     ## 
-    ## Epoch 300 - Loss: 3.761632
+    ## Epoch 300 - Loss: 3.886373
 
 ``` r
 summary(mod)
@@ -103,13 +99,13 @@ summary(mod)
     ## 
     ## Formula:
     ##   Surv(time, status) ~ age + karno + celltype
-    ## <environment: 0x5a98ad21a6c0>
+    ## <environment: 0x63043af80fb0>
     ## 
     ## Model architecture:
     ##   Hidden layers:  32 : 16 
     ##   Activation:  relu 
     ##   Dropout:  0.3 
-    ##   Final loss:  3.761632 
+    ##   Final loss:  3.886373 
     ## 
     ## Training summary:
     ##   Epochs:  300 
@@ -127,8 +123,6 @@ summary(mod)
 plot(mod, group_by = "celltype", times = 1:300)
 ```
 
-------------------------------------------------------------------------
-
 ## Loss Functions
 
 - Cox partial likelihood
@@ -142,17 +136,17 @@ mod1 <- survdnn(
   )
 ```
 
-    ## Epoch 50 - Loss: 3.993244
+    ## Epoch 50 - Loss: 4.000144
     ## 
-    ## Epoch 100 - Loss: 3.978425
+    ## Epoch 100 - Loss: 3.952650
     ## 
-    ## Epoch 150 - Loss: 3.912297
+    ## Epoch 150 - Loss: 3.933398
     ## 
-    ## Epoch 200 - Loss: 3.876797
+    ## Epoch 200 - Loss: 3.854104
     ## 
-    ## Epoch 250 - Loss: 3.840040
+    ## Epoch 250 - Loss: 3.904968
     ## 
-    ## Epoch 300 - Loss: 3.827474
+    ## Epoch 300 - Loss: 3.853973
 
 - Accelerated Failure Time
 
@@ -165,17 +159,17 @@ mod2 <- survdnn(
   )
 ```
 
-    ## Epoch 50 - Loss: 17.312119
+    ## Epoch 50 - Loss: 17.541626
     ## 
-    ## Epoch 100 - Loss: 16.366381
+    ## Epoch 100 - Loss: 17.229677
     ## 
-    ## Epoch 150 - Loss: 16.108498
+    ## Epoch 150 - Loss: 16.550476
     ## 
-    ## Epoch 200 - Loss: 16.010792
+    ## Epoch 200 - Loss: 16.604700
     ## 
-    ## Epoch 250 - Loss: 15.420680
+    ## Epoch 250 - Loss: 15.451199
     ## 
-    ## Epoch 300 - Loss: 14.914168
+    ## Epoch 300 - Loss: 16.233902
 
 - Coxtime
 
@@ -188,19 +182,17 @@ mod3 <- survdnn(
   )
 ```
 
-    ## Epoch 50 - Loss: 4.944570
+    ## Epoch 50 - Loss: 5.481041
     ## 
-    ## Epoch 100 - Loss: 4.871662
+    ## Epoch 100 - Loss: 5.131001
     ## 
-    ## Epoch 150 - Loss: 4.811006
+    ## Epoch 150 - Loss: 5.012476
     ## 
-    ## Epoch 200 - Loss: 4.804973
+    ## Epoch 200 - Loss: 5.215609
     ## 
-    ## Epoch 250 - Loss: 4.772617
+    ## Epoch 250 - Loss: 5.250297
     ## 
-    ## Epoch 300 - Loss: 4.775667
-
-------------------------------------------------------------------------
+    ## Epoch 300 - Loss: 5.056280
 
 ## Cross-validation
 
@@ -218,8 +210,6 @@ cv_results <- cv_survdnn(
 
 print(cv_results)
 ```
-
-------------------------------------------------------------------------
 
 ## Hyperparameter tuning
 
@@ -246,15 +236,11 @@ tune_res <- tune_survdnn(
 print(tune_res)
 ```
 
-------------------------------------------------------------------------
-
 ## Tuning and refitting the best Model
 
 `tune_survdnn()` can be used also to automatically refit the
-best-performing model on the full dataset.
-
-This behavior is controlled by the `refit` and `return` arguments. For
-example:
+best-performing model on the full dataset. This behavior is controlled
+by the `refit` and `return` arguments. For example:
 
 ``` r
 best_model <- tune_survdnn(
