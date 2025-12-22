@@ -24,8 +24,8 @@ Required if `type = "survival"` or `type = "risk"`.}
 \item{...}{Currently ignored (for future extensions).}
 }
 \value{
-A numeric vector (if `type = "lp"` or `"risk"`), or a data frame (if `type = "survival"`)
-  with one row per observation and one column per `times`.
+A numeric vector (if `type = "lp"` or `"risk"`), or a data frame
+  (if `type = "survival"`) with one row per observation and one column per `times`.
 }
 \description{
 Generate predictions from a fitted `survdnn` model for new data. Supports linear predictors,
@@ -36,17 +36,16 @@ survival probabilities at specified time points, or cumulative risk estimates.
 library(survival)
 data(veteran, package = "survival")
 
-# Fit survdnn with Cox loss
-mod <- survdnn(Surv(time, status) ~ age + karno + celltype, data = veteran,
-               loss = "cox", epochs = 50, verbose = FALSE)
+mod <- survdnn(
+  Surv(time, status) ~ age + karno + celltype,
+  data = veteran,
+  loss = "cox",
+  epochs = 50,
+  verbose = FALSE
+)
 
-# Linear predictor (log-risk)
 predict(mod, newdata = veteran, type = "lp")[1:5]
-
-# Survival probabilities at selected times
 predict(mod, newdata = veteran, type = "survival", times = c(30, 90, 180))[1:5, ]
-
-# Cumulative risk at 180 days
 predict(mod, newdata = veteran, type = "risk", times = 180)[1:5]
 }
 }
