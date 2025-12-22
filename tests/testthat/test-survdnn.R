@@ -5,10 +5,10 @@ test_that("survdnn() fits a model and returns correct structure", {
   set.seed(123)
   n <- 100
   df <- data.frame(
-    time = rexp(n, rate = 0.1),
+    time   = rexp(n, rate = 0.1),
     status = rbinom(n, 1, 0.7),
-    x1 = rnorm(n),
-    x2 = rbinom(n, 1, 0.5)
+    x1     = rnorm(n),
+    x2     = rbinom(n, 1, 0.5)
   )
 
   mod <- survdnn(
@@ -30,9 +30,25 @@ test_that("survdnn() fits a model and returns correct structure", {
 
   expect_named(
     mod,
-    c("model", "formula", "data", "xnames", "x_center", "x_scale", 
-    "loss_history", "final_loss", "loss", "activation", "hidden",
-    "lr", "epochs", "device"),
+    c("activation",
+      "batch_norm",
+      "data",
+      "device",
+      "dropout",
+      "epochs",
+      "final_loss",
+      "formula",
+      "hidden",
+      "loss",
+      "loss_history",
+      "lr",
+      "model",
+      "na_action",
+      "optim_args",
+      "optimizer",
+      "x_center",
+      "x_scale",
+      "xnames"),
     ignore.order = TRUE
   )
 })

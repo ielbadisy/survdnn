@@ -8,7 +8,9 @@ evaluate_survdnn(
   model,
   metrics = c("cindex", "brier", "ibs"),
   times,
-  newdata = NULL
+  newdata = NULL,
+  na_action = c("omit", "fail"),
+  verbose = FALSE
 )
 }
 \arguments{
@@ -19,6 +21,11 @@ evaluate_survdnn(
 \item{times}{A numeric vector of evaluation time points.}
 
 \item{newdata}{Optional. A data frame on which to evaluate the model. Defaults to training data.}
+
+\item{na_action}{Character. How to handle missing values in evaluation data:
+`"omit"` drops incomplete rows; `"fail"` errors if any NA is present.}
+
+\item{verbose}{Logical. If TRUE and `na_action="omit"`, prints a message when rows are removed.}
 }
 \value{
 A tibble with evaluation results, containing at least `metric`, `value`, and possibly `time`.
@@ -27,16 +34,4 @@ A tibble with evaluation results, containing at least `metric`, `value`, and pos
 Computes evaluation metrics for a fitted `survdnn` model at one or more time points.
 Supported metrics include the concordance index (`"cindex"`), Brier score (`"brier"`),
 and integrated Brier score (`"ibs"`).
-}
-\examples{
-\donttest{
-library(survival)
-data(veteran)
-\donttest{
-mod <- survdnn(Surv(time, status) ~ age + karno + celltype,
-               data = veteran, epochs = 5, verbose = FALSE)
-evaluate_survdnn(mod, metrics = c("cindex", "ibs"), times = c(30, 90, 180))
-evaluate_survdnn(mod, metrics = "brier", times = c(30, 90, 180))
-}
-}
 }

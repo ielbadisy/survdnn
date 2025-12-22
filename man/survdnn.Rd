@@ -12,12 +12,15 @@ survdnn(
   lr = 1e-04,
   epochs = 300L,
   loss = c("cox", "cox_l2", "aft", "coxtime"),
+  optimizer = c("adam", "adamw", "sgd", "rmsprop", "adagrad"),
+  optim_args = list(),
   verbose = TRUE,
   dropout = 0.3,
   batch_norm = TRUE,
   callbacks = NULL,
   .seed = NULL,
-  .device = c("auto", "cpu", "cuda")
+  .device = c("auto", "cpu", "cuda"),
+  na_action = c("omit", "fail")
 )
 }
 \arguments{
@@ -27,33 +30,66 @@ survdnn(
 
 \item{hidden}{Integer vector. Sizes of the hidden layers (default: c(32, 16)).}
 
-\item{activation}{Character string specifying the activation function.}
+\item{activation}{Character string specifying the activation function to use in each layer.
+Supported options: `"relu"`, `"leaky_relu"`, `"tanh"`, `"sigmoid"`, `"gelu"`, `"elu"`, `"softplus"`.}
 
-\item{lr}{Learning rate for the Adam optimizer (default: `1e-4`).}
+\item{lr}{Learning rate for the optimizer (default: `1e-4`).}
 
 \item{epochs}{Number of training epochs (default: 300).}
 
-\item{loss}{Character name of the loss function to use. One of `"cox"`,
-`"cox_l2"`, `"aft"`, or `"coxtime"`.}
+\item{loss}{Character name of the loss function to use. One of `"cox"`, `"cox_l2"`, `"aft"`, or `"coxtime"`.}
 
-\item{verbose}{Logical; whether to print loss progress every 50 epochs.}
+\item{optimizer}{Character string specifying the optimizer to use. One of
+`"adam"`, `"adamw"`, `"sgd"`, `"rmsprop"`, or `"adagrad"`. Defaults to `"adam"`.}
+
+\item{optim_args}{Optional named list of additional arguments passed to the
+underlying torch optimizer (e.g., `list(weight_decay = 1e-4, momentum = 0.9)`).}
+
+\item{verbose}{Logical; whether to print loss progress every 50 epochs (default: TRUE).}
 
 \item{dropout}{Numeric between 0 and 1. Dropout rate applied after each
 hidden layer (default = 0.3). Set to 0 to disable dropout.}
 
-\item{batch_norm}{Logical; whether to apply batch normalization after each
-hidden layer (default = TRUE).}
+\item{batch_norm}{Logical; whether to add batch normalization after each
+hidden linear layer (default = TRUE).}
 
-\item{callbacks}{Optional list of callback functions to control training
-(e.g., early stopping).}
+\item{callbacks}{Optional list of callback functions. Each callback should have
+signature `function(epoch, current)` and return TRUE if training should stop,
+FALSE otherwise. Used, for example, with [callback_early_stopping()].}
 
-\item{.seed}{Optional integer for full reproducibility.}
+\item{.seed}{Optional integer. If provided, sets both R and torch random seeds for reproducible
+weight initialization, shuffling, and dropout.}
 
-\item{.device}{Character string: `"auto"`, `"cpu"`, or `"cuda"`.}
+\item{.device}{Character string indicating the computation device.
+One of `"auto"`, `"cpu"`, or `"cuda"`. `"auto"` uses CUDA if available,
+otherwise falls back to CPU.}
+
+\item{na_action}{Character. How to handle missing values in the model variables:
+`"omit"` drops incomplete rows (and reports how many were removed when `verbose=TRUE`);
+`"fail"` stops with an error if any missing values are present.}
 }
 \value{
-A `survdnn` model object.
+An object of class `"survdnn"` containing:
+\describe{
+  \item{model}{Trained `nn_module` object.}
+  \item{formula}{Original survival formula.}
+  \item{data}{Training data used for fitting.}
+  \item{xnames}{Predictor variable names.}
+  \item{x_center}{Column means of predictors.}
+  \item{x_scale}{Column standard deviations of predictors.}
+  \item{loss_history}{Vector of loss values per epoch.}
+  \item{final_loss}{Final training loss.}
+  \item{loss}{Loss function name used ("cox", "aft", etc.).}
+  \item{activation}{Activation function used.}
+  \item{hidden}{Hidden layer sizes.}
+  \item{lr}{Learning rate.}
+  \item{epochs}{Number of training epochs.}
+  \item{optimizer}{Optimizer name used.}
+  \item{optim_args}{List of optimizer arguments used.}
+  \item{device}{Torch device used for training (`torch_device`).}
+}
 }
 \description{
-Trains a deep neural network (DNN) to model right-censored survival data.
+Trains a deep neural network (DNN) to model right-censored survival data
+using one of the predefined loss functions: Cox, AFT, or Coxtime.
 }
