@@ -284,7 +284,7 @@ GPU acceleration can be enabled by setting `.device = "cuda"` when calling `surv
 
 ## Availability 
 
-The `survdnn` R package is available on [CRAN](https://cran.r-project.org/web/packages/survdnn/index.html) or [github](https://github.com/ielbadisy/survdnn)  
+The `survdnn` R package is available on [CRAN](https://CRAN.R-project.org/package=survdnn) or [github](https://github.com/ielbadisy/survdnn)  
 
 
 ## Contributions
