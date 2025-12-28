@@ -6,6 +6,8 @@
 \alias{cox_l2_loss}
 \alias{aft_loss}
 \alias{coxtime_loss}
+\alias{rp_ph_loss}
+\alias{rp_tve_loss}
 \title{Loss Functions for survdnn Models}
 \usage{
 cox_loss(pred, true)
@@ -15,6 +17,33 @@ cox_l2_loss(pred, true, lambda = 1e-04)
 aft_loss(pred, true)
 
 coxtime_loss(pred, true)
+
+rp_ph_loss(
+  pred,
+  true,
+  gamma,
+  knots_internal,
+  knot_min,
+  knot_max,
+  timescale = c("log", "identity"),
+  eps_time = 1e-12,
+  eps_h = 1e-12,
+  mono_penalty = 0.01
+)
+
+rp_tve_loss(
+  pred,
+  true,
+  gamma,
+  alpha,
+  knots_internal,
+  knot_min,
+  knot_max,
+  timescale = c("log", "identity"),
+  eps_time = 1e-12,
+  eps_h = 1e-12,
+  mono_penalty = 0.01
+)
 }
 \arguments{
 \item{pred}{A tensor of predicted values (typically linear predictors or log-times).}
@@ -34,7 +63,10 @@ These functions define various loss functions used internally by `survdnn()` for
 - **Cox partial likelihood loss** (`cox_loss`): Negative partial log-likelihood used in proportional hazards modeling.
 - **L2-penalized Cox loss** (`cox_l2_loss`): Adds L2 regularization to the Cox loss.
 - **Accelerated Failure Time (AFT) loss** (`aft_loss`): Mean squared error between predicted and log-transformed event times, applied to uncensored observations only.
-- **CoxTime loss** (`coxtime_loss`): Implements the partial likelihood loss from Kvamme & Borgan (2019), used in Cox-Time models.
+- **CoxTime loss** (`coxtime_loss`): Partial likelihood loss from Kvamme & Borgan (2019) for Cox-Time models.
+- **Royston–Parmar PH loss** (`rp_ph_loss`): Full log-likelihood for a flexible parametric baseline on the log cumulative hazard (PH) scale, combined with a DNN risk score.
+- **Royston–Parmar TVE loss** (`rp_tve_loss`): Extends RP-PH with a single-component time-varying effect while keeping `output_dim = 1`, modeling
+  \deqn{\eta(t \mid x) = \eta_0(t) + f_\theta(x)\, s_1(t).}
 }
 
 \examples{

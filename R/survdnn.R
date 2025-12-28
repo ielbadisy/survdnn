@@ -58,7 +58,10 @@ build_dnn <- function(input_dim,
 #' Fit a Deep Neural Network for Survival Analysis
 #'
 #' Trains a deep neural network (DNN) to model right-censored survival data
-#' using one of the predefined loss functions: Cox, AFT, or Coxtime.
+#' using one of the predefined loss functions.
+#'
+#' Supported losses include:
+#' `"cox"`, `"cox_l2"`, `"aft"`, `"coxtime"`, `"rp_ph"`, `"rp_tve"`.
 #'
 #' @param formula A survival formula of the form `Surv(time, status) ~ predictors`.
 #' @param data A data frame containing the variables in the model.
@@ -67,7 +70,8 @@ build_dnn <- function(input_dim,
 #'   Supported options: `"relu"`, `"leaky_relu"`, `"tanh"`, `"sigmoid"`, `"gelu"`, `"elu"`, `"softplus"`.
 #' @param lr Learning rate for the optimizer (default: `1e-4`).
 #' @param epochs Number of training epochs (default: 300).
-#' @param loss Character name of the loss function to use. One of `"cox"`, `"cox_l2"`, `"aft"`, or `"coxtime"`.
+#' @param loss Character name of the loss function to use.
+#'   One of `"cox"`, `"cox_l2"`, `"aft"`, `"coxtime"`, `"rp_ph"`, `"rp_tve"`.
 #' @param optimizer Character string specifying the optimizer to use. One of
 #'   `"adam"`, `"adamw"`, `"sgd"`, `"rmsprop"`, or `"adagrad"`. Defaults to `"adam"`.
 #' @param optim_args Optional named list of additional arguments passed to the
@@ -89,32 +93,14 @@ build_dnn <- function(input_dim,
 #'   `"omit"` drops incomplete rows (and reports how many were removed when `verbose=TRUE`);
 #'   `"fail"` stops with an error if any missing values are present.
 #'
-#' @return An object of class `"survdnn"` containing:
-#' \describe{
-#'   \item{model}{Trained `nn_module` object.}
-#'   \item{formula}{Original survival formula.}
-#'   \item{data}{Training data used for fitting.}
-#'   \item{xnames}{Predictor variable names.}
-#'   \item{x_center}{Column means of predictors.}
-#'   \item{x_scale}{Column standard deviations of predictors.}
-#'   \item{loss_history}{Vector of loss values per epoch.}
-#'   \item{final_loss}{Final training loss.}
-#'   \item{loss}{Loss function name used ("cox", "aft", etc.).}
-#'   \item{activation}{Activation function used.}
-#'   \item{hidden}{Hidden layer sizes.}
-#'   \item{lr}{Learning rate.}
-#'   \item{epochs}{Number of training epochs.}
-#'   \item{optimizer}{Optimizer name used.}
-#'   \item{optim_args}{List of optimizer arguments used.}
-#'   \item{device}{Torch device used for training (`torch_device`).}
-#' }
+#' @return An object of class `"survdnn"`.
 #' @export
 survdnn <- function(formula, data,
                     hidden = c(32L, 16L),
                     activation = "relu",
                     lr = 1e-4,
                     epochs = 300L,
-                    loss = c("cox", "cox_l2", "aft", "coxtime"),
+                    loss = c("cox", "cox_l2", "aft", "coxtime", "rp_ph", "rp_tve"),
                     optimizer = c("adam", "adamw", "sgd", "rmsprop", "adagrad"),
                     optim_args = list(),
                     verbose = TRUE,
@@ -148,14 +134,6 @@ survdnn <- function(formula, data,
   stopifnot(inherits(formula, "formula"))
   stopifnot(is.data.frame(data))
 
-  loss_fn <- switch(
-    loss,
-    cox     = cox_loss,
-    cox_l2  = function(pred, true) cox_l2_loss(pred, true, lambda = 1e-3),
-    aft     = aft_loss,
-    coxtime = coxtime_loss
-  )
-
   environment(formula) <- list2env(
     list(Surv = survival::Surv),
     parent = environment(formula)
@@ -177,12 +155,19 @@ survdnn <- function(formula, data,
     message(sprintf("Removed %d observations with missing values.", n_removed))
   }
 
-  y         <- model.response(mf)
-  x         <- model.matrix(attr(mf, "terms"), data = mf)[, -1, drop = FALSE]
-  time      <- y[, "time"]
-  status    <- y[, "status"]
-  x_scaled  <- scale(x)
+  y        <- model.response(mf)
+  x        <- model.matrix(attr(mf, "terms"), data = mf)[, -1, drop = FALSE]
+  time     <- y[, "time"]
+  status   <- y[, "status"]
+  x_scaled <- scale(x)
 
+  y_tensor <- torch::torch_tensor(
+    cbind(time, status),
+    dtype  = torch::torch_float(),
+    device = device
+  )
+
+  # coxtime requires time in the network input; all other losses use x only
   x_tensor <- if (loss == "coxtime") {
     torch::torch_tensor(
       cbind(time, x_scaled),
@@ -197,13 +182,7 @@ survdnn <- function(formula, data,
     )
   }
 
-  y_tensor <- torch::torch_tensor(
-    cbind(time, status),
-    dtype  = torch::torch_float(),
-    device = device
-  )
-
-  ## build network with dropout + batch_norm controls
+  ## build network
   net <- build_dnn(
     input_dim  = ncol(x_tensor),
     hidden     = hidden,
@@ -214,9 +193,18 @@ survdnn <- function(formula, data,
   )
   net$to(device = device)
 
-  ## build optimizer with dispatcher
+  ## standardized loss factory (may create additional trainable parameters)
+  loss_obj    <- survdnn_make_loss(loss = loss, y_tensor = y_tensor, device = device)
+  loss_fn     <- loss_obj$fn
+  loss_params <- loss_obj$params
+  loss_state  <- loss_obj$state
+  if (length(loss_params) == 0) loss_params <- list()
+
+  ## optimizer over BOTH: network params + (optional) loss params
+  opt_params <- c(net$parameters, loss_params)
+
   opt_args <- c(
-    list(params = net$parameters, lr = lr),
+    list(params = opt_params, lr = lr),
     optim_args
   )
 
@@ -243,7 +231,7 @@ survdnn <- function(formula, data,
     net$train()
     optimizer_obj$zero_grad()
 
-    pred     <- net(x_tensor)
+    pred <- net(x_tensor)
     loss_val <- loss_fn(pred, y_tensor)
 
     loss_val$backward()
@@ -254,8 +242,7 @@ survdnn <- function(formula, data,
     last_epoch_run      <- epoch
 
     if (verbose && epoch %% 50 == 0) {
-      cat(sprintf("Epoch %d - Loss: %.6f\n", epoch, current_loss))
-      cat("\n")
+      cat(sprintf("Epoch %d - Loss: %.6f\n\n", epoch, current_loss))
     }
 
     ## callbacks
@@ -287,6 +274,7 @@ survdnn <- function(formula, data,
       loss_history = loss_history,
       final_loss   = tail(loss_history, 1),
       loss         = loss,
+      loss_state   = loss_state,  # RP: contains knots + gamma (+ alpha), kept as torch objects
       activation   = activation,
       hidden       = hidden,
       lr           = lr,

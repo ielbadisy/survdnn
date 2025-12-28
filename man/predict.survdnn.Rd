@@ -16,7 +16,7 @@ Required if `type = "survival"` or `type = "risk"`.}
 
 \item{type}{Character string specifying the type of prediction to return:
 \describe{
-  \item{"lp"}{Linear predictor (log-risk score; higher implies worse prognosis).}
+  \item{"lp"}{Linear predictor (model score).}
   \item{"survival"}{Predicted survival probabilities at each value of `times`.}
   \item{"risk"}{Cumulative risk (1 - survival) at a single time point.}
 }}
@@ -30,22 +30,4 @@ A numeric vector (if `type = "lp"` or `"risk"`), or a data frame
 \description{
 Generate predictions from a fitted `survdnn` model for new data. Supports linear predictors,
 survival probabilities at specified time points, or cumulative risk estimates.
-}
-\examples{
-\donttest{
-library(survival)
-data(veteran, package = "survival")
-
-mod <- survdnn(
-  Surv(time, status) ~ age + karno + celltype,
-  data = veteran,
-  loss = "cox",
-  epochs = 50,
-  verbose = FALSE
-)
-
-predict(mod, newdata = veteran, type = "lp")[1:5]
-predict(mod, newdata = veteran, type = "survival", times = c(30, 90, 180))[1:5, ]
-predict(mod, newdata = veteran, type = "risk", times = 180)[1:5]
-}
 }

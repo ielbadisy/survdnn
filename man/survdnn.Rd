@@ -11,7 +11,7 @@ survdnn(
   activation = "relu",
   lr = 1e-04,
   epochs = 300L,
-  loss = c("cox", "cox_l2", "aft", "coxtime"),
+  loss = c("cox", "cox_l2", "aft", "coxtime", "rp_ph", "rp_tve"),
   optimizer = c("adam", "adamw", "sgd", "rmsprop", "adagrad"),
   optim_args = list(),
   verbose = TRUE,
@@ -37,7 +37,8 @@ Supported options: `"relu"`, `"leaky_relu"`, `"tanh"`, `"sigmoid"`, `"gelu"`, `"
 
 \item{epochs}{Number of training epochs (default: 300).}
 
-\item{loss}{Character name of the loss function to use. One of `"cox"`, `"cox_l2"`, `"aft"`, or `"coxtime"`.}
+\item{loss}{Character name of the loss function to use.
+One of `"cox"`, `"cox_l2"`, `"aft"`, `"coxtime"`, `"rp_ph"`, `"rp_tve"`.}
 
 \item{optimizer}{Character string specifying the optimizer to use. One of
 `"adam"`, `"adamw"`, `"sgd"`, `"rmsprop"`, or `"adagrad"`. Defaults to `"adam"`.}
@@ -69,27 +70,13 @@ otherwise falls back to CPU.}
 `"fail"` stops with an error if any missing values are present.}
 }
 \value{
-An object of class `"survdnn"` containing:
-\describe{
-  \item{model}{Trained `nn_module` object.}
-  \item{formula}{Original survival formula.}
-  \item{data}{Training data used for fitting.}
-  \item{xnames}{Predictor variable names.}
-  \item{x_center}{Column means of predictors.}
-  \item{x_scale}{Column standard deviations of predictors.}
-  \item{loss_history}{Vector of loss values per epoch.}
-  \item{final_loss}{Final training loss.}
-  \item{loss}{Loss function name used ("cox", "aft", etc.).}
-  \item{activation}{Activation function used.}
-  \item{hidden}{Hidden layer sizes.}
-  \item{lr}{Learning rate.}
-  \item{epochs}{Number of training epochs.}
-  \item{optimizer}{Optimizer name used.}
-  \item{optim_args}{List of optimizer arguments used.}
-  \item{device}{Torch device used for training (`torch_device`).}
-}
+An object of class `"survdnn"`.
 }
 \description{
 Trains a deep neural network (DNN) to model right-censored survival data
-using one of the predefined loss functions: Cox, AFT, or Coxtime.
+using one of the predefined loss functions.
+}
+\details{
+Supported losses include:
+`"cox"`, `"cox_l2"`, `"aft"`, `"coxtime"`, `"rp_ph"`, `"rp_tve"`.
 }
