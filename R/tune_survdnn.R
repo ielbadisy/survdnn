@@ -83,7 +83,7 @@ tune_survdnn <- function(formula,
 
   summary_tbl <- summarize_tune_survdnn(all_results, by_time = FALSE)
 
-  ## Select best hyperparameters
+  ## select best hyperparameters
   primary_metric <- metrics[1]
 
   best_row_all <- all_results |>
@@ -99,7 +99,7 @@ tune_survdnn <- function(formula,
     stop("No valid configuration found for primary metric: ", primary_metric, call. = FALSE)
   }
 
-  ## Refitting the best model
+  ## refitting the best model
   if (refit) {
     message("Refitting best model on full data...")
     best_model <- survdnn(

@@ -6,7 +6,8 @@
 #' @param input_dim Integer. Number of input features.
 #' @param hidden Integer vector. Sizes of the hidden layers (e.g., c(32, 16)).
 #' @param activation Character. Name of the activation function to use in each layer.
-#'   Supported options: `"relu"`, `"leaky_relu"`, `"tanh"`, `"sigmoid"`, `"gelu"`, `"elu"`, `"softplus"`.
+#'   Supported options: `"relu"`, `"leaky_relu"`, `"tanh"`, `"sigmoid"`, `"gelu"`,
+#'   `"elu"`, `"softplus"`.
 #' @param output_dim Integer. Output layer dimension (default = 1).
 #' @param dropout Numeric between 0 and 1. Dropout rate after each hidden layer
 #'   (default = 0.3). Set to 0 to disable dropout.
@@ -17,338 +18,422 @@
 #' @keywords internal
 #' @export
 build_dnn <- function(input_dim,
-  hidden,
-  activation = "relu",
-  output_dim = 1L,
-  dropout = 0.3,
-  batch_norm = TRUE) {
+                      hidden,
+                      activation = "relu",
+                      output_dim = 1L,
+                      dropout = 0.3,
+                      batch_norm = TRUE) {
 
-layers <- list()
-in_features <- input_dim
+  layers <- list()
+  in_features <- input_dim
 
-act_fn <- switch(
-activation,
-relu       = torch::nn_relu,
-leaky_relu = torch::nn_leaky_relu,
-tanh       = torch::nn_tanh,
-sigmoid    = torch::nn_sigmoid,
-gelu       = torch::nn_gelu,
-elu        = torch::nn_elu,
-softplus   = torch::nn_softplus,
-stop("Unsupported activation function: ", activation)
-)
+  act_fn <- switch(
+    activation,
+    relu       = torch::nn_relu,
+    leaky_relu = torch::nn_leaky_relu,
+    tanh       = torch::nn_tanh,
+    sigmoid    = torch::nn_sigmoid,
+    gelu       = torch::nn_gelu,
+    elu        = torch::nn_elu,
+    softplus   = torch::nn_softplus,
+    stop("Unsupported activation function: ", activation)
+  )
 
-for (h in hidden) {
-layers <- append(layers, list(torch::nn_linear(in_features, h)))
-if (isTRUE(batch_norm)) {
-layers <- append(layers, list(torch::nn_batch_norm1d(h)))
-}
-layers <- append(layers, list(act_fn()))
-if (!is.null(dropout) && dropout > 0) {
-layers <- append(layers, list(torch::nn_dropout(p = dropout)))
-}
-in_features <- h
-}
+  for (h in hidden) {
+    layers <- append(layers, list(torch::nn_linear(in_features, h)))
 
-layers <- append(layers, list(torch::nn_linear(in_features, output_dim)))
-torch::nn_sequential(!!!layers)
+    if (isTRUE(batch_norm)) {
+      layers <- append(layers, list(torch::nn_batch_norm1d(h)))
+    }
+
+    layers <- append(layers, list(act_fn()))
+
+    if (!is.null(dropout) && dropout > 0) {
+      layers <- append(layers, list(torch::nn_dropout(p = dropout)))
+    }
+
+    in_features <- h
+  }
+
+  layers <- append(layers, list(torch::nn_linear(in_features, output_dim)))
+  torch::nn_sequential(!!!layers)
 }
 
 
 #' Fit a Deep Neural Network for Survival Analysis
 #'
-#' Trains a deep neural network (DNN) to model right-censored survival data
-#' using one of the predefined loss functions: Cox, AFT, or Coxtime.
+#' Fits a deep neural network (MLP) for right-censored time-to-event data using
+#' one of the supported losses: Cox partial likelihood, L2-penalized Cox,
+#' log-normal AFT (censored negative log-likelihood), or CoxTime (time-dependent
+#' relative risk model).
 #'
-#' @param formula A survival formula of the form `Surv(time, status) ~ predictors`.
+#' The function:
+#' \itemize{
+#'   \item builds an MLP via [build_dnn()],
+#'   \item preprocesses predictors using centering/scaling (stored in the model),
+#'   \item optionally applies log-time centering for AFT (stored as \code{aft_loc}),
+#'   \item scales time for CoxTime to stabilize optimization (stored as \code{coxtime_time_center}/\code{coxtime_time_scale}),
+#'   \item trains the network with a torch optimizer and optional callbacks.
+#' }
+#'
+#' @param formula A survival formula of the form \code{Surv(time, status) ~ predictors}.
 #' @param data A data frame containing the variables in the model.
-#' @param hidden Integer vector. Sizes of the hidden layers (default: c(32, 16)).
-#' @param activation Character string specifying the activation function to use in each layer.
-#'   Supported options: `"relu"`, `"leaky_relu"`, `"tanh"`, `"sigmoid"`, `"gelu"`, `"elu"`, `"softplus"`.
-#' @param lr Learning rate for the optimizer (default: `1e-4`).
-#' @param epochs Number of training epochs (default: 300).
-#' @param loss Character name of the loss function to use. One of `"cox"`, `"cox_l2"`, `"aft"`, or `"coxtime"`.
-#' @param optimizer Character string specifying the optimizer to use. One of
-#'   `"adam"`, `"adamw"`, `"sgd"`, `"rmsprop"`, or `"adagrad"`. Defaults to `"adam"`.
-#' @param optim_args Optional named list of additional arguments passed to the
-#'   underlying torch optimizer (e.g., `list(weight_decay = 1e-4, momentum = 0.9)`).
-#' @param verbose Logical; whether to print loss progress every 50 epochs (default: TRUE).
-#' @param dropout Numeric between 0 and 1. Dropout rate applied after each
-#'   hidden layer (default = 0.3). Set to 0 to disable dropout.
-#' @param batch_norm Logical; whether to add batch normalization after each
-#'   hidden linear layer (default = TRUE).
-#' @param callbacks Optional list of callback functions. Each callback should have
-#'   signature `function(epoch, current)` and return TRUE if training should stop,
-#'   FALSE otherwise. Used, for example, with [callback_early_stopping()].
-#' @param .seed Optional integer. If provided, sets both R and torch random seeds for reproducible
-#'   weight initialization, shuffling, and dropout.
-#' @param .device Character string indicating the computation device.
-#'   One of `"auto"`, `"cpu"`, or `"cuda"`. `"auto"` uses CUDA if available,
-#'   otherwise falls back to CPU.
-#' @param na_action Character. How to handle missing values in the model variables:
-#'   `"omit"` drops incomplete rows (and reports how many were removed when `verbose=TRUE`);
-#'   `"fail"` stops with an error if any missing values are present.
+#' @param hidden Integer vector giving hidden layer widths (e.g., \code{c(32L, 16L)}).
+#' @param activation Activation function used in each hidden layer. One of
+#'   \code{"relu"}, \code{"leaky_relu"}, \code{"tanh"}, \code{"sigmoid"},
+#'   \code{"gelu"}, \code{"elu"}, \code{"softplus"}.
+#' @param lr Learning rate passed to the optimizer (default \code{1e-4}).
+#' @param epochs Number of training epochs (default \code{300L}).
+#' @param loss Loss function to optimize. One of \code{"cox"}, \code{"cox_l2"},
+#'   \code{"aft"}, \code{"coxtime"}.
+#' @param optimizer Optimizer name. One of \code{"adam"}, \code{"adamw"},
+#'   \code{"sgd"}, \code{"rmsprop"}, \code{"adagrad"}.
+#' @param optim_args Optional named list of extra arguments passed to the chosen
+#'   torch optimizer (e.g., \code{list(weight_decay = 1e-4, momentum = 0.9)}).
+#' @param verbose Logical; whether to print training progress every 50 epochs.
+#' @param dropout Dropout rate applied after each hidden layer (set \code{0} to disable).
+#' @param batch_norm Logical; whether to add batch normalization after each hidden linear layer.
+#' @param callbacks Optional callback(s) for early stopping or monitoring.
+#'   May be \code{NULL}, a single function, or a list of functions. Each callback must have
+#'   signature \code{function(epoch, current_loss)} and return \code{TRUE} to stop training,
+#'   \code{FALSE} otherwise.
+#' @param .seed Optional integer seed controlling both R and torch RNGs (weight init,
+#'   shuffling, dropout) for reproducibility.
+#' @param .device Computation device. One of \code{"auto"}, \code{"cpu"}, \code{"cuda"}.
+#'   \code{"auto"} selects CUDA when available.
+#' @param na_action Missing-data handling. \code{"omit"} drops incomplete rows (and reports
+#'   how many were removed when \code{verbose=TRUE}); \code{"fail"} errors if any missing
+#'   values are present in model variables.
 #'
-#' @return An object of class `"survdnn"` containing:
+#' @details
+#' \strong{AFT model.} With \code{loss="aft"}, the model is a log-normal AFT model:
+#' \deqn{\log(T) = \text{aft\_loc} + \mu_{\text{resid}}(x) + \sigma \varepsilon, \quad \varepsilon \sim \mathcal{N}(0,1).}
+#' For numerical stability, training uses centered log-times
+#' \code{log(time) - aft_loc}. The learned network output corresponds to
+#' \code{mu_resid(x)}. The fitted object stores \code{aft_loc} and the learned global
+#' \code{aft_log_sigma}.
+#'
+#' \strong{CoxTime.} With \code{loss="coxtime"}, the network represents a time-dependent
+#' score \eqn{g(t, x)}. Internally, time is standardized before being concatenated with
+#' standardized covariates. The scaling parameters are stored as
+#' \code{coxtime_time_center} and \code{coxtime_time_scale} to ensure prediction uses the
+#' same transformation.
+#'
+#' @return An object of class \code{"survdnn"} with components:
 #' \describe{
-#'   \item{model}{Trained `nn_module` object.}
-#'   \item{formula}{Original survival formula.}
-#'   \item{data}{Training data used for fitting.}
-#'   \item{xnames}{Predictor variable names.}
-#'   \item{x_center}{Column means of predictors.}
-#'   \item{x_scale}{Column standard deviations of predictors.}
-#'   \item{loss_history}{Vector of loss values per epoch.}
-#'   \item{final_loss}{Final training loss.}
-#'   \item{loss}{Loss function name used ("cox", "aft", etc.).}
-#'   \item{activation}{Activation function used.}
+#'   \item{model}{Trained torch \code{nn_module} (MLP).}
+#'   \item{formula}{Model formula used for fitting.}
+#'   \item{data}{Training data used for fitting (original \code{data} argument).}
+#'   \item{xnames}{Predictor column names used by the model matrix.}
+#'   \item{x_center}{Numeric vector of predictor means used for scaling.}
+#'   \item{x_scale}{Numeric vector of predictor standard deviations used for scaling.}
+#'   \item{loss_history}{Numeric vector of loss values per epoch (possibly truncated by early stopping).}
+#'   \item{final_loss}{Final loss value (last element of \code{loss_history}).}
+#'   \item{loss}{Loss name used for training.}
+#'   \item{activation}{Activation function name.}
 #'   \item{hidden}{Hidden layer sizes.}
 #'   \item{lr}{Learning rate.}
-#'   \item{epochs}{Number of training epochs.}
-#'   \item{optimizer}{Optimizer name used.}
+#'   \item{epochs}{Number of requested epochs.}
+#'   \item{optimizer}{Optimizer name.}
 #'   \item{optim_args}{List of optimizer arguments used.}
-#'   \item{device}{Torch device used for training (`torch_device`).}
-#'   \item{aft_log_sigma}{Learned global log(sigma) for `loss="aft"`; `NA_real_` otherwise.}
-#'   \item{aft_loc}{AFT log-time location offset used for centering when `loss="aft"`; `NA_real_` otherwise.}
-#'   \item{coxtime_time_center}{Mean used to scale time for CoxTime; `NA_real_` otherwise.}
-#'   \item{coxtime_time_scale}{SD used to scale time for CoxTime; `NA_real_` otherwise.}
+#'   \item{device}{Torch device used for fitting.}
+#'   \item{dropout}{Dropout rate used.}
+#'   \item{batch_norm}{Whether batch normalization was used.}
+#'   \item{na_action}{Missing-data strategy used.}
+#'   \item{aft_log_sigma}{Learned global \code{log(sigma)} for AFT; \code{NA_real_} otherwise.}
+#'   \item{aft_loc}{Log-time centering offset used for AFT; \code{NA_real_} otherwise.}
+#'   \item{coxtime_time_center}{Time centering used for CoxTime; \code{NA_real_} otherwise.}
+#'   \item{coxtime_time_scale}{Time scaling used for CoxTime; \code{NA_real_} otherwise.}
 #' }
+#'
+#' @examples
+#' \donttest{
+#' if (torch::torch_is_installed()) {
+#'   veteran <- survival::veteran
+#'
+#'   # --- Cox model ---
+#'   fit_cox <- survdnn(
+#'     Surv(time, status) ~ age + karno + celltype,
+#'     data = veteran,
+#'     epochs = 50,
+#'     verbose = FALSE,
+#'     .seed = 1
+#'   )
+#'   lp <- predict(fit_cox, newdata = veteran, type = "lp")
+#'   S  <- predict(fit_cox, newdata = veteran, type = "survival", times = c(30, 90, 180))
+#'
+#'   # --- AFT log-normal model ---
+#'   fit_aft <- survdnn(
+#'     Surv(time, status) ~ age + karno + celltype,
+#'     data = veteran,
+#'     loss = "aft",
+#'     epochs = 50,
+#'     verbose = FALSE,
+#'     .seed = 1
+#'   )
+#'   S_aft <- predict(fit_aft, newdata = veteran, type = "survival", times = c(30, 90, 180))
+#'
+#'   # --- CoxTime model ---
+#'   fit_ct <- survdnn(
+#'     Surv(time, status) ~ age + karno + celltype,
+#'     data = veteran,
+#'     loss = "coxtime",
+#'     epochs = 50,
+#'     verbose = FALSE,
+#'     .seed = 1
+#'   )
+#'   # By default, CoxTime survival predictions can use event times if times=NULL
+#'   S_ct <- predict(fit_ct, newdata = veteran, type = "survival")
+#' }
+#' }
+#'
 #' @export
-survdnn <- function(formula, data,
-hidden = c(32L, 16L),
-activation = "relu",
-lr = 1e-4,
-epochs = 300L,
-loss = c("cox", "cox_l2", "aft", "coxtime"),
-optimizer = c("adam", "adamw", "sgd", "rmsprop", "adagrad"),
-optim_args = list(),
-verbose = TRUE,
-dropout = 0.3,
-batch_norm = TRUE,
-callbacks = NULL,
-.seed = NULL,
-.device = c("auto", "cpu", "cuda"),
-na_action = c("omit", "fail")) {
 
-survdnn_set_seed(.seed)
-device <- survdnn_get_device(.device)
+survdnn <- function(formula,
+                    data,
+                    hidden = c(32L, 16L),
+                    activation = "relu",
+                    lr = 1e-4,
+                    epochs = 300L,
+                    loss = c("cox", "cox_l2", "aft", "coxtime"),
+                    optimizer = c("adam", "adamw", "sgd", "rmsprop", "adagrad"),
+                    optim_args = list(),
+                    verbose = TRUE,
+                    dropout = 0.3,
+                    batch_norm = TRUE,
+                    callbacks = NULL,
+                    .seed = NULL,
+                    .device = c("auto", "cpu", "cuda"),
+                    na_action = c("omit", "fail")) {
 
-loss      <- match.arg(loss)
-optimizer <- match.arg(optimizer)
-na_action <- match.arg(na_action)
+  survdnn_set_seed(.seed)
+  device <- survdnn_get_device(.device)
 
-if (!is.list(optim_args)) {
-stop("`optim_args` must be a list (possibly empty).", call. = FALSE)
-}
+  loss      <- match.arg(loss)
+  optimizer <- match.arg(optimizer)
+  na_action <- match.arg(na_action)
 
-if (!is.null(callbacks)) {
-if (is.function(callbacks)) {
-callbacks <- list(callbacks)
-} else if (!is.list(callbacks) || !all(vapply(callbacks, is.function, logical(1)))) {
-stop("`callbacks` must be NULL, a function, or a list of functions.", call. = FALSE)
-}
-}
+  if (!is.list(optim_args)) {
+    stop("`optim_args` must be a list (possibly empty).", call. = FALSE)
+  }
 
-stopifnot(inherits(formula, "formula"))
-stopifnot(is.data.frame(data))
+  if (!is.null(callbacks)) {
+    if (is.function(callbacks)) {
+      callbacks <- list(callbacks)
+    } else if (!is.list(callbacks) ||
+               !all(vapply(callbacks, is.function, logical(1)))) {
+      stop("`callbacks` must be NULL, a function, or a list of functions.",
+           call. = FALSE)
+    }
+  }
 
-environment(formula) <- list2env(
-list(Surv = survival::Surv),
-parent = environment(formula)
-)
+  stopifnot(inherits(formula, "formula"))
+  stopifnot(is.data.frame(data))
 
-# ---- missing data handling ----
-n_before <- nrow(data)
-mf <- model.frame(
-formula,
-data = data,
-na.action = if (na_action == "omit") stats::na.omit else stats::na.fail
-)
-n_after <- nrow(mf)
-n_removed <- n_before - n_after
-if (n_removed > 0 && isTRUE(verbose) && na_action == "omit") {
-message(sprintf("Removed %d observations with missing values.", n_removed))
-}
+  environment(formula) <- list2env(
+    list(Surv = survival::Surv),
+    parent = environment(formula)
+  )
 
-y        <- model.response(mf)
-x        <- model.matrix(attr(mf, "terms"), data = mf)[, -1, drop = FALSE]
-time     <- y[, "time"]
-status   <- y[, "status"]
-x_scaled <- scale(x)
+  # missing data handling
+  n_before <- nrow(data)
 
-# ---- AFT location offset for stability ----
-aft_loc <- NA_real_
-if (loss == "aft") {
-evt <- (status == 1)
-if (any(evt)) {
-aft_loc <- mean(log(pmax(time[evt], .Machine$double.eps)))
-} else {
-aft_loc <- mean(log(pmax(time, .Machine$double.eps)))
-}
-if (!is.finite(aft_loc)) aft_loc <- 0
-}
+  mf <- model.frame(
+    formula,
+    data = data,
+    na.action = if (na_action == "omit") stats::na.omit else stats::na.fail
+  )
 
-# ---- CoxTime time scaling (CRITICAL for heterogeneity) ----
-coxtime_time_center <- NA_real_
-coxtime_time_scale  <- NA_real_
-time_scaled <- NULL
+  n_after   <- nrow(mf)
+  n_removed <- n_before - n_after ## keep it informative 
 
-if (loss == "coxtime") {
-ts <- scale(as.numeric(time))
-coxtime_time_center <- as.numeric(attr(ts, "scaled:center"))
-coxtime_time_scale  <- as.numeric(attr(ts, "scaled:scale"))
-if (!is.finite(coxtime_time_scale) || coxtime_time_scale <= 0) coxtime_time_scale <- 1
-time_scaled <- as.numeric(ts)
-}
+  if (n_removed > 0 && isTRUE(verbose) && na_action == "omit") {
+    message(sprintf("Removed %d observations with missing values.", n_removed))
+  }
 
-# ---- tensors ----
-# x_tensor:
-# - coxtime: [time_scaled, x_scaled]  (time as fed to net)
-# - others : [x_scaled]
-x_tensor <- if (loss == "coxtime") {
-torch::torch_tensor(
-cbind(time_scaled, x_scaled),
-dtype  = torch::torch_float(),
-device = device
-)
-} else {
-torch::torch_tensor(
-x_scaled,
-dtype  = torch::torch_float(),
-device = device
-)
-}
+  y        <- model.response(mf)
+  x        <- model.matrix(attr(mf, "terms"), data = mf)[, -1, drop = FALSE]
+  time     <- y[, "time"]
+  status   <- y[, "status"]
+  x_scaled <- scale(x)
 
-# y_tensor always uses RAW time for ordering/risk sets
-y_tensor <- torch::torch_tensor(
-cbind(time, status),
-dtype  = torch::torch_float(),
-device = device
-)
+  # AFT location offset
+  aft_loc <- NA_real_
 
-# ---- network ----
-net <- build_dnn(
-input_dim  = ncol(x_tensor),
-hidden     = hidden,
-activation = activation,
-output_dim = 1L,
-dropout    = dropout,
-batch_norm = batch_norm
-)
-net$to(device = device)
+  if (loss == "aft") {
+    evt <- status == 1
+    aft_loc <- if (any(evt)) {
+      mean(log(pmax(time[evt], .Machine$double.eps)))
+    } else {
+      mean(log(pmax(time, .Machine$double.eps)))
+    }
 
-# ---- loss dispatcher + (optional) AFT extra params ----
-extra_params  <- NULL            # list for AFT, NULL otherwise
-aft_log_sigma <- NA_real_        # ALWAYS numeric
-loss_fn <- NULL
+    if (!is.finite(aft_loc)) aft_loc <- 0
+  }
 
-if (loss == "cox") {
-loss_fn <- function(net, x, y) cox_loss(net(x), y)
-} else if (loss == "cox_l2") {
-loss_fn <- function(net, x, y) cox_l2_loss(net(x), y, lambda = 1e-3)
-} else if (loss == "aft") {
-loc0 <- if (is.finite(aft_loc)) aft_loc else 0
-aft_bundle <- survdnn__aft_lognormal_nll_factory(device = device, aft_loc = loc0)
-extra_params <- aft_bundle$extra_params
-loss_fn <- function(net, x, y) aft_bundle$loss_fn(net, x, y)
-} else if (loss == "coxtime") {
-lf <- survdnn__coxtime_loss_factory(net)
-loss_fn <- function(net, x, y) lf(x, y)
-} else {
-stop("Unsupported loss: ", loss, call. = FALSE)
-}
+  # CoxTime scaling
+  coxtime_time_center <- NA_real_
+  coxtime_time_scale  <- NA_real_
+  time_scaled <- NULL
 
-# ---- optimizer params ----
-params <- net$parameters
-if (loss == "aft" && !is.null(extra_params) && !is.null(extra_params$log_sigma)) {
-params <- c(params, list(extra_params$log_sigma))
-}
+  if (loss == "coxtime") {
+    ts <- scale(as.numeric(time))
+    coxtime_time_center <- as.numeric(attr(ts, "scaled:center"))
+    coxtime_time_scale  <- as.numeric(attr(ts, "scaled:scale"))
 
-opt_args <- c(list(params = params, lr = lr), optim_args)
+    if (!is.finite(coxtime_time_scale) || coxtime_time_scale <= 0) {
+      coxtime_time_scale <- 1
+    }
 
-if (is.null(optim_args$weight_decay) && optimizer %in% c("adam", "adamw")) {
-opt_args$weight_decay <- 1e-4
-}
+    time_scaled <- as.numeric(ts)
+  }
 
-optimizer_obj <- switch(
-optimizer,
-adam    = do.call(torch::optim_adam,    opt_args),
-adamw   = do.call(torch::optim_adamw,   opt_args),
-sgd     = do.call(torch::optim_sgd,     opt_args),
-rmsprop = do.call(torch::optim_rmsprop, opt_args),
-adagrad = do.call(torch::optim_adagrad, opt_args),
-stop("Unsupported optimizer: ", optimizer)
-)
+  # tensors
+  x_tensor <- if (loss == "coxtime") { ## special case only for coxtime since it needs time_scaled with x_scaled
+    torch::torch_tensor(
+      cbind(time_scaled, x_scaled),
+      dtype  = torch::torch_float(),
+      device = device
+    )
+  } else {
+    torch::torch_tensor(
+      x_scaled,
+      dtype  = torch::torch_float(),
+      device = device
+    )
+  }
 
-# ---- training loop ----
-loss_history   <- numeric(epochs)
-early_stopped  <- FALSE
-last_epoch_run <- epochs
+  y_tensor <- torch::torch_tensor(
+    cbind(time, status),
+    dtype  = torch::torch_float(),
+    device = device
+  )
 
-for (epoch in 1:epochs) {
-net$train()
-optimizer_obj$zero_grad()
+  # network building
+  net <- build_dnn(
+    input_dim  = ncol(x_tensor),
+    hidden     = hidden,
+    activation = activation,
+    output_dim = 1L,
+    dropout    = dropout,
+    batch_norm = batch_norm
+  )
+  net$to(device = device)
 
-loss_val <- loss_fn(net, x_tensor, y_tensor)
-loss_val$backward()
-optimizer_obj$step()
+  # Loss dispatcher; AFT initializes a learnable log(sigma) and CoxTime uses a custom factory
 
-current_loss        <- loss_val$item()
-loss_history[epoch] <- current_loss
-last_epoch_run      <- epoch
+  extra_params  <- NULL
+  aft_log_sigma <- NA_real_
 
-if (verbose && epoch %% 50 == 0) {
-cat(sprintf("Epoch %d - Loss: %.6f\n\n", epoch, current_loss))
-}
+  loss_fn <- switch(
+    loss,
+    cox = function(net, x, y) cox_loss(net(x), y),
+    cox_l2 = function(net, x, y) cox_l2_loss(net(x), y, lambda = 1e-3),
+    aft = {
+      aft_bundle <- survdnn__aft_lognormal_nll_factory(
+        device  = device,
+        aft_loc = aft_loc
+      )
+      extra_params <<- aft_bundle$extra_params
+      function(net, x, y) aft_bundle$loss_fn(net, x, y)
+    },
+    coxtime = {
+      lf <- survdnn__coxtime_loss_factory(net)
+      function(net, x, y) lf(x, y)
+    }
+  )
 
-if (!is.null(callbacks)) {
-for (cb in callbacks) {
-if (isTRUE(cb(epoch, current_loss))) {
-early_stopped <- TRUE
-break
-}
-}
-if (early_stopped) break
-}
-}
+  # optimizer
+  params <- net$parameters
 
-if (early_stopped && last_epoch_run < epochs) {
-loss_history <- loss_history[seq_len(last_epoch_run)]
-}
+  if (loss == "aft" && !is.null(extra_params$log_sigma)) {
+    params <- c(params, list(extra_params$log_sigma))
+  }
 
-# ---- store learned AFT log(sigma) robustly ----
-if (loss == "aft" && !is.null(extra_params) && !is.null(extra_params$log_sigma)) {
-aft_log_sigma <- as.numeric(extra_params$log_sigma$item())
-if (!is.finite(aft_log_sigma)) aft_log_sigma <- NA_real_
-} else {
-aft_log_sigma <- NA_real_
-}
+  opt_args <- c(list(params = params, lr = lr), optim_args)
 
-structure(
-list(
-model               = net,
-formula             = formula,
-data                = data,
-xnames              = colnames(x),
-x_center            = attr(x_scaled, "scaled:center"),
-x_scale             = attr(x_scaled, "scaled:scale"),
-loss_history        = loss_history,
-final_loss          = tail(loss_history, 1),
-loss                = loss,
-activation          = activation,
-hidden              = hidden,
-lr                  = lr,
-epochs              = epochs,
-optimizer           = optimizer,
-optim_args          = optim_args,
-device              = device,
-dropout             = dropout,
-batch_norm          = batch_norm,
-na_action           = na_action,
-aft_log_sigma       = aft_log_sigma,
-aft_loc             = if (loss == "aft") aft_loc else NA_real_,
-coxtime_time_center = if (loss == "coxtime") coxtime_time_center else NA_real_,
-coxtime_time_scale  = if (loss == "coxtime") coxtime_time_scale  else NA_real_
-),
-class = "survdnn"
-)
+  if (is.null(optim_args$weight_decay) &&
+      optimizer %in% c("adam", "adamw")) {
+    opt_args$weight_decay <- 1e-4
+  }
+
+  optimizer_obj <- switch(
+    optimizer,
+    adam    = do.call(torch::optim_adam,    opt_args),
+    adamw   = do.call(torch::optim_adamw,   opt_args),
+    sgd     = do.call(torch::optim_sgd,     opt_args),
+    rmsprop = do.call(torch::optim_rmsprop, opt_args),
+    adagrad = do.call(torch::optim_adagrad, opt_args)
+  )
+
+  # training loop 
+  loss_history   <- numeric(epochs)
+  early_stopped  <- FALSE
+  last_epoch_run <- epochs
+  
+  ##the the training is purely synchronous so no need to use coro
+  for (epoch in seq_len(epochs)) { 
+    net$train()
+    optimizer_obj$zero_grad()
+
+    loss_val <- loss_fn(net, x_tensor, y_tensor)
+    loss_val$backward()
+    optimizer_obj$step()
+
+    current_loss <- loss_val$item()
+    loss_history[epoch] <- current_loss
+    last_epoch_run <- epoch
+
+    if (verbose && epoch %% 50 == 0) {
+      cat(sprintf("Epoch %d - Loss: %.6f\n\n", epoch, current_loss))
+    }
+
+    if (!is.null(callbacks)) {
+      for (cb in callbacks) {
+        if (isTRUE(cb(epoch, current_loss))) {
+          early_stopped <- TRUE
+          break
+        }
+      }
+      if (early_stopped) break
+    }
+  }
+
+  if (early_stopped && last_epoch_run < epochs) {
+    loss_history <- loss_history[seq_len(last_epoch_run)]
+  }
+
+  if (loss == "aft" && !is.null(extra_params$log_sigma)) {
+    aft_log_sigma <- as.numeric(extra_params$log_sigma$item())
+    if (!is.finite(aft_log_sigma)) aft_log_sigma <- NA_real_
+  }
+
+  structure(
+    list(
+      model               = net,
+      formula             = formula,
+      data                = data,
+      xnames              = colnames(x),
+      x_center            = attr(x_scaled, "scaled:center"),
+      x_scale             = attr(x_scaled, "scaled:scale"),
+      loss_history        = loss_history,
+      final_loss          = tail(loss_history, 1),
+      loss                = loss,
+      activation          = activation,
+      hidden              = hidden,
+      lr                  = lr,
+      epochs              = epochs,
+      optimizer           = optimizer,
+      optim_args          = optim_args,
+      device              = device,
+      dropout             = dropout,
+      batch_norm          = batch_norm,
+      na_action           = na_action,
+      aft_log_sigma       = aft_log_sigma,
+      aft_loc             = if (loss == "aft") aft_loc else NA_real_,
+      coxtime_time_center = if (loss == "coxtime") coxtime_time_center else NA_real_,
+      coxtime_time_scale  = if (loss == "coxtime") coxtime_time_scale  else NA_real_
+    ),
+    class = "survdnn"
+  )
 }
