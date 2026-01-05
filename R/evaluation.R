@@ -34,7 +34,7 @@ evaluate_survdnn <- function(model,
   data <- if (is.null(newdata)) model$data else newdata
   n_before <- nrow(data)
 
-  # Build model frame first with explicit NA policy (so y aligns with predictions)
+  # build model frame first with explicit NA policy
   mf <- model.frame(
     model$formula,
     data = data,
@@ -50,10 +50,10 @@ evaluate_survdnn <- function(model,
   y <- model.response(mf)
   if (!inherits(y, "Surv")) stop("The response must be a 'Surv' object.", call. = FALSE)
 
-  # Predict on the filtered mf to keep row alignment
+  # predict on the filtered mf to keep row alignment
   sp_matrix <- predict(model, newdata = mf, times = times, type = "survival")
 
-  purrr::map_dfr(metrics, function(metric) {
+  purrr::map_dfr(metrics, function(metric) { ## to replace with fmap from functionals package
     if (metric == "brier" && length(times) > 1) {
       tibble::tibble(
         metric = "brier",

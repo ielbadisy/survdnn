@@ -9,14 +9,11 @@
     "fold", "metric", "value", "id", "time", "surv", "group", "mean_surv",
     "n", "se", "hidden", "lr", "activation", "epochs", "loss_name", ".loss_fn"
   ))
-
-  # IMPORTANT: never load or probe torch here (because CRAN/Windows may segfault).
-  # No torch checks, no tensor creation on load.
+  # never load or probe torch here (because CRAN/Windows may segfault)
 }
 
 ## handles user-facing messaging
 .onAttach <- function(libname, pkgname) {
-  # Do NOT load torch or call torch::torch_is_installed() here.
   # friendly hint that doesn't load the namespace:
   torch_pkg_present <- nzchar(system.file(package = "torch"))
 
@@ -51,7 +48,7 @@ survdnn_set_seed <- function(.seed = NULL) {
 
 
 
-## Internal utility to choose a torch device for survdnn
+## internal utility to choose a torch device for survdnn
 survdnn_get_device <- function(.device = c("auto", "cpu", "cuda")) {
   .device <- match.arg(.device)
 
