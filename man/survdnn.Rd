@@ -87,6 +87,10 @@ An object of class `"survdnn"` containing:
   \item{optimizer}{Optimizer name used.}
   \item{optim_args}{List of optimizer arguments used.}
   \item{device}{Torch device used for training (`torch_device`).}
+  \item{aft_log_sigma}{Learned global log(sigma) for `loss="aft"`; `NA_real_` otherwise.}
+  \item{aft_loc}{AFT log-time location offset used for centering when `loss="aft"`; `NA_real_` otherwise.}
+  \item{coxtime_time_center}{Mean used to scale time for CoxTime; `NA_real_` otherwise.}
+  \item{coxtime_time_scale}{SD used to scale time for CoxTime; `NA_real_` otherwise.}
 }
 }
 \description{

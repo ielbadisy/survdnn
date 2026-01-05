@@ -30,8 +30,13 @@ test_that("survdnn() fits a model and returns correct structure", {
 
   expect_named(
     mod,
-    c("activation",
+    c(
+      "activation",
+      "aft_loc",
+      "aft_log_sigma",
       "batch_norm",
+      "coxtime_time_center",
+      "coxtime_time_scale",
       "data",
       "device",
       "dropout",
@@ -48,9 +53,16 @@ test_that("survdnn() fits a model and returns correct structure", {
       "optimizer",
       "x_center",
       "x_scale",
-      "xnames"),
+      "xnames"
+    ),
     ignore.order = TRUE
   )
+
+  # sanity: for loss="cox", AFT/CoxTime metadata should be NA
+  expect_true(is.na(mod$aft_log_sigma))
+  expect_true(is.na(mod$aft_loc))
+  expect_true(is.na(mod$coxtime_time_center))
+  expect_true(is.na(mod$coxtime_time_scale))
 })
 
 
@@ -91,5 +103,6 @@ test_that("survdnn() is reproducible given .seed", {
     verbose = FALSE,
     .seed   = 999
   )
+
   expect_equal(mod1$loss_history, mod2$loss_history)
 })
