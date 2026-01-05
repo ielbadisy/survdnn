@@ -12,13 +12,17 @@
 \item{newdata}{A data frame of new observations to predict on.}
 
 \item{times}{Numeric vector of time points at which to compute survival or risk probabilities.
-Required if `type = "survival"` or `type = "risk"`.}
+Required if `type = "survival"` or `type = "risk"` for Cox/AFT models.
+For CoxTime, `times = NULL` is allowed when `type="survival"` and defaults to event times.}
 
 \item{type}{Character string specifying the type of prediction to return:
 \describe{
-  \item{"lp"}{Linear predictor (log-risk score; higher implies worse prognosis).}
+  \item{"lp"}{Linear predictor. For `"cox"`/`"cox_l2"` this is a log-risk score
+  (higher implies worse prognosis, consistent with training sign convention). For `"aft"`,
+  this is the predicted location parameter \eqn{\mu(x)} on the log-time scale. For `"coxtime"`,
+  this is \eqn{g(t_0, x)} evaluated at a reference time \eqn{t_0} (the first event time).}
   \item{"survival"}{Predicted survival probabilities at each value of `times`.}
-  \item{"risk"}{Cumulative risk (1 - survival) at a single time point.}
+  \item{"risk"}{Cumulative risk (1 - survival) at **a single** time point.}
 }}
 
 \item{...}{Currently ignored (for future extensions).}
@@ -30,22 +34,4 @@ A numeric vector (if `type = "lp"` or `"risk"`), or a data frame
 \description{
 Generate predictions from a fitted `survdnn` model for new data. Supports linear predictors,
 survival probabilities at specified time points, or cumulative risk estimates.
-}
-\examples{
-\donttest{
-library(survival)
-data(veteran, package = "survival")
-
-mod <- survdnn(
-  Surv(time, status) ~ age + karno + celltype,
-  data = veteran,
-  loss = "cox",
-  epochs = 50,
-  verbose = FALSE
-)
-
-predict(mod, newdata = veteran, type = "lp")[1:5]
-predict(mod, newdata = veteran, type = "survival", times = c(30, 90, 180))[1:5, ]
-predict(mod, newdata = veteran, type = "risk", times = 180)[1:5]
-}
 }
