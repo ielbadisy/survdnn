@@ -62,7 +62,9 @@ predict.survdnn <- function(
     stop("For type = 'risk', `times` must be a single numeric value.", call. = FALSE)
   }
 
+  ## ================================================================
   ## Cox / Cox L2
+  ## ================================================================
   if (loss %in% c("cox", "cox_l2")) {
 
     if (type %in% c("survival", "risk") && is.null(times)) {
@@ -131,8 +133,9 @@ predict.survdnn <- function(
     return(as.data.frame(surv_mat))
   }
 
-  # AFT (log-normal AFT with learned global sigma + training centering)
-
+  ## ================================================================
+  ## AFT (log-normal AFT with learned global sigma + training centering)
+  ## ================================================================
   if (loss == "aft") {
 
     if (type %in% c("survival", "risk") && is.null(times)) {
@@ -177,8 +180,9 @@ predict.survdnn <- function(
     return(as.data.frame(surv_mat))
   }
 
-  # CoxTime
-
+  ## ================================================================
+  ## CoxTime
+  ## ================================================================
   if (loss == "coxtime") {
 
     y_train <- model.response(model.frame(object$formula, object$data))
@@ -226,7 +230,7 @@ predict.survdnn <- function(
       return(lp)
     }
 
-    ## for CoxTime: allow times=NULL for survival -> default event_times (RAW)
+    ## For CoxTime: allow times=NULL for survival -> default event_times (RAW)
     if (type == "survival" && is.null(times)) {
       times_sorted <- event_times
     } else {
@@ -236,8 +240,10 @@ predict.survdnn <- function(
       times_sorted <- sort(unique(as.numeric(times)))
     }
 
-    ## compute g(t_k, x_new) on event-time grid
-    ## NOTE: net expects SCALED time input 
+    ## ------------------------------------------------------------
+    ## Compute g(t_k, x_new) on event-time grid
+    ## NOTE: net expects SCALED time input
+    ## ------------------------------------------------------------
     g_new_mat <- matrix(NA_real_, nrow = nrow(x_scaled), ncol = length(event_times))
     for (j in seq_along(event_times)) {
       tj  <- event_times[j]
@@ -249,7 +255,9 @@ predict.survdnn <- function(
       })
     }
 
-    ## compute g(t_k, x_train) on event-time grid (scaled time input)
+    ## ------------------------------------------------------------
+    ## Compute g(t_k, x_train) on event-time grid (scaled time input)
+    ## ------------------------------------------------------------
     g_train_mat <- matrix(NA_real_, nrow = nrow(train_x_scaled), ncol = length(event_times))
     for (j in seq_along(event_times)) {
       tj  <- event_times[j]
@@ -261,8 +269,10 @@ predict.survdnn <- function(
       })
     }
 
-    
-    ## baseline increments: dH0(t_k) = dN(t_k) / sum_{j in R(t_k)} exp(g(t_k, x_j)) risk sets are defined on RAW time (correct)
+    ## ------------------------------------------------------------
+    ## Baseline increments: dH0(t_k) = dN(t_k) / sum_{j in R(t_k)} exp(g(t_k, x_j))
+    ## risk sets are defined on RAW time (correct)
+    ## ------------------------------------------------------------
     dN <- as.numeric(table(factor(time_train[status_train == 1], levels = event_times)))
 
     risk_mat <- outer(time_train, event_times, `>=`)
@@ -272,7 +282,9 @@ predict.survdnn <- function(
     dH0 <- dN / denom
     dH0[is.na(dH0)] <- 0
 
-    ## cumulative hazard at requested times (RAW time grid)
+    ## ------------------------------------------------------------
+    ## Cumulative hazard at requested times (RAW time grid)
+    ## ------------------------------------------------------------
     H_pred <- matrix(0, nrow = nrow(g_new_mat), ncol = length(times_sorted))
     for (i in seq_along(times_sorted)) {
       relevant <- which(event_times <= times_sorted[i])
