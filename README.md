@@ -1,8 +1,8 @@
 
 # survdnn <img src="https://raw.githubusercontent.com/ielbadisy/survdnn/main/inst/logo.png" align="right" height="140"/>
 
-> Deep Neural Networks for Survival Analysis using
-> [torch](https://torch.mlverse.org/)
+> Deep Neural Networks for Survival Analysis using [R
+> torch](https://torch.mlverse.org/)
 
 [![License:
 MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)  
@@ -48,7 +48,7 @@ evaluation of `survdnn` is currently under review at *The R Journal*.
 
 ``` r
 # Install from CRAN
-install.packages("surdnn")
+install.packages("survdnn")
 
 
 # Install from GitHub
@@ -80,17 +80,17 @@ mod <- survdnn(
   )
 ```
 
-    ## Epoch 50 - Loss: 3.983201
+    ## Epoch 50 - Loss: 3.967377
     ## 
-    ## Epoch 100 - Loss: 3.947356
+    ## Epoch 100 - Loss: 3.863189
     ## 
-    ## Epoch 150 - Loss: 3.934828
+    ## Epoch 150 - Loss: 3.879065
     ## 
-    ## Epoch 200 - Loss: 3.876191
+    ## Epoch 200 - Loss: 3.814478
     ## 
-    ## Epoch 250 - Loss: 3.813223
+    ## Epoch 250 - Loss: 3.756944
     ## 
-    ## Epoch 300 - Loss: 3.868888
+    ## Epoch 300 - Loss: 3.823366
 
 ``` r
 summary(mod)
@@ -99,13 +99,13 @@ summary(mod)
     ## 
     ## Formula:
     ##   Surv(time, status) ~ age + karno + celltype
-    ## <environment: 0x611459d0ec80>
+    ## <environment: 0x6171aa19de98>
     ## 
     ## Model architecture:
     ##   Hidden layers:  32 : 16 
     ##   Activation:  relu 
     ##   Dropout:  0.3 
-    ##   Final loss:  3.868888 
+    ##   Final loss:  3.823366 
     ## 
     ## Training summary:
     ##   Epochs:  300 
@@ -136,17 +136,17 @@ mod1 <- survdnn(
   )
 ```
 
-    ## Epoch 50 - Loss: 3.986035
+    ## Epoch 50 - Loss: 3.988259
     ## 
-    ## Epoch 100 - Loss: 3.973183
+    ## Epoch 100 - Loss: 3.930287
     ## 
-    ## Epoch 150 - Loss: 3.944867
+    ## Epoch 150 - Loss: 3.913787
     ## 
-    ## Epoch 200 - Loss: 3.901533
+    ## Epoch 200 - Loss: 3.896528
     ## 
-    ## Epoch 250 - Loss: 3.849433
+    ## Epoch 250 - Loss: 3.819792
     ## 
-    ## Epoch 300 - Loss: 3.899746
+    ## Epoch 300 - Loss: 3.893889
 
 - Accelerated Failure Time
 
@@ -159,17 +159,17 @@ mod2 <- survdnn(
   )
 ```
 
-    ## Epoch 50 - Loss: 18.154217
+    ## Epoch 50 - Loss: 16.911470
     ## 
-    ## Epoch 100 - Loss: 17.844833
+    ## Epoch 100 - Loss: 16.589067
     ## 
-    ## Epoch 150 - Loss: 17.560537
+    ## Epoch 150 - Loss: 16.226612
     ## 
-    ## Epoch 200 - Loss: 17.134348
+    ## Epoch 200 - Loss: 15.959708
     ## 
-    ## Epoch 250 - Loss: 16.840366
+    ## Epoch 250 - Loss: 15.182121
     ## 
-    ## Epoch 300 - Loss: 16.344124
+    ## Epoch 300 - Loss: 15.049762
 
 - Coxtime
 
@@ -182,17 +182,17 @@ mod3 <- survdnn(
   )
 ```
 
-    ## Epoch 50 - Loss: 4.932558
+    ## Epoch 50 - Loss: 4.888907
     ## 
-    ## Epoch 100 - Loss: 4.864682
+    ## Epoch 100 - Loss: 4.846722
     ## 
-    ## Epoch 150 - Loss: 4.830169
+    ## Epoch 150 - Loss: 4.838490
     ## 
-    ## Epoch 200 - Loss: 4.784954
+    ## Epoch 200 - Loss: 4.816662
     ## 
-    ## Epoch 250 - Loss: 4.764827
+    ## Epoch 250 - Loss: 4.780379
     ## 
-    ## Epoch 300 - Loss: 4.731824
+    ## Epoch 300 - Loss: 4.756117
 
 ## Cross-validation
 
