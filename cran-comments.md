@@ -4,5 +4,5 @@
 
 ## Update 
 
-This update (version 0.7.0) is a feature release that does not modify package installation behavior, system requirements, or external dependencies. No network access, file system modification, or automatic software installation is performed at load or runtime.
+This update (version 0.7.1) fixes internal issues in loss functions (AFT and CoxTime) and prediction methods and updates documentation accordingly.
 

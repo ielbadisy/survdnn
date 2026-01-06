@@ -1,5 +1,17 @@
 # survdnn
 
+## survdnn 0.7.1
+
+### Main changes
+
+* **Fixed and stabilized loss implementations** for AFT and CoxTime models, ensuring correct handling of time scaling, parameter learning, and numerical stability.
+* **Corrected and harmonized prediction methods** (`predict.survdnn`) across all supported losses (Cox, Cox L2, AFT, CoxTime), including survival and risk predictions.
+* **Improved internal consistency checks** to ensure valid survival probabilities (monotonicity and bounds).
+* **Updated and expanded unit tests** to cover prediction behavior, edge cases, and reproducibility.
+* **Regenerated Rd documentation** to fully document all function arguments and remove previous documentation warnings.
+
+
+
 ## survdnn 0.7.0
 
 ### Major changes
