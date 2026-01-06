@@ -4,7 +4,7 @@ output: github_document
 
 # survdnn <img src="https://raw.githubusercontent.com/ielbadisy/survdnn/main/inst/logo.png" align="right" height="140"/>
 
-> Deep Neural Networks for Survival Analysis using [torch](https://torch.mlverse.org/)
+> Deep Neural Networks for Survival Analysis using [R torch](https://torch.mlverse.org/)
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)  
 [![R-CMD-check](https://github.com/ielbadisy/survdnn/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/ielbadisy/survdnn/actions/workflows/R-CMD-check.yaml)
@@ -43,7 +43,7 @@ A methodological paper describing the design, implementation, and evaluation of 
 
 ```{r, eval = FALSE}
 # Install from CRAN
-install.packages("surdnn")
+install.packages("survdnn")
 
 
 # Install from GitHub
