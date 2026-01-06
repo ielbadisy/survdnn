@@ -19,8 +19,7 @@ build_dnn(
 \item{hidden}{Integer vector. Sizes of the hidden layers (e.g., c(32, 16)).}
 
 \item{activation}{Character. Name of the activation function to use in each layer.
-Supported options: `"relu"`, `"leaky_relu"`, `"tanh"`, `"sigmoid"`, `"gelu"`,
-`"elu"`, `"softplus"`.}
+Supported options: `"relu"`, `"leaky_relu"`, `"tanh"`, `"sigmoid"`, `"gelu"`, `"elu"`, `"softplus"`.}
 
 \item{output_dim}{Integer. Output layer dimension (default = 1).}
 

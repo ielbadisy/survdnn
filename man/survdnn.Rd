@@ -24,147 +24,76 @@ survdnn(
 )
 }
 \arguments{
-\item{formula}{A survival formula of the form \code{Surv(time, status) ~ predictors}.}
+\item{formula}{A survival formula of the form `Surv(time, status) ~ predictors`.}
 
 \item{data}{A data frame containing the variables in the model.}
 
-\item{hidden}{Integer vector giving hidden layer widths (e.g., \code{c(32L, 16L)}).}
+\item{hidden}{Integer vector. Sizes of the hidden layers (default: c(32, 16)).}
 
-\item{activation}{Activation function used in each hidden layer. One of
-\code{"relu"}, \code{"leaky_relu"}, \code{"tanh"}, \code{"sigmoid"},
-\code{"gelu"}, \code{"elu"}, \code{"softplus"}.}
+\item{activation}{Character string specifying the activation function to use in each layer.
+Supported options: `"relu"`, `"leaky_relu"`, `"tanh"`, `"sigmoid"`, `"gelu"`, `"elu"`, `"softplus"`.}
 
-\item{lr}{Learning rate passed to the optimizer (default \code{1e-4}).}
+\item{lr}{Learning rate for the optimizer (default: `1e-4`).}
 
-\item{epochs}{Number of training epochs (default \code{300L}).}
+\item{epochs}{Number of training epochs (default: 300).}
 
-\item{loss}{Loss function to optimize. One of \code{"cox"}, \code{"cox_l2"},
-\code{"aft"}, \code{"coxtime"}.}
+\item{loss}{Character name of the loss function to use. One of `"cox"`, `"cox_l2"`, `"aft"`, or `"coxtime"`.}
 
-\item{optimizer}{Optimizer name. One of \code{"adam"}, \code{"adamw"},
-\code{"sgd"}, \code{"rmsprop"}, \code{"adagrad"}.}
+\item{optimizer}{Character string specifying the optimizer to use. One of
+`"adam"`, `"adamw"`, `"sgd"`, `"rmsprop"`, or `"adagrad"`. Defaults to `"adam"`.}
 
-\item{optim_args}{Optional named list of extra arguments passed to the chosen
-torch optimizer (e.g., \code{list(weight_decay = 1e-4, momentum = 0.9)}).}
+\item{optim_args}{Optional named list of additional arguments passed to the
+underlying torch optimizer (e.g., `list(weight_decay = 1e-4, momentum = 0.9)`).}
 
-\item{verbose}{Logical; whether to print training progress every 50 epochs.}
+\item{verbose}{Logical; whether to print loss progress every 50 epochs (default: TRUE).}
 
-\item{dropout}{Dropout rate applied after each hidden layer (set \code{0} to disable).}
+\item{dropout}{Numeric between 0 and 1. Dropout rate applied after each
+hidden layer (default = 0.3). Set to 0 to disable dropout.}
 
-\item{batch_norm}{Logical; whether to add batch normalization after each hidden linear layer.}
+\item{batch_norm}{Logical; whether to add batch normalization after each
+hidden linear layer (default = TRUE).}
 
-\item{callbacks}{Optional callback(s) for early stopping or monitoring.
-May be \code{NULL}, a single function, or a list of functions. Each callback must have
-signature \code{function(epoch, current_loss)} and return \code{TRUE} to stop training,
-\code{FALSE} otherwise.}
+\item{callbacks}{Optional list of callback functions. Each callback should have
+signature `function(epoch, current)` and return TRUE if training should stop,
+FALSE otherwise. Used, for example, with [callback_early_stopping()].}
 
-\item{.seed}{Optional integer seed controlling both R and torch RNGs (weight init,
-shuffling, dropout) for reproducibility.}
+\item{.seed}{Optional integer. If provided, sets both R and torch random seeds for reproducible
+weight initialization, shuffling, and dropout.}
 
-\item{.device}{Computation device. One of \code{"auto"}, \code{"cpu"}, \code{"cuda"}.
-\code{"auto"} selects CUDA when available.}
+\item{.device}{Character string indicating the computation device.
+One of `"auto"`, `"cpu"`, or `"cuda"`. `"auto"` uses CUDA if available,
+otherwise falls back to CPU.}
 
-\item{na_action}{Missing-data handling. \code{"omit"} drops incomplete rows (and reports
-how many were removed when \code{verbose=TRUE}); \code{"fail"} errors if any missing
-values are present in model variables.}
+\item{na_action}{Character. How to handle missing values in the model variables:
+`"omit"` drops incomplete rows (and reports how many were removed when `verbose=TRUE`);
+`"fail"` stops with an error if any missing values are present.}
 }
 \value{
-An object of class \code{"survdnn"} with components:
+An object of class `"survdnn"` containing:
 \describe{
-  \item{model}{Trained torch \code{nn_module} (MLP).}
-  \item{formula}{Model formula used for fitting.}
-  \item{data}{Training data used for fitting (original \code{data} argument).}
-  \item{xnames}{Predictor column names used by the model matrix.}
-  \item{x_center}{Numeric vector of predictor means used for scaling.}
-  \item{x_scale}{Numeric vector of predictor standard deviations used for scaling.}
-  \item{loss_history}{Numeric vector of loss values per epoch (possibly truncated by early stopping).}
-  \item{final_loss}{Final loss value (last element of \code{loss_history}).}
-  \item{loss}{Loss name used for training.}
-  \item{activation}{Activation function name.}
+  \item{model}{Trained `nn_module` object.}
+  \item{formula}{Original survival formula.}
+  \item{data}{Training data used for fitting.}
+  \item{xnames}{Predictor variable names.}
+  \item{x_center}{Column means of predictors.}
+  \item{x_scale}{Column standard deviations of predictors.}
+  \item{loss_history}{Vector of loss values per epoch.}
+  \item{final_loss}{Final training loss.}
+  \item{loss}{Loss function name used ("cox", "aft", etc.).}
+  \item{activation}{Activation function used.}
   \item{hidden}{Hidden layer sizes.}
   \item{lr}{Learning rate.}
-  \item{epochs}{Number of requested epochs.}
-  \item{optimizer}{Optimizer name.}
+  \item{epochs}{Number of training epochs.}
+  \item{optimizer}{Optimizer name used.}
   \item{optim_args}{List of optimizer arguments used.}
-  \item{device}{Torch device used for fitting.}
-  \item{dropout}{Dropout rate used.}
-  \item{batch_norm}{Whether batch normalization was used.}
-  \item{na_action}{Missing-data strategy used.}
-  \item{aft_log_sigma}{Learned global \code{log(sigma)} for AFT; \code{NA_real_} otherwise.}
-  \item{aft_loc}{Log-time centering offset used for AFT; \code{NA_real_} otherwise.}
-  \item{coxtime_time_center}{Time centering used for CoxTime; \code{NA_real_} otherwise.}
-  \item{coxtime_time_scale}{Time scaling used for CoxTime; \code{NA_real_} otherwise.}
+  \item{device}{Torch device used for training (`torch_device`).}
+  \item{aft_log_sigma}{Learned global log(sigma) for `loss="aft"`; `NA_real_` otherwise.}
+  \item{aft_loc}{AFT log-time location offset used for centering when `loss="aft"`; `NA_real_` otherwise.}
+  \item{coxtime_time_center}{Mean used to scale time for CoxTime; `NA_real_` otherwise.}
+  \item{coxtime_time_scale}{SD used to scale time for CoxTime; `NA_real_` otherwise.}
 }
 }
 \description{
-Fits a deep neural network (MLP) for right-censored time-to-event data using
-one of the supported losses: Cox partial likelihood, L2-penalized Cox,
-log-normal AFT (censored negative log-likelihood), or CoxTime (time-dependent
-relative risk model).
-}
-\details{
-The function:
-\itemize{
-  \item builds an MLP via [build_dnn()],
-  \item preprocesses predictors using centering/scaling (stored in the model),
-  \item optionally applies log-time centering for AFT (stored as \code{aft_loc}),
-  \item scales time for CoxTime to stabilize optimization (stored as \code{coxtime_time_center}/\code{coxtime_time_scale}),
-  \item trains the network with a torch optimizer and optional callbacks.
-}
-
-
-\strong{AFT model.} With \code{loss="aft"}, the model is a log-normal AFT model:
-\deqn{\log(T) = \text{aft\_loc} + \mu_{\text{resid}}(x) + \sigma \varepsilon, \quad \varepsilon \sim \mathcal{N}(0,1).}
-For numerical stability, training uses centered log-times
-\code{log(time) - aft_loc}. The learned network output corresponds to
-\code{mu_resid(x)}. The fitted object stores \code{aft_loc} and the learned global
-\code{aft_log_sigma}.
-
-\strong{CoxTime.} With \code{loss="coxtime"}, the network represents a time-dependent
-score \eqn{g(t, x)}. Internally, time is standardized before being concatenated with
-standardized covariates. The scaling parameters are stored as
-\code{coxtime_time_center} and \code{coxtime_time_scale} to ensure prediction uses the
-same transformation.
-}
-\examples{
-\donttest{
-if (torch::torch_is_installed()) {
-  veteran <- survival::veteran
-
-  # --- Cox model ---
-  fit_cox <- survdnn(
-    Surv(time, status) ~ age + karno + celltype,
-    data = veteran,
-    epochs = 50,
-    verbose = FALSE,
-    .seed = 1
-  )
-  lp <- predict(fit_cox, newdata = veteran, type = "lp")
-  S  <- predict(fit_cox, newdata = veteran, type = "survival", times = c(30, 90, 180))
-
-  # --- AFT log-normal model ---
-  fit_aft <- survdnn(
-    Surv(time, status) ~ age + karno + celltype,
-    data = veteran,
-    loss = "aft",
-    epochs = 50,
-    verbose = FALSE,
-    .seed = 1
-  )
-  S_aft <- predict(fit_aft, newdata = veteran, type = "survival", times = c(30, 90, 180))
-
-  # --- CoxTime model ---
-  fit_ct <- survdnn(
-    Surv(time, status) ~ age + karno + celltype,
-    data = veteran,
-    loss = "coxtime",
-    epochs = 50,
-    verbose = FALSE,
-    .seed = 1
-  )
-  # By default, CoxTime survival predictions can use event times if times=NULL
-  S_ct <- predict(fit_ct, newdata = veteran, type = "survival")
-}
-}
-
+Trains a deep neural network (DNN) to model right-censored survival data
+using one of the predefined loss functions: Cox, AFT, or Coxtime.
 }
