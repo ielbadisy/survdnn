@@ -1,6 +1,6 @@
 Package: survdnn
 Title: Deep Neural Networks for Survival Analysis with R 'torch'
-Version: 0.7.0
+Version: 0.7.5
 Authors@R: 
     person(given = "Imad", 
            family = "EL BADISY", 
