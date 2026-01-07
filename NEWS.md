@@ -1,6 +1,6 @@
 # survdnn
 
-## survdnn 0.7.1
+## survdnn 0.7.5
 
 ### Main changes
 
