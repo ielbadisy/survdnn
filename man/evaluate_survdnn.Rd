@@ -23,7 +23,7 @@ evaluate_survdnn(
 \item{newdata}{Optional. A data frame on which to evaluate the model. Defaults to training data.}
 
 \item{na_action}{Character. How to handle missing values in evaluation data:
-`"omit"` drops incomplete rows; `"fail"` errors if any NA is present.}
+`"omit"` drops incomplete rows, `"fail"` errors if any NA is present.}
 
 \item{verbose}{Logical. If TRUE and `na_action="omit"`, prints a message when rows are removed.}
 }

@@ -14,7 +14,7 @@ brier(object, pre_sp, t_star)
 \item{t_star}{The evaluation time point.}
 }
 \value{
-A single numeric value representing the Brier score.
+A single numeric value representing the Brier score a a specific time point.
 }
 \description{
 Computes the Brier score at a fixed time point using inverse probability of censoring weights (IPCW).

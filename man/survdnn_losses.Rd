@@ -10,18 +10,25 @@
 \usage{
 cox_loss(pred, true)
 
-cox_l2_loss(pred, true, lambda = 1e-04)
+cox_l2_loss(pred, true, lambda = 0.001)
 
 aft_loss(pred, true, sigma = 1, aft_loc = 0, eps = 1e-12)
 
 coxtime_loss(pred, true)
 }
 \arguments{
-\item{pred}{A tensor of predicted values (typically linear predictors or log-times).}
+\item{pred}{A torch tensor of model predictions. Its interpretation depends
+on the loss function:
+\itemize{
+  \item{\code{loss = "cox"} or \code{"cox_l2"}: linear predictors
+        (log hazard ratios).}
+  \item{\code{loss = "aft"}: predicted log survival times.}
+  \item{\code{loss = "coxtime"}: predicted time-dependent risk scores.}
+}}
 
 \item{true}{A tensor with two columns: observed time and status (1 = event, 0 = censored).}
 
-\item{lambda}{Regularization parameter for `cox_l2_loss` (default: `1e-4`).}
+\item{lambda}{Regularization parameter for `cox_l2_loss` (default: `1e-3`).}
 
 \item{sigma}{Positive numeric scale parameter for the log-normal AFT model (default: `1`).
 In `survdnn()`, a learnable global scale can be used via `survdnn__aft_lognormal_nll_factory()`.}

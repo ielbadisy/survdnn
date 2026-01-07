@@ -16,9 +16,9 @@ callback_early_stopping(
 
 \item{min_delta}{Minimum change to qualify as an improvement (default: 0).}
 
-\item{mode}{Character; "min" (for losses) or "max" (for metrics to maximize).}
+\item{mode}{Character. "min" (for losses) or "max" (for metrics to maximize).}
 
-\item{verbose}{Logical; whether to print a message when early stopping is triggered.}
+\item{verbose}{Logical. Whether to print a message when early stopping is triggered.}
 }
 \value{
 A function of the form `function(epoch, current)` that returns TRUE
