@@ -10,9 +10,16 @@
 #'   (uses both events and censored observations).
 #' - **CoxTime loss** (`coxtime_loss`): Placeholder (see details). A correct CoxTime loss requires access to the network and the full input tensor.
 #'
-#' @param pred A tensor of predicted values (typically linear predictors or log-times).
+#' @param pred A torch tensor of model predictions. Its interpretation depends
+#'   on the loss function:
+#'   \itemize{
+#'     \item{\code{loss = "cox"} or \code{"cox_l2"}: linear predictors
+#'           (log hazard ratios).}
+#'     \item{\code{loss = "aft"}: predicted log survival times.}
+#'     \item{\code{loss = "coxtime"}: predicted time-dependent risk scores.}
+#'   }
 #' @param true A tensor with two columns: observed time and status (1 = event, 0 = censored).
-#' @param lambda Regularization parameter for `cox_l2_loss` (default: `1e-4`).
+#' @param lambda Regularization parameter for `cox_l2_loss` (default: `1e-3`).
 #' @param sigma Positive numeric scale parameter for the log-normal AFT model (default: `1`).
 #'   In `survdnn()`, a learnable global scale can be used via `survdnn__aft_lognormal_nll_factory()`.
 #' @param aft_loc Numeric scalar location offset for the AFT model on the log-time scale.
@@ -28,10 +35,7 @@
 NULL
 
 
-# -------------------------------------------------------------------------
-# Internal utilities
-# -------------------------------------------------------------------------
-
+# internal utilities
 #' @keywords internal
 survdnn__zeros_like_scalar <- function(x) {
   torch::torch_zeros_like(x$view(c(1)))[1]
@@ -51,9 +55,7 @@ survdnn__log_surv_std_normal <- function(z, eps = 1e-12) {
 }
 
 
-# -------------------------------------------------------------------------
-# Cox loss (keeps your sign convention: lp = -net(x))
-# -------------------------------------------------------------------------
+# Cox loss 
 
 #' @rdname survdnn_losses
 #' @export
@@ -77,7 +79,7 @@ cox_loss <- function(pred, true) {
 
 #' @rdname survdnn_losses
 #' @export
-cox_l2_loss <- function(pred, true, lambda = 1e-4) {
+cox_l2_loss <- function(pred, true, lambda = 1e-3) {
   base_loss <- cox_loss(pred, true)
   lp <- -pred[, 1]
   l2_penalty <- lambda * torch::torch_mean(lp^2)
@@ -85,9 +87,7 @@ cox_l2_loss <- function(pred, true, lambda = 1e-4) {
 }
 
 
-# -------------------------------------------------------------------------
-# AFT loss (Option B): log-normal AFT censored negative log-likelihood
-# -------------------------------------------------------------------------
+# AFT loss (log-normal AFT censored negative log-likelihood)
 
 #' @rdname survdnn_losses
 #' @export
@@ -106,6 +106,7 @@ aft_loss <- function(pred, true, sigma = 1, aft_loc = 0, eps = 1e-12) {
     dtype  = mu_resid$dtype,
     device = mu_resid$device
   )
+
   sigma_t <- torch::torch_clamp(sigma_t, min = eps)
   log_sigma <- torch::torch_log(sigma_t)
 
@@ -114,10 +115,15 @@ aft_loss <- function(pred, true, sigma = 1, aft_loc = 0, eps = 1e-12) {
     dtype  = mu_resid$dtype,
     device = mu_resid$device
   )
-
+  
   lt_c <- lt - aft_loc_t
-  z <- (lt_c - mu_resid) / sigma_t
 
+  # In the log-normal AFT model, log(T) = aft_loc + mu + sigma * Z,
+  # with Z ~ N(0, 1). Here, `pred` represents the subject-specific
+  # location term mu, while `sigma` controls global time dispersion.
+
+  z <- (lt_c - mu_resid) / sigma_t
+  
   logS <- survdnn__log_surv_std_normal(z, eps = eps)
 
   nll_event <- lt + log_sigma + 0.5 * z^2
@@ -128,9 +134,8 @@ aft_loss <- function(pred, true, sigma = 1, aft_loc = 0, eps = 1e-12) {
 }
 
 
-# -------------------------------------------------------------------------
-# CoxTime loss — cannot be correct with (pred, true) only
-# -------------------------------------------------------------------------
+
+# CoxTime loss (not identifiable from pred alone)
 
 #' @rdname survdnn_losses
 #' @export
@@ -144,13 +149,13 @@ coxtime_loss <- function(pred, true) {
 }
 
 
-# -------------------------------------------------------------------------
-# Internal: Correct CoxTime loss factory
-#
+# Internals (with  loss factory pattern)
+
+
+# Correct CoxTime
 # IMPORTANT FIX:
 # - use `true[,1]` (RAW time) for sorting + risk sets
-# - use `x_tensor[,1]` (TIME AS FED TO NET; possibly scaled) when calling net
-# -------------------------------------------------------------------------
+# - use `x_tensor[,1]` (TIME AS FED TO NET) when calling net
 
 #' @keywords internal
 survdnn__coxtime_loss_factory <- function(net) {
@@ -166,10 +171,10 @@ survdnn__coxtime_loss_factory <- function(net) {
     d <- x_tensor$size()[[2]]
     if (d < 2) stop("CoxTime expects x_tensor with at least 2 columns: (time, x).", call. = FALSE)
 
-    time_inp <- x_tensor[, 1]               # time as used by the net (can be raw or scaled)
+    time_inp <- x_tensor[, 1]               # time as used by the net
     x_cov    <- x_tensor[, 2:d, drop = FALSE]
 
-    ## sort by RAW time (risk sets depend on raw ordering)
+    ## sort by RAW time (risk sets depend on raw ordering. Not so precise but approximate the risk intensity)
     idx <- torch::torch_argsort(time_raw, descending = TRUE)
 
     time_raw <- time_raw[idx]
@@ -215,10 +220,8 @@ survdnn__coxtime_loss_factory <- function(net) {
 }
 
 
-# -------------------------------------------------------------------------
-# Internal: AFT log-normal censored NLL factory (learnable global log(sigma))
+# AFT log-normal censored NLL factory (learnable global log(sigma))
 # with optional centering by aft_loc.
-# -------------------------------------------------------------------------
 
 #' @keywords internal
 survdnn__aft_lognormal_nll_factory <- function(device, aft_loc = 0) {
