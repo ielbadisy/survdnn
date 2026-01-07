@@ -132,7 +132,8 @@ cv_survdnn <- function(formula, data, times,
 
   if (!is.null(.seed)) survdnn_set_seed(.seed)
 
-  vfolds <- rsample::vfold_cv(data, v = folds, strata = all.vars(formula)[1])
+  status_var <- all.vars(formula[[2]])[2]          # more safe for extracting the status
+  vfolds <- rsample::vfold_cv(data, v = folds, strata = dplyr::all_of(status_var))
 
   results <- purrr::imap_dfr(vfolds$splits, function(split, i) {
 
