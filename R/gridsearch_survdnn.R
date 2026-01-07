@@ -71,6 +71,11 @@ gridsearch_survdnn <- function(formula, train, valid, times,
   
   if (!is.null(.seed)) survdnn_set_seed(.seed)
   
+  req <- c("hidden","lr","activation","epochs","loss")
+  miss <- setdiff(req, names(param_grid))
+  if (length(miss)) stop("param_grid is missing: ", paste(miss, collapse=", "), call. = FALSE)
+
+  
   param_df <- tidyr::crossing(!!!param_grid)
   
   
