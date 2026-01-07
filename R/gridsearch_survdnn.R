@@ -6,11 +6,16 @@
 #' @param train Training dataset
 #' @param valid Validation dataset
 #' @param times Evaluation time points (numeric vector)
-#' @param metrics Evaluation metrics (character vector): any of "cindex", "ibs", "brier"
-#' @param param_grid A named list of hyperparameters (`hidden`, `lr`, `activation`, `epochs`, `loss`)
+#' @param metrics Evaluation metrics (character vector): any of "cindex" and "ibs".
+#' @param param_grid A named list of hyperparameters to search over. Currently
+#'   supported entries are \code{hidden}, \code{lr}, \code{activation},
+#'   \code{epochs}, and \code{loss}.
 #' @param .seed Optional random seed for reproducibility
-#' @param .device Character string indicating the computation device used when fitting models for each hyperparameter configuration. One of `"auto"`, `"cpu"`, or `"cuda"`. `"auto"` uses CUDA if available, otherwise falls back to CPU.
-#'
+#' @param .device Character string indicating the computation device used when
+#'   fitting all models in the grid search. One of \code{"auto"}, \code{"cpu"},
+#'   or \code{"cuda"}. This is a runtime setting and is not part of the
+#'   hyperparameter grid.
+#' 
 #' @return A tibble with configurations and their validation metrics
 #' @export
 #'
@@ -19,16 +24,19 @@
 #' library(survdnn)
 #' library(survival)
 #' set.seed(123)
+#'
 #' # Simulate small dataset
 #' n <- 300
 #' x1 <- rnorm(n); x2 <- rbinom(n, 1, 0.5)
 #' time <- rexp(n, rate = 0.1)
 #' status <- rbinom(n, 1, 0.7)
 #' df <- data.frame(time, status, x1, x2)
+#' 
 #' # Split into training and validation
 #' idx <- sample(seq_len(n), 0.7 * n)
 #' train <- df[idx, ]
 #' valid <- df[-idx, ]
+#' 
 #' # Define formula and param grid
 #' formula <- Surv(time, status) ~ x1 + x2
 #' param_grid <- list(
@@ -38,6 +46,7 @@
 #'   epochs     = c(100),
 #'   loss       = c("cox", "coxtime")
 #' )
+#' 
 #' # Run grid search
 #' results <- gridsearch_survdnn(
 #'   formula = formula,
@@ -47,6 +56,7 @@
 #'   metrics = c("cindex", "ibs"),
 #'   param_grid = param_grid
 #' )
+#' 
 #' # View summary
 #' dplyr::group_by(results, hidden, lr, activation, epochs, loss, metric) |>
 #'   dplyr::summarise(mean = mean(value, na.rm = TRUE), .groups = "drop")
