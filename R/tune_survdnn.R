@@ -29,18 +29,19 @@ utils::globalVariables(c("loss", "epoch"))
 #'
 #' @return A tibble or model object depending on the `return` value.
 #' @export
-tune_survdnn <- function(formula,
-                         data,
-                         times,
-                         metrics = "cindex",
-                         param_grid,
-                         folds = 3,
-                         .seed = 42,
-                         .device = c("auto", "cpu", "cuda"),
-                         na_action = c("omit", "fail"),
-                         refit = FALSE,
-                         return = c("all", "summary", "best_model")) {
-
+tune_survdnn <- function(
+  formula,
+  data,
+  times,
+  metrics = "cindex",
+  param_grid,
+  folds = 3,
+  .seed = 42,
+  .device = c("auto", "cpu", "cuda"),
+  na_action = c("omit", "fail"),
+  refit = FALSE,
+  return = c("all", "summary", "best_model")
+) {
   return    <- match.arg(return)
   .device   <- match.arg(.device)
   na_action <- match.arg(na_action)
@@ -52,7 +53,6 @@ tune_survdnn <- function(formula,
   all_results <- purrr::pmap_dfr(
     param_df,
     function(hidden, lr, activation, epochs, loss) {
-
       config_tbl <- tibble::tibble(
         hidden     = list(hidden),
         lr         = lr,
@@ -62,13 +62,13 @@ tune_survdnn <- function(formula,
       )
 
       cv_tbl <- cv_survdnn(
-        formula   = formula,
-        data      = data,
-        times     = times,
-        metrics   = metrics,
-        folds     = folds,
-        hidden    = hidden,
-        lr        = lr,
+        formula    = formula,
+        data       = data,
+        times      = times,
+        metrics    = metrics,
+        folds      = folds,
+        hidden     = hidden,
+        lr         = lr,
         activation = activation,
         epochs     = epochs,
         loss       = loss,
