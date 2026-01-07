@@ -181,7 +181,7 @@ ibs_survmat <- function(object, sp_matrix, times) {
   }, numeric(1))
 
   dt <- diff(times)
-  integral <- sum(brier_vec[-length(brier_vec)] * dt)
+  integral <- sum((brier_vec[-1] + brier_vec[-length(brier_vec)]) / 2 * dt)
   ibs_value <- integral / (max(times) - min(times))
   names(ibs_value) <- "ibs"
   return(round(ibs_value, 6))
