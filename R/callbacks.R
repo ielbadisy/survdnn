@@ -4,8 +4,8 @@
 #'
 #' @param patience Integer. Number of epochs with no improvement before stopping.
 #' @param min_delta Minimum change to qualify as an improvement (default: 0).
-#' @param mode Character; "min" (for losses) or "max" (for metrics to maximize).
-#' @param verbose Logical; whether to print a message when early stopping is triggered.
+#' @param mode Character. "min" (for losses) or "max" (for metrics to maximize).
+#' @param verbose Logical. Whether to print a message when early stopping is triggered.
 #'
 #' @return A function of the form `function(epoch, current)` that returns TRUE
 #'   if training should stop, FALSE otherwise.
