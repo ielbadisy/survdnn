@@ -91,7 +91,7 @@ tune_survdnn <- function(
     dplyr::group_by(hidden, lr, activation, epochs, loss) |>
     dplyr::summarise(mean = mean(value, na.rm = TRUE), .groups = "drop") |>
     dplyr::slice_max(
-      order_by = if (primary_metric == "cindex") mean else -mean,
+      order_by = if (identical(primary_metric, "cindex")) mean else -mean,
       n = 1
     )
 
