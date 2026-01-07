@@ -135,4 +135,3 @@ summary.survdnn <- function(object, ...) {
 
   invisible(out)
 }
-s
