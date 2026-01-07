@@ -9,7 +9,7 @@
 #' @param times A numeric vector of evaluation time points.
 #' @param newdata Optional. A data frame on which to evaluate the model. Defaults to training data.
 #' @param na_action Character. How to handle missing values in evaluation data:
-#'   `"omit"` drops incomplete rows; `"fail"` errors if any NA is present.
+#'   `"omit"` drops incomplete rows, `"fail"` errors if any NA is present.
 #' @param verbose Logical. If TRUE and `na_action="omit"`, prints a message when rows are removed.
 #'
 #' @return A tibble with evaluation results, containing at least `metric`, `value`, and possibly `time`.
@@ -20,6 +20,7 @@ evaluate_survdnn <- function(model,
                              newdata = NULL,
                              na_action = c("omit", "fail"),
                              verbose = FALSE) {
+  
   stopifnot(inherits(model, "survdnn"))
   if (missing(times)) stop("You must provide `times` for evaluation.", call. = FALSE)
 
@@ -30,17 +31,17 @@ evaluate_survdnn <- function(model,
   if (length(unknown) > 0) {
     stop("Unknown metric(s): ", paste(unknown, collapse = ", "), call. = FALSE)
   }
-
+ 
   data <- if (is.null(newdata)) model$data else newdata
   n_before <- nrow(data)
-
+  
   # build model frame first with explicit NA policy
   mf <- model.frame(
     model$formula,
     data = data,
     na.action = if (na_action == "omit") stats::na.omit else stats::na.fail
   )
-
+  
   n_after <- nrow(mf)
   n_removed <- n_before - n_after
   if (n_removed > 0 && isTRUE(verbose) && na_action == "omit") {
@@ -53,7 +54,7 @@ evaluate_survdnn <- function(model,
   # predict on the filtered mf to keep row alignment
   sp_matrix <- predict(model, newdata = mf, times = times, type = "survival")
 
-  purrr::map_dfr(metrics, function(metric) { ## to replace with fmap from functionals package
+  purrr::map_dfr(metrics, function(metric) { ## (to replace map_dfr() with fmap() from functionals package)
     if (metric == "brier" && length(times) > 1) {
       tibble::tibble(
         metric = "brier",

@@ -16,42 +16,47 @@
 #' @return A `nn_sequential` object representing the network.
 #' @keywords internal
 #' @export
-build_dnn <- function(input_dim,
+build_dnn <- function(
+  input_dim,
   hidden,
   activation = "relu",
   output_dim = 1L,
   dropout = 0.3,
-  batch_norm = TRUE) {
+  batch_norm = TRUE
+) {
+  layers <- list()
+  in_features <- input_dim
 
-layers <- list()
-in_features <- input_dim
+  act_fn <- switch(
+    activation,
+    relu       = torch::nn_relu,
+    leaky_relu = torch::nn_leaky_relu,
+    tanh       = torch::nn_tanh,
+    sigmoid    = torch::nn_sigmoid,
+    gelu       = torch::nn_gelu,
+    elu        = torch::nn_elu,
+    softplus   = torch::nn_softplus,
+    stop("Unsupported activation function: ", activation)
+  )
 
-act_fn <- switch(
-activation,
-relu       = torch::nn_relu,
-leaky_relu = torch::nn_leaky_relu,
-tanh       = torch::nn_tanh,
-sigmoid    = torch::nn_sigmoid,
-gelu       = torch::nn_gelu,
-elu        = torch::nn_elu,
-softplus   = torch::nn_softplus,
-stop("Unsupported activation function: ", activation)
-)
+  for (h in hidden) {
+    layers <- append(layers, list(torch::nn_linear(in_features, h)))
 
-for (h in hidden) {
-layers <- append(layers, list(torch::nn_linear(in_features, h)))
-if (isTRUE(batch_norm)) {
-layers <- append(layers, list(torch::nn_batch_norm1d(h)))
-}
-layers <- append(layers, list(act_fn()))
-if (!is.null(dropout) && dropout > 0) {
-layers <- append(layers, list(torch::nn_dropout(p = dropout)))
-}
-in_features <- h
-}
+    if (isTRUE(batch_norm)) {
+      layers <- append(layers, list(torch::nn_batch_norm1d(h)))
+    }
 
-layers <- append(layers, list(torch::nn_linear(in_features, output_dim)))
-torch::nn_sequential(!!!layers)
+    layers <- append(layers, list(act_fn()))
+
+    if (!is.null(dropout) && dropout > 0) {
+      layers <- append(layers, list(torch::nn_dropout(p = dropout)))
+    }
+
+    in_features <- h
+  }
+
+  layers <- append(layers, list(torch::nn_linear(in_features, output_dim)))
+  torch::nn_sequential(!!!layers)
 }
 
 
@@ -113,242 +118,243 @@ torch::nn_sequential(!!!layers)
 #'   \item{coxtime_time_scale}{SD used to scale time for CoxTime; `NA_real_` otherwise.}
 #' }
 #' @export
-survdnn <- function(formula, data,
-hidden = c(32L, 16L),
-activation = "relu",
-lr = 1e-4,
-epochs = 300L,
-loss = c("cox", "cox_l2", "aft", "coxtime"),
-optimizer = c("adam", "adamw", "sgd", "rmsprop", "adagrad"),
-optim_args = list(),
-verbose = TRUE,
-dropout = 0.3,
-batch_norm = TRUE,
-callbacks = NULL,
-.seed = NULL,
-.device = c("auto", "cpu", "cuda"),
-na_action = c("omit", "fail")) {
+survdnn <- function(
+  formula,
+  data,
+  hidden = c(32L, 16L),
+  activation = "relu",
+  lr = 1e-4,
+  epochs = 300L,
+  loss = c("cox", "cox_l2", "aft", "coxtime"),
+  optimizer = c("adam", "adamw", "sgd", "rmsprop", "adagrad"),
+  optim_args = list(),
+  verbose = TRUE,
+  dropout = 0.3,
+  batch_norm = TRUE,
+  callbacks = NULL,
+  .seed = NULL,
+  .device = c("auto", "cpu", "cuda"),
+  na_action = c("omit", "fail")
+) {
+  survdnn_set_seed(.seed)
+  device <- survdnn_get_device(.device)
 
-survdnn_set_seed(.seed)
-device <- survdnn_get_device(.device)
+  loss      <- match.arg(loss)
+  optimizer <- match.arg(optimizer)
+  na_action <- match.arg(na_action)
 
-loss      <- match.arg(loss)
-optimizer <- match.arg(optimizer)
-na_action <- match.arg(na_action)
+  if (!is.list(optim_args)) {
+    stop("`optim_args` must be a list (possibly empty).", call. = FALSE)
+  }
 
-if (!is.list(optim_args)) {
-stop("`optim_args` must be a list (possibly empty).", call. = FALSE)
-}
+  if (!is.null(callbacks)) {
+    if (is.function(callbacks)) {
+      callbacks <- list(callbacks)
+    } else if (!is.list(callbacks) || !all(vapply(callbacks, is.function, logical(1)))) {
+      stop("`callbacks` must be NULL, a function, or a list of functions.", call. = FALSE)
+    }
+  }
 
-if (!is.null(callbacks)) {
-if (is.function(callbacks)) {
-callbacks <- list(callbacks)
-} else if (!is.list(callbacks) || !all(vapply(callbacks, is.function, logical(1)))) {
-stop("`callbacks` must be NULL, a function, or a list of functions.", call. = FALSE)
-}
-}
+  stopifnot(inherits(formula, "formula"))
+  stopifnot(is.data.frame(data))
 
-stopifnot(inherits(formula, "formula"))
-stopifnot(is.data.frame(data))
+  environment(formula) <- list2env(
+    list(Surv = survival::Surv),
+    parent = environment(formula)
+  )
 
-environment(formula) <- list2env(
-list(Surv = survival::Surv),
-parent = environment(formula)
-)
+  # missing data handling
+  n_before <- nrow(data)
+  mf <- model.frame(
+    formula,
+    data = data,
+    na.action = if (na_action == "omit") stats::na.omit else stats::na.fail
+  )
+  n_after <- nrow(mf)
+  n_removed <- n_before - n_after
+  if (n_removed > 0 && isTRUE(verbose) && na_action == "omit") {
+    message(sprintf("Removed %d observations with missing values.", n_removed))
+  }
 
-# ---- missing data handling ----
-n_before <- nrow(data)
-mf <- model.frame(
-formula,
-data = data,
-na.action = if (na_action == "omit") stats::na.omit else stats::na.fail
-)
-n_after <- nrow(mf)
-n_removed <- n_before - n_after
-if (n_removed > 0 && isTRUE(verbose) && na_action == "omit") {
-message(sprintf("Removed %d observations with missing values.", n_removed))
-}
+  y        <- model.response(mf)
+  x        <- model.matrix(attr(mf, "terms"), data = mf)[, -1, drop = FALSE]
+  time     <- y[, "time"]
+  status   <- y[, "status"]
+  x_scaled <- scale(x)
 
-y        <- model.response(mf)
-x        <- model.matrix(attr(mf, "terms"), data = mf)[, -1, drop = FALSE]
-time     <- y[, "time"]
-status   <- y[, "status"]
-x_scaled <- scale(x)
+  # AFT location offset for stability
+  aft_loc <- NA_real_
+  if (loss == "aft") {
+    evt <- (status == 1)
+    if (any(evt)) {
+      aft_loc <- mean(log(pmax(time[evt], .Machine$double.eps)))
+    } else {
+      aft_loc <- mean(log(pmax(time, .Machine$double.eps)))
+    }
+    if (!is.finite(aft_loc)) aft_loc <- 0
+  }
 
-# ---- AFT location offset for stability ----
-aft_loc <- NA_real_
-if (loss == "aft") {
-evt <- (status == 1)
-if (any(evt)) {
-aft_loc <- mean(log(pmax(time[evt], .Machine$double.eps)))
-} else {
-aft_loc <- mean(log(pmax(time, .Machine$double.eps)))
-}
-if (!is.finite(aft_loc)) aft_loc <- 0
-}
+  # CoxTime time scaling
+  coxtime_time_center <- NA_real_
+  coxtime_time_scale  <- NA_real_
+  time_scaled <- NULL
 
-# ---- CoxTime time scaling (CRITICAL for heterogeneity) ----
-coxtime_time_center <- NA_real_
-coxtime_time_scale  <- NA_real_
-time_scaled <- NULL
+  if (loss == "coxtime") {
+    ts <- scale(as.numeric(time))
+    coxtime_time_center <- as.numeric(attr(ts, "scaled:center"))
+    coxtime_time_scale  <- as.numeric(attr(ts, "scaled:scale"))
+    if (!is.finite(coxtime_time_scale) || coxtime_time_scale <= 0) coxtime_time_scale <- 1
+    time_scaled <- as.numeric(ts)
+  }
 
-if (loss == "coxtime") {
-ts <- scale(as.numeric(time))
-coxtime_time_center <- as.numeric(attr(ts, "scaled:center"))
-coxtime_time_scale  <- as.numeric(attr(ts, "scaled:scale"))
-if (!is.finite(coxtime_time_scale) || coxtime_time_scale <= 0) coxtime_time_scale <- 1
-time_scaled <- as.numeric(ts)
-}
+  # x_tensor:
+  # - only for coxtime: [time_scaled, x_scaled]  (time as fed to net)
+  # - others : [x_scaled]
+  x_tensor <- if (loss == "coxtime") {
+    torch::torch_tensor(
+      cbind(time_scaled, x_scaled),
+      dtype  = torch::torch_float(),
+      device = device
+    )
+  } else {
+    torch::torch_tensor(
+      x_scaled,
+      dtype  = torch::torch_float(),
+      device = device
+    )
+  }
 
-# ---- tensors ----
-# x_tensor:
-# - coxtime: [time_scaled, x_scaled]  (time as fed to net)
-# - others : [x_scaled]
-x_tensor <- if (loss == "coxtime") {
-torch::torch_tensor(
-cbind(time_scaled, x_scaled),
-dtype  = torch::torch_float(),
-device = device
-)
-} else {
-torch::torch_tensor(
-x_scaled,
-dtype  = torch::torch_float(),
-device = device
-)
-}
+  # y_tensor always uses RAW time for ordering/risk sets
+  y_tensor <- torch::torch_tensor(
+    cbind(time, status),
+    dtype  = torch::torch_float(),
+    device = device
+  )
 
-# y_tensor always uses RAW time for ordering/risk sets
-y_tensor <- torch::torch_tensor(
-cbind(time, status),
-dtype  = torch::torch_float(),
-device = device
-)
+  # network
+  net <- build_dnn(
+    input_dim  = ncol(x_tensor),
+    hidden     = hidden,
+    activation = activation,
+    output_dim = 1L,
+    dropout    = dropout,
+    batch_norm = batch_norm
+  )
+  net$to(device = device)
 
-# ---- network ----
-net <- build_dnn(
-input_dim  = ncol(x_tensor),
-hidden     = hidden,
-activation = activation,
-output_dim = 1L,
-dropout    = dropout,
-batch_norm = batch_norm
-)
-net$to(device = device)
+  # loss dispatcher + (optional) AFT extra params
+  extra_params  <- NULL # list for AFT, NULL otherwise
+  aft_log_sigma <- NA_real_     
+  loss_fn <- NULL
 
-# ---- loss dispatcher + (optional) AFT extra params ----
-extra_params  <- NULL            # list for AFT, NULL otherwise
-aft_log_sigma <- NA_real_        # ALWAYS numeric
-loss_fn <- NULL
+  if (loss == "cox") {
+    loss_fn <- function(net, x, y) cox_loss(net(x), y)
+  } else if (loss == "cox_l2") {
+    loss_fn <- function(net, x, y) cox_l2_loss(net(x), y, lambda = 1e-3)
+  } else if (loss == "aft") {
+    loc0 <- if (is.finite(aft_loc)) aft_loc else 0
+    aft_bundle <- survdnn__aft_lognormal_nll_factory(device = device, aft_loc = loc0)
+    extra_params <- aft_bundle$extra_params
+    loss_fn <- function(net, x, y) aft_bundle$loss_fn(net, x, y)
+  } else if (loss == "coxtime") {
+    lf <- survdnn__coxtime_loss_factory(net)
+    loss_fn <- function(net, x, y) lf(x, y)
+  } else {
+    stop("Unsupported loss: ", loss, call. = FALSE)
+  }
 
-if (loss == "cox") {
-loss_fn <- function(net, x, y) cox_loss(net(x), y)
-} else if (loss == "cox_l2") {
-loss_fn <- function(net, x, y) cox_l2_loss(net(x), y, lambda = 1e-3)
-} else if (loss == "aft") {
-loc0 <- if (is.finite(aft_loc)) aft_loc else 0
-aft_bundle <- survdnn__aft_lognormal_nll_factory(device = device, aft_loc = loc0)
-extra_params <- aft_bundle$extra_params
-loss_fn <- function(net, x, y) aft_bundle$loss_fn(net, x, y)
-} else if (loss == "coxtime") {
-lf <- survdnn__coxtime_loss_factory(net)
-loss_fn <- function(net, x, y) lf(x, y)
-} else {
-stop("Unsupported loss: ", loss, call. = FALSE)
-}
+  # optimizer params
+  params <- net$parameters
+  if (loss == "aft" && !is.null(extra_params) && !is.null(extra_params$log_sigma)) {
+    params <- c(params, list(extra_params$log_sigma))
+  }
 
-# ---- optimizer params ----
-params <- net$parameters
-if (loss == "aft" && !is.null(extra_params) && !is.null(extra_params$log_sigma)) {
-params <- c(params, list(extra_params$log_sigma))
-}
+  opt_args <- c(list(params = params, lr = lr), optim_args)
 
-opt_args <- c(list(params = params, lr = lr), optim_args)
+  if (is.null(optim_args$weight_decay) && optimizer %in% c("adam", "adamw")) {
+    opt_args$weight_decay <- 1e-4
+  }
 
-if (is.null(optim_args$weight_decay) && optimizer %in% c("adam", "adamw")) {
-opt_args$weight_decay <- 1e-4
-}
+  optimizer_obj <- switch(
+    optimizer,
+    adam    = do.call(torch::optim_adam,    opt_args),
+    adamw   = do.call(torch::optim_adamw,   opt_args),
+    sgd     = do.call(torch::optim_sgd,     opt_args),
+    rmsprop = do.call(torch::optim_rmsprop, opt_args),
+    adagrad = do.call(torch::optim_adagrad, opt_args),
+    stop("Unsupported optimizer: ", optimizer)
+  )
 
-optimizer_obj <- switch(
-optimizer,
-adam    = do.call(torch::optim_adam,    opt_args),
-adamw   = do.call(torch::optim_adamw,   opt_args),
-sgd     = do.call(torch::optim_sgd,     opt_args),
-rmsprop = do.call(torch::optim_rmsprop, opt_args),
-adagrad = do.call(torch::optim_adagrad, opt_args),
-stop("Unsupported optimizer: ", optimizer)
-)
+  # training loop
+  loss_history   <- numeric(epochs)
+  early_stopped  <- FALSE
+  last_epoch_run <- epochs
 
-# ---- training loop ----
-loss_history   <- numeric(epochs)
-early_stopped  <- FALSE
-last_epoch_run <- epochs
+  for (epoch in 1:epochs) {
+    net$train()
+    optimizer_obj$zero_grad()
 
-for (epoch in 1:epochs) {
-net$train()
-optimizer_obj$zero_grad()
+    loss_val <- loss_fn(net, x_tensor, y_tensor)
+    loss_val$backward()
+    optimizer_obj$step()
 
-loss_val <- loss_fn(net, x_tensor, y_tensor)
-loss_val$backward()
-optimizer_obj$step()
+    current_loss        <- loss_val$item()
+    loss_history[epoch] <- current_loss
+    last_epoch_run      <- epoch
 
-current_loss        <- loss_val$item()
-loss_history[epoch] <- current_loss
-last_epoch_run      <- epoch
+    if (verbose && epoch %% 50 == 0) {
+      cat(sprintf("Epoch %d - Loss: %.6f\n\n", epoch, current_loss))
+    }
 
-if (verbose && epoch %% 50 == 0) {
-cat(sprintf("Epoch %d - Loss: %.6f\n\n", epoch, current_loss))
-}
+    if (!is.null(callbacks)) {
+      for (cb in callbacks) {
+        if (isTRUE(cb(epoch, current_loss))) {
+          early_stopped <- TRUE
+          break
+        }
+      }
+      if (early_stopped) break
+    }
+  }
 
-if (!is.null(callbacks)) {
-for (cb in callbacks) {
-if (isTRUE(cb(epoch, current_loss))) {
-early_stopped <- TRUE
-break
-}
-}
-if (early_stopped) break
-}
-}
+  if (early_stopped && last_epoch_run < epochs) {
+    loss_history <- loss_history[seq_len(last_epoch_run)]
+  }
 
-if (early_stopped && last_epoch_run < epochs) {
-loss_history <- loss_history[seq_len(last_epoch_run)]
-}
+  # store learned AFT log(sigma) robustly
+  if (loss == "aft" && !is.null(extra_params) && !is.null(extra_params$log_sigma)) {
+    aft_log_sigma <- as.numeric(extra_params$log_sigma$item())
+    if (!is.finite(aft_log_sigma)) aft_log_sigma <- NA_real_
+  } else {
+    aft_log_sigma <- NA_real_
+  }
 
-# ---- store learned AFT log(sigma) robustly ----
-if (loss == "aft" && !is.null(extra_params) && !is.null(extra_params$log_sigma)) {
-aft_log_sigma <- as.numeric(extra_params$log_sigma$item())
-if (!is.finite(aft_log_sigma)) aft_log_sigma <- NA_real_
-} else {
-aft_log_sigma <- NA_real_
-}
-
-structure(
-list(
-model               = net,
-formula             = formula,
-data                = data,
-xnames              = colnames(x),
-x_center            = attr(x_scaled, "scaled:center"),
-x_scale             = attr(x_scaled, "scaled:scale"),
-loss_history        = loss_history,
-final_loss          = tail(loss_history, 1),
-loss                = loss,
-activation          = activation,
-hidden              = hidden,
-lr                  = lr,
-epochs              = epochs,
-optimizer           = optimizer,
-optim_args          = optim_args,
-device              = device,
-dropout             = dropout,
-batch_norm          = batch_norm,
-na_action           = na_action,
-aft_log_sigma       = aft_log_sigma,
-aft_loc             = if (loss == "aft") aft_loc else NA_real_,
-coxtime_time_center = if (loss == "coxtime") coxtime_time_center else NA_real_,
-coxtime_time_scale  = if (loss == "coxtime") coxtime_time_scale  else NA_real_
-),
-class = "survdnn"
-)
+  structure(
+    list(
+      model               = net,
+      formula             = formula,
+      data                = data,
+      xnames              = colnames(x),
+      x_center            = attr(x_scaled, "scaled:center"),
+      x_scale             = attr(x_scaled, "scaled:scale"),
+      loss_history        = loss_history,
+      final_loss          = tail(loss_history, 1),
+      loss                = loss,
+      activation          = activation,
+      hidden              = hidden,
+      lr                  = lr,
+      epochs              = epochs,
+      optimizer           = optimizer,
+      optim_args          = optim_args,
+      device              = device,
+      dropout             = dropout,
+      batch_norm          = batch_norm,
+      na_action           = na_action,
+      aft_log_sigma       = aft_log_sigma,
+      aft_loc             = if (loss == "aft") aft_loc else NA_real_,
+      coxtime_time_center = if (loss == "coxtime") coxtime_time_center else NA_real_,
+      coxtime_time_scale  = if (loss == "coxtime") coxtime_time_scale  else NA_real_
+    ),
+    class = "survdnn"
+  )
 }

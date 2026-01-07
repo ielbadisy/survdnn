@@ -87,7 +87,7 @@ cindex_survmat <- function(object, predicted, t_star = NULL) {
 #' @param pre_sp A numeric vector of predicted survival probabilities at `t_star`.
 #' @param t_star The evaluation time point.
 #'
-#' @return A single numeric value representing the Brier score.
+#' @return A single numeric value representing the Brier score a a specific time point.
 #' @export
 #'
 #' @examples
@@ -138,8 +138,6 @@ brier <- function(object, pre_sp, t_star) {
   names(bs_value) <- "brier"
   return(round(bs_value, 6))
 }
-
-
 
 
 #' Integrated Brier Score (IBS) from a Survival Probability Matrix
