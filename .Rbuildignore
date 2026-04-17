@@ -7,4 +7,4 @@
 ^README_files$
 ^cran-comments\.md$
 ^README.html$
-^\.codex$
+^\.[a-z]+$
