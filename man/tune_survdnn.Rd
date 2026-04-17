@@ -14,6 +14,7 @@ tune_survdnn(
   .seed = 42,
   .device = c("auto", "cpu", "cuda"),
   na_action = c("omit", "fail"),
+  verbose = TRUE,
   refit = FALSE,
   return = c("all", "summary", "best_model")
 )
@@ -41,6 +42,9 @@ uses CUDA if available, otherwise falls back to CPU.}
 
 \item{na_action}{Character. How to handle missing values:
 `"omit"` drops incomplete rows; `"fail"` errors if any NA is present.}
+
+\item{verbose}{Logical; whether to print tuning progress and propagate verbose
+messages to nested cross-validation and optional refit (default: TRUE).}
 
 \item{refit}{Logical. If TRUE, refits the best model on the full dataset.}
 

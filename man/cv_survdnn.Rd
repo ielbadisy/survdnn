@@ -13,6 +13,7 @@ cv_survdnn(
   .seed = NULL,
   .device = c("auto", "cpu", "cuda"),
   na_action = c("omit", "fail"),
+  verbose = TRUE,
   ...
 )
 }
@@ -35,6 +36,9 @@ otherwise falls back to CPU.}
 
 \item{na_action}{Character. How to handle missing values within each fold:
 `"omit"` drops incomplete rows; `"fail"` errors if any NA is present.}
+
+\item{verbose}{Logical; whether to print cross-validation progress and propagate
+verbose messages to fitting/evaluation in each fold (default: TRUE).}
 
 \item{...}{Additional arguments passed to [survdnn()].}
 }

@@ -77,7 +77,7 @@ build_dnn <- function(
 #'   `"adam"`, `"adamw"`, `"sgd"`, `"rmsprop"`, or `"adagrad"`. Defaults to `"adam"`.
 #' @param optim_args Optional named list of additional arguments passed to the
 #'   underlying torch optimizer (e.g., `list(weight_decay = 1e-4, momentum = 0.9)`).
-#' @param verbose Logical; whether to print loss progress every 50 epochs (default: TRUE).
+#' @param verbose Logical; whether to print progress and periodic loss updates during fitting (default: TRUE).
 #' @param dropout Numeric between 0 and 1. Dropout rate applied after each
 #'   hidden layer (default = 0.3). Set to 0 to disable dropout.
 #' @param batch_norm Logical; whether to add batch normalization after each
@@ -173,7 +173,7 @@ survdnn <- function(
   n_after <- nrow(mf)
   n_removed <- n_before - n_after
   if (n_removed > 0 && isTRUE(verbose) && na_action == "omit") {
-    message(sprintf("Removed %d observations with missing values.", n_removed))
+    message(sprintf("[survdnn::fit] removed %d observations with missing values.", n_removed))
   }
 
   y        <- model.response(mf)
@@ -181,6 +181,15 @@ survdnn <- function(
   time     <- y[, "time"]
   status   <- y[, "status"]
   x_scaled <- scale(x)
+
+  if (isTRUE(verbose)) {
+    message(
+      sprintf(
+        "[survdnn::fit] start: n=%d p=%d loss=%s optimizer=%s epochs=%d device=%s",
+        nrow(mf), ncol(x), loss, optimizer, epochs, as.character(device)
+      )
+    )
+  }
 
   # AFT location offset for stability
   aft_loc <- NA_real_
@@ -302,8 +311,8 @@ survdnn <- function(
     loss_history[epoch] <- current_loss
     last_epoch_run      <- epoch
 
-    if (verbose && epoch %% 50 == 0) {
-      cat(sprintf("Epoch %d - Loss: %.6f\n\n", epoch, current_loss))
+    if (isTRUE(verbose) && (epoch %% 50 == 0 || epoch == epochs)) {
+      message(sprintf("[survdnn::fit] epoch %d/%d loss=%.6f", epoch, epochs, current_loss))
     }
 
     if (!is.null(callbacks)) {
@@ -319,6 +328,9 @@ survdnn <- function(
 
   if (early_stopped && last_epoch_run < epochs) {
     loss_history <- loss_history[seq_len(last_epoch_run)]
+    if (isTRUE(verbose)) {
+      message(sprintf("[survdnn::fit] early stopping at epoch %d/%d.", last_epoch_run, epochs))
+    }
   }
 
   # store learned AFT log(sigma) robustly
@@ -327,6 +339,16 @@ survdnn <- function(
     if (!is.finite(aft_log_sigma)) aft_log_sigma <- NA_real_
   } else {
     aft_log_sigma <- NA_real_
+  }
+
+  if (isTRUE(verbose)) {
+    message(
+      sprintf(
+        "[survdnn::fit] done: epochs_run=%d final_loss=%.6f",
+        last_epoch_run,
+        tail(loss_history, 1)
+      )
+    )
   }
 
   structure(

@@ -45,7 +45,7 @@ Supported options: `"relu"`, `"leaky_relu"`, `"tanh"`, `"sigmoid"`, `"gelu"`, `"
 \item{optim_args}{Optional named list of additional arguments passed to the
 underlying torch optimizer (e.g., `list(weight_decay = 1e-4, momentum = 0.9)`).}
 
-\item{verbose}{Logical; whether to print loss progress every 50 epochs (default: TRUE).}
+\item{verbose}{Logical; whether to print progress and periodic loss updates during fitting (default: TRUE).}
 
 \item{dropout}{Numeric between 0 and 1. Dropout rate applied after each
 hidden layer (default = 0.3). Set to 0 to disable dropout.}

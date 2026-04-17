@@ -19,6 +19,8 @@ utils::globalVariables(c("loss", "epoch"))
 #'   uses CUDA if available, otherwise falls back to CPU.
 #' @param na_action Character. How to handle missing values:
 #'   `"omit"` drops incomplete rows; `"fail"` errors if any NA is present.
+#' @param verbose Logical; whether to print tuning progress and propagate verbose
+#'   messages to nested cross-validation and optional refit (default: TRUE).
 #' @param refit Logical. If TRUE, refits the best model on the full dataset.
 #' @param return One of "all", "summary", or "best_model":
 #'   \describe{
@@ -39,6 +41,7 @@ tune_survdnn <- function(
   .seed = 42,
   .device = c("auto", "cpu", "cuda"),
   na_action = c("omit", "fail"),
+  verbose = TRUE,
   refit = FALSE,
   return = c("all", "summary", "best_model")
 ) {
@@ -49,10 +52,35 @@ tune_survdnn <- function(
   if (!is.null(.seed)) survdnn_set_seed(.seed)
 
   param_df <- tidyr::crossing(!!!param_grid)
+  n_configs <- nrow(param_df)
 
-  all_results <- purrr::pmap_dfr(
-    param_df,
-    function(hidden, lr, activation, epochs, loss) {
+  if (isTRUE(verbose)) {
+    message(
+      sprintf(
+        "[survdnn::tune] start: configs=%d folds=%d total_fits=%d",
+        n_configs, folds, n_configs * folds
+      )
+    )
+  }
+
+  all_results <- purrr::map_dfr(
+    seq_len(n_configs),
+    function(config_id) {
+      hidden <- param_df$hidden[[config_id]]
+      lr <- param_df$lr[[config_id]]
+      activation <- param_df$activation[[config_id]]
+      epochs <- param_df$epochs[[config_id]]
+      loss <- param_df$loss[[config_id]]
+
+      if (isTRUE(verbose)) {
+        message(
+          sprintf(
+            "[survdnn::tune] config %d/%d: loss=%s activation=%s hidden=%s lr=%s epochs=%d",
+            config_id, n_configs, loss, activation, toString(hidden), format(lr), epochs
+          )
+        )
+      }
+
       config_tbl <- tibble::tibble(
         hidden     = list(hidden),
         lr         = lr,
@@ -74,7 +102,8 @@ tune_survdnn <- function(
         loss       = loss,
         .seed      = .seed,
         .device    = .device,
-        na_action  = na_action
+        na_action  = na_action,
+        verbose    = verbose
       )
 
       dplyr::bind_cols(config_tbl[rep(1, nrow(cv_tbl)), ], cv_tbl)
@@ -99,9 +128,24 @@ tune_survdnn <- function(
     stop("No valid configuration found for primary metric: ", primary_metric, call. = FALSE)
   }
 
+  if (isTRUE(verbose)) {
+    message(
+      sprintf(
+        "[survdnn::tune] best config: loss=%s activation=%s hidden=%s lr=%s epochs=%d",
+        best_row_all$loss[[1]],
+        best_row_all$activation[[1]],
+        toString(best_row_all$hidden[[1]]),
+        format(best_row_all$lr[[1]]),
+        best_row_all$epochs[[1]]
+      )
+    )
+  }
+
   ## refitting the best model
   if (refit) {
-    message("Refitting best model on full data...")
+    if (isTRUE(verbose)) {
+      message("[survdnn::tune] refitting best model on full data...")
+    }
     best_model <- survdnn(
       formula    = formula,
       data       = data,
@@ -112,8 +156,13 @@ tune_survdnn <- function(
       loss       = best_row_all$loss[[1]],
       .seed      = .seed,
       .device    = .device,
+      verbose    = verbose,
       na_action  = na_action
     )
+  }
+
+  if (isTRUE(verbose)) {
+    message("[survdnn::tune] done.")
   }
 
   switch(
