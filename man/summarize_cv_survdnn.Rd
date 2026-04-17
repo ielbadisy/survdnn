@@ -21,18 +21,19 @@ Computes mean, standard deviation, and confidence intervals for metrics from cro
 }
 \examples{
 \donttest{
-library(survival)
-data(veteran)
-res <- cv_survdnn(
-  Surv(time, status) ~ age + karno + celltype,
-  data = veteran,
-  times = c(30, 90, 180, 270),
-  metrics = c("cindex", "ibs"),
-  folds = 3,
-  .seed = 42,
-  hidden = c(16, 8),
-  epochs = 5
-)
-summarize_cv_survdnn(res)
+if (torch::torch_is_installed()) {
+  veteran <- survival::veteran
+  res <- cv_survdnn(
+    survival::Surv(time, status) ~ age + karno + celltype,
+    data = veteran,
+    times = c(30, 90, 180, 270),
+    metrics = c("cindex", "ibs"),
+    folds = 3,
+    .seed = 42,
+    hidden = c(16, 8),
+    epochs = 5
+  )
+  summarize_cv_survdnn(res)
+}
 }
 }

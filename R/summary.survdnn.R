@@ -12,16 +12,18 @@
 #'
 #' @examples
 #' \donttest{
-#' set.seed(42)
-#' sim_data <- data.frame(
-#'   age = rnorm(100, 60, 10),
-#'   sex = factor(sample(c("male", "female"), 100, TRUE)),
-#'   trt = factor(sample(c("A", "B"), 100, TRUE)),
-#'   time = rexp(100, 0.05),
-#'   status = rbinom(100, 1, 0.7)
-#' )
-#' mod <- survdnn(Surv(time, status) ~ age + sex + trt, data = sim_data, epochs = 50, verbose = FALSE)
-#' summary(mod)
+#' if (torch::torch_is_installed()) {
+#'   set.seed(42)
+#'   sim_data <- data.frame(
+#'     age = rnorm(100, 60, 10),
+#'     sex = factor(sample(c("male", "female"), 100, TRUE)),
+#'     trt = factor(sample(c("A", "B"), 100, TRUE)),
+#'     time = rexp(100, 0.05),
+#'     status = rbinom(100, 1, 0.7)
+#'   )
+#'   mod <- survdnn(survival::Surv(time, status) ~ age + sex + trt, data = sim_data, epochs = 50, verbose = FALSE)
+#'   summary(mod)
+#' }
 #' }
 
 summary.survdnn <- function(object, ...) {

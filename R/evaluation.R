@@ -98,18 +98,19 @@ evaluate_survdnn <- function(model,
 #'
 #' @examples
 #' \donttest{
-#' library(survival)
-#' data(veteran)
-#' cv_survdnn(
-#'   Surv(time, status) ~ age + karno + celltype,
-#'   data = veteran,
-#'   times = c(30, 90, 180),
-#'   metrics = "ibs",
-#'   folds = 3,
-#'   .seed = 42,
-#'   hidden = c(16, 8),
-#'   epochs = 5
-#' )
+#' if (torch::torch_is_installed()) {
+#'   veteran <- survival::veteran
+#'   cv_survdnn(
+#'     survival::Surv(time, status) ~ age + karno + celltype,
+#'     data = veteran,
+#'     times = c(30, 90, 180),
+#'     metrics = "ibs",
+#'     folds = 3,
+#'     .seed = 42,
+#'     hidden = c(16, 8),
+#'     epochs = 5
+#'   )
+#' }
 #' }
 cv_survdnn <- function(formula, data, times,
                        metrics = c("cindex", "ibs"),
@@ -182,19 +183,20 @@ cv_survdnn <- function(formula, data, times,
 #'
 #' @examples
 #' \donttest{
-#' library(survival)
-#' data(veteran)
-#' res <- cv_survdnn(
-#'   Surv(time, status) ~ age + karno + celltype,
-#'   data = veteran,
-#'   times = c(30, 90, 180, 270),
-#'   metrics = c("cindex", "ibs"),
-#'   folds = 3,
-#'   .seed = 42,
-#'   hidden = c(16, 8),
-#'   epochs = 5
-#' )
-#' summarize_cv_survdnn(res)
+#' if (torch::torch_is_installed()) {
+#'   veteran <- survival::veteran
+#'   res <- cv_survdnn(
+#'     survival::Surv(time, status) ~ age + karno + celltype,
+#'     data = veteran,
+#'     times = c(30, 90, 180, 270),
+#'     metrics = c("cindex", "ibs"),
+#'     folds = 3,
+#'     .seed = 42,
+#'     hidden = c(16, 8),
+#'     epochs = 5
+#'   )
+#'   summarize_cv_survdnn(res)
+#' }
 #' }
 summarize_cv_survdnn <- function(cv_results, by_time = TRUE, conf_level = 0.95) {
   stopifnot(all(c("fold", "metric", "value") %in% names(cv_results)))

@@ -46,17 +46,18 @@ Performs cross-validation for a `survdnn` model using the specified evaluation m
 }
 \examples{
 \donttest{
-library(survival)
-data(veteran)
-cv_survdnn(
-  Surv(time, status) ~ age + karno + celltype,
-  data = veteran,
-  times = c(30, 90, 180),
-  metrics = "ibs",
-  folds = 3,
-  .seed = 42,
-  hidden = c(16, 8),
-  epochs = 5
-)
+if (torch::torch_is_installed()) {
+  veteran <- survival::veteran
+  cv_survdnn(
+    survival::Surv(time, status) ~ age + karno + celltype,
+    data = veteran,
+    times = c(30, 90, 180),
+    metrics = "ibs",
+    folds = 3,
+    .seed = 42,
+    hidden = c(16, 8),
+    epochs = 5
+  )
+}
 }
 }
