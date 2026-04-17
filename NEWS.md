@@ -1,5 +1,14 @@
 # survdnn
 
+## survdnn 0.7.6
+
+### CRAN resubmission update
+
+* Hardened `\\donttest{}` examples that train models by guarding them with `torch::torch_is_installed()` so checks pass on systems without Torch.
+* Updated examples to load the veteran dataset explicitly via `survival::veteran` (instead of `data(veteran, ...)`).
+* Regenerated documentation (`man/*.Rd`) to reflect example updates.
+* Added `.codex` to `.gitignore` and `.Rbuildignore` to prevent local artifacts from entering source builds.
+
 ## survdnn 0.7.5
 
 ### Main changes
