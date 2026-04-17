@@ -89,6 +89,8 @@ evaluate_survdnn <- function(model,
 #' @param .device Character string indicating the computation device used when fitting the models
 #'   in each fold. One of `"auto"`, `"cpu"`, or `"cuda"`. `"auto"` uses CUDA if available,
 #'   otherwise falls back to CPU.
+#' @param .threads Optional positive integer. If provided, sets Torch CPU thread
+#'   count before each fold fit via `torch::torch_set_num_threads()`.
 #' @param na_action Character. How to handle missing values within each fold:
 #'   `"omit"` drops incomplete rows; `"fail"` errors if any NA is present.
 #' @param verbose Logical; whether to print cross-validation progress and propagate
@@ -119,6 +121,7 @@ cv_survdnn <- function(formula, data, times,
                        folds = 5,
                        .seed = NULL,
                        .device = c("auto", "cpu", "cuda"),
+                       .threads = NULL,
                        na_action = c("omit", "fail"),
                        verbose = TRUE,
                        ...) {
@@ -146,6 +149,9 @@ cv_survdnn <- function(formula, data, times,
         paste(times, collapse = ",")
       )
     )
+    if (!is.null(.threads)) {
+      message(sprintf("[survdnn::cv] cpu_threads=%d", as.integer(.threads)))
+    }
   }
 
   status_var <- all.vars(formula[[2]])[2]          # more safe for extracting the status
@@ -174,6 +180,7 @@ cv_survdnn <- function(formula, data, times,
       verbose   = verbose,
       .seed     = .seed,
       .device   = .device,
+      .threads  = .threads,
       na_action = na_action,
       ...
     )

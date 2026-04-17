@@ -269,6 +269,18 @@ By default, Torch automatically configures its CPU thread pools based on the ava
 torch::torch_set_num_threads(4)
 ```
 
+You can also set this directly from `survdnn` APIs with `.threads`:
+
+```{r}
+mod <- survdnn(
+  Surv(time, status) ~ age + karno + celltype,
+  data = survival::veteran,
+  .threads = 4
+)
+```
+
+The same `.threads` argument is available in `cv_survdnn()` and `tune_survdnn()`.
+
 This setting affects:
 
 * model training
@@ -297,5 +309,4 @@ Open an [issue](https://github.com/ielbadisy/survdnn/issues) or submit a pull re
 ## License
 
 MIT License © 2025 Imad EL BADISY
-
 

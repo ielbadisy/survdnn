@@ -20,6 +20,7 @@ test_that("tune_survdnn returns correct structure for all modes", {
     param_grid = param_grid,
     folds = 2,
     .seed = 123,
+    .threads = 1,
     verbose = FALSE,
     refit = FALSE,
     return = "all"
@@ -36,6 +37,7 @@ test_that("tune_survdnn returns correct structure for all modes", {
     param_grid = param_grid,
     folds = 2,
     .seed = 123,
+    .threads = 1,
     verbose = FALSE,
     refit = FALSE,
     return = "summary"
@@ -52,6 +54,7 @@ test_that("tune_survdnn returns correct structure for all modes", {
     param_grid = param_grid,
     folds = 2,
     .seed = 123,
+    .threads = 1,
     verbose = FALSE,
     refit = FALSE,
     return = "best_model"
@@ -83,6 +86,7 @@ test_that("tune_survdnn works with refit = TRUE and returns survdnn model", {
     param_grid = param_grid,
     folds = 2,
     .seed = 42,
+    .threads = 1,
     verbose = FALSE,
     refit = TRUE,
     return = "best_model"
@@ -114,6 +118,7 @@ test_that("summarize_tune_survdnn aggregates correctly and throws on bad input",
     param_grid = param_grid,
     folds = 2,
     .seed = 123,
+    .threads = 1,
     verbose = FALSE,
     refit = FALSE,
     return = "all"
@@ -151,6 +156,7 @@ test_that("tune_survdnn verbose controls progress messages", {
       param_grid = param_grid,
       folds = 2,
       .seed = 123,
+      .threads = 1,
       verbose = TRUE,
       refit = FALSE,
       return = "summary"
@@ -170,6 +176,7 @@ test_that("tune_survdnn verbose controls progress messages", {
       param_grid = param_grid,
       folds = 2,
       .seed = 123,
+      .threads = 1,
       verbose = FALSE,
       refit = FALSE,
       return = "summary"

@@ -78,46 +78,38 @@ mod <- survdnn(
   loss = "cox",
   verbose = TRUE
   )
-```
 
-    ## Epoch 50 - Loss: 3.967377
-    ## 
-    ## Epoch 100 - Loss: 3.863189
-    ## 
-    ## Epoch 150 - Loss: 3.879065
-    ## 
-    ## Epoch 200 - Loss: 3.814478
-    ## 
-    ## Epoch 250 - Loss: 3.756944
-    ## 
-    ## Epoch 300 - Loss: 3.823366
-
-``` r
 summary(mod)
 ```
 
     ## 
     ## Formula:
     ##   Surv(time, status) ~ age + karno + celltype
-    ## <environment: 0x6171aa19de98>
+    ## <environment: 0x6011c835fbe0>
     ## 
     ## Model architecture:
     ##   Hidden layers:  32 : 16 
     ##   Activation:  relu 
     ##   Dropout:  0.3 
-    ##   Final loss:  3.823366 
+    ##   Batch norm:  TRUE 
+    ##   Final loss:  3.841008 
     ## 
     ## Training summary:
     ##   Epochs:  300 
     ##   Learning rate:  1e-04 
     ##   Loss function:  cox 
     ##   Optimizer:  adam 
+    ##   Device:  cpu 
+    ##   CPU threads:  default 
+    ##   NA action:  omit 
     ## 
     ## Data summary:
-    ##   Observations:  137 
-    ##   Predictors:  age, karno, celltypesmallcell, celltypeadeno, celltypelarge 
+    ##   Observations (used/total): 137 / 137
+    ##   Predictors (5): age, karno, celltypesmallcell, celltypeadeno, celltypelarge
     ##   Time range: [ 1, 999 ]
-    ##   Event rate:  93.4%
+    ##   Events / censored:  128  /  9 
+    ##   Event rate:  93.4% 
+    ##   Predictors standardized:  yes
 
 ``` r
 plot(mod, group_by = "celltype", times = 1:300)
@@ -136,17 +128,21 @@ mod1 <- survdnn(
   )
 ```
 
-    ## Epoch 50 - Loss: 3.988259
-    ## 
-    ## Epoch 100 - Loss: 3.930287
-    ## 
-    ## Epoch 150 - Loss: 3.913787
-    ## 
-    ## Epoch 200 - Loss: 3.896528
-    ## 
-    ## Epoch 250 - Loss: 3.819792
-    ## 
-    ## Epoch 300 - Loss: 3.893889
+    ## [survdnn::fit] start: n=137 p=2 loss=cox optimizer=adam epochs=300 device=cpu
+
+    ## [survdnn::fit] epoch 50/300 loss=3.989828
+
+    ## [survdnn::fit] epoch 100/300 loss=3.942912
+
+    ## [survdnn::fit] epoch 150/300 loss=3.890888
+
+    ## [survdnn::fit] epoch 200/300 loss=3.869117
+
+    ## [survdnn::fit] epoch 250/300 loss=3.866454
+
+    ## [survdnn::fit] epoch 300/300 loss=3.870147
+
+    ## [survdnn::fit] done: epochs_run=300 final_loss=3.870147
 
 - Accelerated Failure Time
 
@@ -159,17 +155,21 @@ mod2 <- survdnn(
   )
 ```
 
-    ## Epoch 50 - Loss: 16.911470
-    ## 
-    ## Epoch 100 - Loss: 16.589067
-    ## 
-    ## Epoch 150 - Loss: 16.226612
-    ## 
-    ## Epoch 200 - Loss: 15.959708
-    ## 
-    ## Epoch 250 - Loss: 15.182121
-    ## 
-    ## Epoch 300 - Loss: 15.049762
+    ## [survdnn::fit] start: n=137 p=2 loss=aft optimizer=adam epochs=300 device=cpu
+
+    ## [survdnn::fit] epoch 50/300 loss=4.628552
+
+    ## [survdnn::fit] epoch 100/300 loss=4.641005
+
+    ## [survdnn::fit] epoch 150/300 loss=4.563893
+
+    ## [survdnn::fit] epoch 200/300 loss=4.507134
+
+    ## [survdnn::fit] epoch 250/300 loss=4.501204
+
+    ## [survdnn::fit] epoch 300/300 loss=4.494009
+
+    ## [survdnn::fit] done: epochs_run=300 final_loss=4.494009
 
 - Coxtime
 
@@ -182,17 +182,21 @@ mod3 <- survdnn(
   )
 ```
 
-    ## Epoch 50 - Loss: 4.888907
-    ## 
-    ## Epoch 100 - Loss: 4.846722
-    ## 
-    ## Epoch 150 - Loss: 4.838490
-    ## 
-    ## Epoch 200 - Loss: 4.816662
-    ## 
-    ## Epoch 250 - Loss: 4.780379
-    ## 
-    ## Epoch 300 - Loss: 4.756117
+    ## [survdnn::fit] start: n=137 p=2 loss=coxtime optimizer=adam epochs=300 device=cpu
+
+    ## [survdnn::fit] epoch 50/300 loss=3.946552
+
+    ## [survdnn::fit] epoch 100/300 loss=3.955686
+
+    ## [survdnn::fit] epoch 150/300 loss=3.944864
+
+    ## [survdnn::fit] epoch 200/300 loss=3.930768
+
+    ## [survdnn::fit] epoch 250/300 loss=3.838923
+
+    ## [survdnn::fit] epoch 300/300 loss=3.889966
+
+    ## [survdnn::fit] done: epochs_run=300 final_loss=3.889966
 
 ## Cross-validation
 
@@ -361,6 +365,37 @@ using:
 ``` r
 torch::torch_set_num_threads(4)
 ```
+
+You can also set this directly from `survdnn` APIs with `.threads`:
+
+``` r
+mod <- survdnn(
+  Surv(time, status) ~ age + karno + celltype,
+  data = survival::veteran,
+  .threads = 4
+)
+```
+
+    ## [survdnn::fit] start: n=137 p=5 loss=cox optimizer=adam epochs=300 device=cpu
+
+    ## [survdnn::fit] cpu_threads=4
+
+    ## [survdnn::fit] epoch 50/300 loss=3.962863
+
+    ## [survdnn::fit] epoch 100/300 loss=3.952089
+
+    ## [survdnn::fit] epoch 150/300 loss=3.896662
+
+    ## [survdnn::fit] epoch 200/300 loss=3.834132
+
+    ## [survdnn::fit] epoch 250/300 loss=3.866578
+
+    ## [survdnn::fit] epoch 300/300 loss=3.821199
+
+    ## [survdnn::fit] done: epochs_run=300 final_loss=3.821199
+
+The same `.threads` argument is available in `cv_survdnn()` and
+`tune_survdnn()`.
 
 This setting affects:
 

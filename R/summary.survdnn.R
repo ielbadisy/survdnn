@@ -63,6 +63,7 @@ summary.survdnn <- function(object, ...) {
       loss_function = object$loss,
       optimizer     = object$optimizer,
       device        = object$device,
+      threads       = if (!is.null(object$threads)) object$threads else NA_integer_,
       na_action     = object$na_action
     ),
     data_summary = list(
@@ -113,6 +114,7 @@ summary.survdnn <- function(object, ...) {
   cat("  Loss function: ", out$training_summary$loss_function, "\n")
   cat("  Optimizer: ", out$training_summary$optimizer, "\n")
   cat("  Device: ", as.character(out$training_summary$device), "\n")
+  cat("  CPU threads: ", if (is.na(out$training_summary$threads)) "default" else out$training_summary$threads, "\n")
   cat("  NA action: ", as.character(out$training_summary$na_action), "\n")
 
   cat("\nData summary:\n")

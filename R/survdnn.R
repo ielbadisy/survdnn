@@ -90,6 +90,8 @@ build_dnn <- function(
 #' @param .device Character string indicating the computation device.
 #'   One of `"auto"`, `"cpu"`, or `"cuda"`. `"auto"` uses CUDA if available,
 #'   otherwise falls back to CPU.
+#' @param .threads Optional positive integer. If provided, sets the global
+#'   Torch CPU thread count via `torch::torch_set_num_threads()`.
 #' @param na_action Character. How to handle missing values in the model variables:
 #'   `"omit"` drops incomplete rows (and reports how many were removed when `verbose=TRUE`);
 #'   `"fail"` stops with an error if any missing values are present.
@@ -112,6 +114,7 @@ build_dnn <- function(
 #'   \item{optimizer}{Optimizer name used.}
 #'   \item{optim_args}{List of optimizer arguments used.}
 #'   \item{device}{Torch device used for training (`torch_device`).}
+#'   \item{threads}{CPU thread setting passed via `.threads`; `NULL` means Torch default/global setting.}
 #'   \item{aft_log_sigma}{Learned global log(sigma) for `loss="aft"`; `NA_real_` otherwise.}
 #'   \item{aft_loc}{AFT log-time location offset used for centering when `loss="aft"`; `NA_real_` otherwise.}
 #'   \item{coxtime_time_center}{Mean used to scale time for CoxTime; `NA_real_` otherwise.}
@@ -134,10 +137,12 @@ survdnn <- function(
   callbacks = NULL,
   .seed = NULL,
   .device = c("auto", "cpu", "cuda"),
+  .threads = NULL,
   na_action = c("omit", "fail")
 ) {
   survdnn_set_seed(.seed)
   device <- survdnn_get_device(.device)
+  survdnn_set_threads(.threads)
 
   loss      <- match.arg(loss)
   optimizer <- match.arg(optimizer)
@@ -189,6 +194,9 @@ survdnn <- function(
         nrow(mf), ncol(x), loss, optimizer, epochs, as.character(device)
       )
     )
+    if (!is.null(.threads)) {
+      message(sprintf("[survdnn::fit] cpu_threads=%d", as.integer(.threads)))
+    }
   }
 
   # AFT location offset for stability
@@ -369,6 +377,7 @@ survdnn <- function(
       optimizer           = optimizer,
       optim_args          = optim_args,
       device              = device,
+      threads             = .threads,
       dropout             = dropout,
       batch_norm          = batch_norm,
       na_action           = na_action,

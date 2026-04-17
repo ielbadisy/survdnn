@@ -13,6 +13,7 @@ tune_survdnn(
   folds = 3,
   .seed = 42,
   .device = c("auto", "cpu", "cuda"),
+  .threads = NULL,
   na_action = c("omit", "fail"),
   verbose = TRUE,
   refit = FALSE,
@@ -39,6 +40,9 @@ Required names: `hidden`, `lr`, `activation`, `epochs`, `loss`.}
 \item{.device}{Character string indicating the computation device used when fitting models
 during cross-validation and refitting. One of `"auto"`, `"cpu"`, or `"cuda"`. `"auto"`
 uses CUDA if available, otherwise falls back to CPU.}
+
+\item{.threads}{Optional positive integer. If provided, sets Torch CPU thread
+count for all nested model fits via `torch::torch_set_num_threads()`.}
 
 \item{na_action}{Character. How to handle missing values:
 `"omit"` drops incomplete rows; `"fail"` errors if any NA is present.}

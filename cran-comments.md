@@ -11,5 +11,6 @@ Changes made in this update:
 * Guarded all model-training `\\donttest{}` examples with `torch::torch_is_installed()` so `--run-donttest` succeeds on systems without Torch installed.
 * Updated examples to use explicit dataset access via `survival::veteran`.
 * Added explicit `verbose` arguments to `cv_survdnn()` and `tune_survdnn()`, and improved consistency of progress messages across fit/cv/tune.
+* Added optional `.threads` arguments to `survdnn()`, `cv_survdnn()`, and `tune_survdnn()` for explicit Torch CPU thread control.
 * Regenerated documentation (`man/*.Rd`) after example updates.
 * Removed internal-tool references from package notes.

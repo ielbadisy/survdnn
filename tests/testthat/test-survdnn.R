@@ -51,6 +51,7 @@ test_that("survdnn() fits a model and returns correct structure", {
       "na_action",
       "optim_args",
       "optimizer",
+      "threads",
       "x_center",
       "x_scale",
       "xnames"
@@ -63,6 +64,29 @@ test_that("survdnn() fits a model and returns correct structure", {
   expect_true(is.na(mod$aft_loc))
   expect_true(is.na(mod$coxtime_time_center))
   expect_true(is.na(mod$coxtime_time_scale))
+})
+
+test_that("survdnn() validates .threads", {
+  skip_on_cran()
+  skip_if_not(torch::torch_is_installed())
+
+  set.seed(123)
+  df <- data.frame(
+    time   = rexp(20, rate = 0.1),
+    status = rbinom(20, 1, 0.7),
+    x1     = rnorm(20)
+  )
+
+  expect_error(
+    survdnn(
+      Surv(time, status) ~ x1,
+      data = df,
+      epochs = 1,
+      verbose = FALSE,
+      .threads = 0
+    ),
+    "`.threads` must be a single positive integer or NULL."
+  )
 })
 
 

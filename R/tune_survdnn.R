@@ -17,6 +17,8 @@ utils::globalVariables(c("loss", "epoch"))
 #' @param .device Character string indicating the computation device used when fitting models
 #'   during cross-validation and refitting. One of `"auto"`, `"cpu"`, or `"cuda"`. `"auto"`
 #'   uses CUDA if available, otherwise falls back to CPU.
+#' @param .threads Optional positive integer. If provided, sets Torch CPU thread
+#'   count for all nested model fits via `torch::torch_set_num_threads()`.
 #' @param na_action Character. How to handle missing values:
 #'   `"omit"` drops incomplete rows; `"fail"` errors if any NA is present.
 #' @param verbose Logical; whether to print tuning progress and propagate verbose
@@ -40,6 +42,7 @@ tune_survdnn <- function(
   folds = 3,
   .seed = 42,
   .device = c("auto", "cpu", "cuda"),
+  .threads = NULL,
   na_action = c("omit", "fail"),
   verbose = TRUE,
   refit = FALSE,
@@ -61,6 +64,9 @@ tune_survdnn <- function(
         n_configs, folds, n_configs * folds
       )
     )
+    if (!is.null(.threads)) {
+      message(sprintf("[survdnn::tune] cpu_threads=%d", as.integer(.threads)))
+    }
   }
 
   all_results <- purrr::map_dfr(
@@ -102,6 +108,7 @@ tune_survdnn <- function(
         loss       = loss,
         .seed      = .seed,
         .device    = .device,
+        .threads   = .threads,
         na_action  = na_action,
         verbose    = verbose
       )
@@ -156,6 +163,7 @@ tune_survdnn <- function(
       loss       = best_row_all$loss[[1]],
       .seed      = .seed,
       .device    = .device,
+      .threads   = .threads,
       verbose    = verbose,
       na_action  = na_action
     )
