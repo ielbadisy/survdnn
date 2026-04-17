@@ -14,13 +14,14 @@
 #'
 #' @examples
 #' \donttest{
-#' library(survival)
-#' data(veteran, package = "survival")
-#' mod <- survdnn(Surv(time, status) ~
-#' age + karno + celltype, data = veteran, epochs = 50, verbose = FALSE)
-#' pred <- predict(mod, newdata = veteran, type = "survival", times = c(30, 90, 180))
-#' y <- model.response(model.frame(mod$formula, veteran))
-#' cindex_survmat(y, pred, t_star = 180)
+#' if (torch::torch_is_installed()) {
+#'   veteran <- survival::veteran
+#'   mod <- survdnn(survival::Surv(time, status) ~
+#'   age + karno + celltype, data = veteran, epochs = 50, verbose = FALSE)
+#'   pred <- predict(mod, newdata = veteran, type = "survival", times = c(30, 90, 180))
+#'   y <- model.response(model.frame(mod$formula, veteran))
+#'   cindex_survmat(y, pred, t_star = 180)
+#' }
 #' }
 
 cindex_survmat <- function(object, predicted, t_star = NULL) {
@@ -92,13 +93,14 @@ cindex_survmat <- function(object, predicted, t_star = NULL) {
 #'
 #' @examples
 #' \donttest{
-#' library(survival)
-#' data(veteran, package = "survival")
-#' mod <- survdnn(Surv(time, status) ~
-#' age + karno + celltype, data = veteran, epochs = 50, verbose = FALSE)
-#' pred <- predict(mod, newdata = veteran, type = "survival", times = c(30, 90, 180))
-#' y <- model.response(model.frame(mod$formula, veteran))
-#' survdnn::brier(y, pre_sp = pred[["t=90"]], t_star = 90)
+#' if (torch::torch_is_installed()) {
+#'   veteran <- survival::veteran
+#'   mod <- survdnn(survival::Surv(time, status) ~
+#'   age + karno + celltype, data = veteran, epochs = 50, verbose = FALSE)
+#'   pred <- predict(mod, newdata = veteran, type = "survival", times = c(30, 90, 180))
+#'   y <- model.response(model.frame(mod$formula, veteran))
+#'   survdnn::brier(y, pre_sp = pred[["t=90"]], t_star = 90)
+#' }
 #' }
 
 brier <- function(object, pre_sp, t_star) {
@@ -155,16 +157,17 @@ brier <- function(object, pre_sp, t_star) {
 #'
 #' @examples
 #' \donttest{
-#' set.seed(123)
-#' library(survival)
-#' data(veteran, package = "survival")
-#' idx <- sample(nrow(veteran), 0.7 * nrow(veteran))
-#' train <- veteran[idx, ]; test <- veteran[-idx, ]
-#' mod <- survdnn(Surv(time, status) ~
-#' age + karno + celltype, data = train, epochs = 50, verbose = FALSE)
-#' pred <- predict(mod, newdata = test, times = c(30, 90, 180), type = "survival")
-#' y_test <- model.response(model.frame(mod$formula, test))
-#' ibs_survmat(y_test, sp_matrix = pred, times = c(30, 90, 180))
+#' if (torch::torch_is_installed()) {
+#'   set.seed(123)
+#'   veteran <- survival::veteran
+#'   idx <- sample(nrow(veteran), 0.7 * nrow(veteran))
+#'   train <- veteran[idx, ]; test <- veteran[-idx, ]
+#'   mod <- survdnn(survival::Surv(time, status) ~
+#'   age + karno + celltype, data = train, epochs = 50, verbose = FALSE)
+#'   pred <- predict(mod, newdata = test, times = c(30, 90, 180), type = "survival")
+#'   y_test <- model.response(model.frame(mod$formula, test))
+#'   ibs_survmat(y_test, sp_matrix = pred, times = c(30, 90, 180))
+#' }
 #' }
 
 ibs_survmat <- function(object, sp_matrix, times) {
