@@ -45,6 +45,22 @@ survdnn_set_seed <- function(.seed = NULL) {
   invisible(NULL)
 }
 
+## set torch CPU thread count safely (process-global)
+survdnn_set_threads <- function(.threads = NULL) {
+  if (is.null(.threads)) return(invisible(NULL))
+
+  if (!is.numeric(.threads) || length(.threads) != 1 || is.na(.threads) ||
+      .threads <= 0 || (.threads %% 1 != 0)) {
+    stop("`.threads` must be a single positive integer or NULL.", call. = FALSE)
+  }
+
+  if (requireNamespace("torch", quietly = TRUE) && isTRUE(torch::torch_is_installed())) {
+    torch::torch_set_num_threads(as.integer(.threads))
+  }
+
+  invisible(NULL)
+}
+
 
 
 

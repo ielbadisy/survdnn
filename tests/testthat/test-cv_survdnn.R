@@ -11,6 +11,7 @@ test_that("cv_survdnn performs cross-validation and returns fold-level metrics",
     metrics = c("cindex", "ibs"),
     folds = 2,
     .seed = 123,
+    .threads = 1,
     hidden = c(8),
     epochs = 5,
     verbose = FALSE
@@ -57,6 +58,7 @@ test_that("cv_survdnn verbose controls progress messages", {
       metrics = c("ibs"),
       folds = 2,
       .seed = 123,
+      .threads = 1,
       hidden = c(8),
       epochs = 1,
       verbose = TRUE
@@ -75,6 +77,7 @@ test_that("cv_survdnn verbose controls progress messages", {
       metrics = c("ibs"),
       folds = 2,
       .seed = 123,
+      .threads = 1,
       hidden = c(8),
       epochs = 1,
       verbose = FALSE
