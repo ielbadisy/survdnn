@@ -11,4 +11,4 @@ Changes made in this update:
 * Guarded all model-training `\\donttest{}` examples with `torch::torch_is_installed()` so `--run-donttest` succeeds on systems without Torch installed.
 * Updated examples to use explicit dataset access via `survival::veteran`.
 * Regenerated documentation (`man/*.Rd`) after example updates.
-* Added `.codex` to `.gitignore` and `.Rbuildignore` to prevent local artifacts from being included in source builds.
+* Removed internal-tool references from package notes.
