@@ -45,7 +45,7 @@ evaluate_survdnn <- function(model,
   n_after <- nrow(mf)
   n_removed <- n_before - n_after
   if (n_removed > 0 && isTRUE(verbose) && na_action == "omit") {
-    message(sprintf("Removed %d observations with missing values in evaluation data.", n_removed))
+    message(sprintf("[survdnn::eval] removed %d observations with missing values in evaluation data.", n_removed))
   }
 
   y <- model.response(mf)
@@ -91,6 +91,8 @@ evaluate_survdnn <- function(model,
 #'   otherwise falls back to CPU.
 #' @param na_action Character. How to handle missing values within each fold:
 #'   `"omit"` drops incomplete rows; `"fail"` errors if any NA is present.
+#' @param verbose Logical; whether to print cross-validation progress and propagate
+#'   verbose messages to fitting/evaluation in each fold (default: TRUE).
 #' @param ... Additional arguments passed to [survdnn()].
 #'
 #' @return A tibble containing metric values per fold and (optionally) per time point.
@@ -118,6 +120,7 @@ cv_survdnn <- function(formula, data, times,
                        .seed = NULL,
                        .device = c("auto", "cpu", "cuda"),
                        na_action = c("omit", "fail"),
+                       verbose = TRUE,
                        ...) {
 
   .device   <- match.arg(.device)
@@ -133,6 +136,18 @@ cv_survdnn <- function(formula, data, times,
 
   if (!is.null(.seed)) survdnn_set_seed(.seed)
 
+  if (isTRUE(verbose)) {
+    message(
+      sprintf(
+        "[survdnn::cv] start: folds=%d n=%d metrics=%s times=%s",
+        folds,
+        nrow(data),
+        paste(metrics, collapse = ","),
+        paste(times, collapse = ",")
+      )
+    )
+  }
+
   status_var <- all.vars(formula[[2]])[2]          # more safe for extracting the status
   vfolds <- rsample::vfold_cv(data, v = folds, strata = dplyr::all_of(status_var))
 
@@ -144,9 +159,19 @@ cv_survdnn <- function(formula, data, times,
     train_data <- rsample::analysis(split)
     test_data  <- rsample::assessment(split)
 
+    if (isTRUE(verbose)) {
+      message(
+        sprintf(
+          "[survdnn::cv] fold %d/%d: train_n=%d test_n=%d",
+          i, folds, nrow(train_data), nrow(test_data)
+        )
+      )
+    }
+
     model <- survdnn(
       formula,
       data      = train_data,
+      verbose   = verbose,
       .seed     = .seed,
       .device   = .device,
       na_action = na_action,
@@ -159,12 +184,19 @@ cv_survdnn <- function(formula, data, times,
       times     = times,
       newdata   = test_data,
       na_action = na_action,
-      verbose   = FALSE
+      verbose   = verbose
     )
 
     eval_tbl$fold <- i
+    if (isTRUE(verbose)) {
+      message(sprintf("[survdnn::cv] fold %d/%d done.", i, folds))
+    }
     eval_tbl
   })
+
+  if (isTRUE(verbose)) {
+    message(sprintf("[survdnn::cv] done: completed %d folds.", folds))
+  }
 
   dplyr::select(results, fold, metric, time = dplyr::any_of("time"), value)
 }
