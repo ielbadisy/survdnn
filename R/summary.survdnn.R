@@ -21,7 +21,12 @@
 #'     time = rexp(100, 0.05),
 #'     status = rbinom(100, 1, 0.7)
 #'   )
-#'   mod <- survdnn(survival::Surv(time, status) ~ age + sex + trt, data = sim_data, epochs = 50, verbose = FALSE)
+#'   mod <- survdnn(
+#'     survival::Surv(time, status) ~ age + sex + trt,
+#'     data = sim_data,
+#'     epochs = 50,
+#'     verbose = FALSE
+#'   )
 #'   summary(mod)
 #' }
 #' }
