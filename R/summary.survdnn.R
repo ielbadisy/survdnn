@@ -12,7 +12,7 @@
 #'
 #' @examples
 #' \donttest{
-#' if (torch::torch_is_installed()) {
+#' if (requireNamespace("torch", quietly = TRUE) && torch::torch_is_installed()) {
 #'   set.seed(42)
 #'   sim_data <- data.frame(
 #'     age = rnorm(100, 60, 10),

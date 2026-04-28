@@ -23,7 +23,7 @@ using trapezoidal integration and IPCW adjustment for right-censoring.
 }
 \examples{
 \donttest{
-if (torch::torch_is_installed()) {
+if (requireNamespace("torch", quietly = TRUE) && torch::torch_is_installed()) {
   set.seed(123)
   veteran <- survival::veteran
   idx <- sample(nrow(veteran), 0.7 * nrow(veteran))

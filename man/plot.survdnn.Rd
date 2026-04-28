@@ -48,7 +48,7 @@ optionally display only the group-wise means or overlay them.
 }
 \examples{
 \donttest{
-if (torch::torch_is_installed()) {
+if (requireNamespace("torch", quietly = TRUE) && torch::torch_is_installed()) {
   set.seed(42)
   veteran <- survival::veteran
   mod <- survdnn(survival::Surv(time, status) ~ age + karno + celltype, data = veteran,

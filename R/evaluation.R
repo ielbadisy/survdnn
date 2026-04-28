@@ -102,7 +102,7 @@ evaluate_survdnn <- function(model,
 #'
 #' @examples
 #' \donttest{
-#' if (torch::torch_is_installed()) {
+#' if (requireNamespace("torch", quietly = TRUE) && torch::torch_is_installed()) {
 #'   veteran <- survival::veteran
 #'   cv_survdnn(
 #'     survival::Surv(time, status) ~ age + karno + celltype,
@@ -222,7 +222,7 @@ cv_survdnn <- function(formula, data, times,
 #'
 #' @examples
 #' \donttest{
-#' if (torch::torch_is_installed()) {
+#' if (requireNamespace("torch", quietly = TRUE) && torch::torch_is_installed()) {
 #'   veteran <- survival::veteran
 #'   res <- cv_survdnn(
 #'     survival::Surv(time, status) ~ age + karno + celltype,

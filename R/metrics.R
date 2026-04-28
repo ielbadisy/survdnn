@@ -14,7 +14,7 @@
 #'
 #' @examples
 #' \donttest{
-#' if (torch::torch_is_installed()) {
+#' if (requireNamespace("torch", quietly = TRUE) && torch::torch_is_installed()) {
 #'   veteran <- survival::veteran
 #'   mod <- survdnn(survival::Surv(time, status) ~
 #'   age + karno + celltype, data = veteran, epochs = 50, verbose = FALSE)
@@ -93,7 +93,7 @@ cindex_survmat <- function(object, predicted, t_star = NULL) {
 #'
 #' @examples
 #' \donttest{
-#' if (torch::torch_is_installed()) {
+#' if (requireNamespace("torch", quietly = TRUE) && torch::torch_is_installed()) {
 #'   veteran <- survival::veteran
 #'   mod <- survdnn(survival::Surv(time, status) ~
 #'   age + karno + celltype, data = veteran, epochs = 50, verbose = FALSE)
@@ -157,7 +157,7 @@ brier <- function(object, pre_sp, t_star) {
 #'
 #' @examples
 #' \donttest{
-#' if (torch::torch_is_installed()) {
+#' if (requireNamespace("torch", quietly = TRUE) && torch::torch_is_installed()) {
 #'   set.seed(123)
 #'   veteran <- survival::veteran
 #'   idx <- sample(nrow(veteran), 0.7 * nrow(veteran))

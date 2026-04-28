@@ -54,7 +54,7 @@ Performs cross-validation for a `survdnn` model using the specified evaluation m
 }
 \examples{
 \donttest{
-if (torch::torch_is_installed()) {
+if (requireNamespace("torch", quietly = TRUE) && torch::torch_is_installed()) {
   veteran <- survival::veteran
   cv_survdnn(
     survival::Surv(time, status) ~ age + karno + celltype,
