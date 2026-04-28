@@ -21,7 +21,7 @@ Computes the Brier score at a fixed time point using inverse probability of cens
 }
 \examples{
 \donttest{
-if (torch::torch_is_installed()) {
+if (requireNamespace("torch", quietly = TRUE) && torch::torch_is_installed()) {
   veteran <- survival::veteran
   mod <- survdnn(survival::Surv(time, status) ~
   age + karno + celltype, data = veteran, epochs = 50, verbose = FALSE)
