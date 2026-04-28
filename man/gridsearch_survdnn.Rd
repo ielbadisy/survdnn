@@ -49,7 +49,7 @@ if (requireNamespace("torch", quietly = TRUE) && torch::torch_is_installed()) {
   set.seed(123)
 
   # Simulate small dataset
-  n <- 300
+  n <- 60
   x1 <- rnorm(n); x2 <- rbinom(n, 1, 0.5)
   time <- rexp(n, rate = 0.1)
   status <- rbinom(n, 1, 0.7)
@@ -63,11 +63,11 @@ if (requireNamespace("torch", quietly = TRUE) && torch::torch_is_installed()) {
   # Define formula and param grid
   formula <- survival::Surv(time, status) ~ x1 + x2
   param_grid <- list(
-    hidden     = list(c(16, 8), c(32, 16)),
+    hidden     = list(c(4)),
     lr         = c(1e-3),
     activation = c("relu"),
-    epochs     = c(100),
-    loss       = c("cox", "coxtime")
+    epochs     = c(1),
+    loss       = c("cox")
   )
 
   # Run grid search
@@ -75,7 +75,7 @@ if (requireNamespace("torch", quietly = TRUE) && torch::torch_is_installed()) {
     formula = formula,
     train   = train,
     valid   = valid,
-    times   = c(10, 20, 30),
+    times   = c(10, 20),
     metrics = c("cindex", "ibs"),
     param_grid = param_grid
   )
