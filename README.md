@@ -19,10 +19,24 @@ formula interface, supports model evaluation using time-dependent
 metrics (C-index, Brier score, IBS), cross-validation, and
 hyperparameter tuning.
 
-## Review status
+## Citation
 
-A methodological paper describing the design, implementation, and
-evaluation of `survdnn` is currently under review at *The R Journal*.
+If you use `survdnn`, please cite:
+
+```bibtex
+@article{RJ-2026-008,
+  author = {Badisy, Imad El},
+  title = {The R Journal: SurvDNN: Survival Deep Learning Models for Tabular Data},
+  journal = {The R Journal},
+  year = {2026},
+  note = {https://doi.org/10.32614/RJ-2026-008},
+  doi = {10.32614/RJ-2026-008},
+  volume = {18},
+  issue = {1},
+  issn = {2073-4859},
+  pages = {384-399}
+}
+```
 
 ## Main features
 
