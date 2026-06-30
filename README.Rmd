@@ -6,8 +6,6 @@ output: github_document
 
 > Deep Neural Networks for Survival Analysis using [R torch](https://torch.mlverse.org/)
 
-Paper: [The R Journal article](https://rjournal.github.io/articles/RJ-2026-008/)
-
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)  
 [![R-CMD-check](https://github.com/ielbadisy/survdnn/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/ielbadisy/survdnn/actions/workflows/R-CMD-check.yaml)
 
@@ -17,6 +15,8 @@ Paper: [The R Journal article](https://rjournal.github.io/articles/RJ-2026-008/)
 `survdnn` implements neural network-based models for right-censored survival analysis using the native `torch` backend in R. It supports multiple loss functions including Cox partial likelihood, L2-penalized Cox, Accelerated Failure Time (AFT) objectives, as well as time-dependent extension such as Cox-Time. The package provides a formula interface, supports model evaluation using time-dependent metrics (C-index, Brier score, IBS), cross-validation, and hyperparameter tuning.
 
 ## Citation
+
+Paper: [The R Journal article](https://rjournal.github.io/articles/RJ-2026-008/)
 
 If you use `survdnn`, please cite:
 
