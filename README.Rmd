@@ -320,6 +320,8 @@ The `survdnn` R package is available on [CRAN](https://CRAN.R-project.org/packag
 
 Contributions, issues, and feature requests are welcome!
 
+Daniel Falbel is a contributor to this package.
+
 Open an [issue](https://github.com/ielbadisy/survdnn/issues) or submit a pull request.
 
 

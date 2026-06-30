@@ -437,6 +437,8 @@ The `survdnn` R package is available on
 
 Contributions, issues, and feature requests are welcome!
 
+Daniel Falbel is a contributor to this package.
+
 Open an [issue](https://github.com/ielbadisy/survdnn/issues) or submit a
 pull request.
 
