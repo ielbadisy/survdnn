@@ -4,6 +4,9 @@
 > Deep Neural Networks for Survival Analysis using [R
 > torch](https://torch.mlverse.org/)
 
+Paper: [The R Journal
+article](https://rjournal.github.io/articles/RJ-2026-008/)
+
 [![License:
 MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)  
 [![R-CMD-check](https://github.com/ielbadisy/survdnn/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/ielbadisy/survdnn/actions/workflows/R-CMD-check.yaml)
@@ -23,7 +26,7 @@ hyperparameter tuning.
 
 If you use `survdnn`, please cite:
 
-```bibtex
+``` bibtex
 @article{RJ-2026-008,
   author = {Badisy, Imad El},
   title = {The R Journal: SurvDNN: Survival Deep Learning Models for Tabular Data},
@@ -99,14 +102,14 @@ summary(mod)
     ## 
     ## Formula:
     ##   Surv(time, status) ~ age + karno + celltype
-    ## <environment: 0x6011c835fbe0>
+    ## <environment: 0x5a3de0bc22a8>
     ## 
     ## Model architecture:
     ##   Hidden layers:  32 : 16 
     ##   Activation:  relu 
     ##   Dropout:  0.3 
     ##   Batch norm:  TRUE 
-    ##   Final loss:  3.841008 
+    ##   Final loss:  3.826400 
     ## 
     ## Training summary:
     ##   Epochs:  300 
@@ -144,19 +147,19 @@ mod1 <- survdnn(
 
     ## [survdnn::fit] start: n=137 p=2 loss=cox optimizer=adam epochs=300 device=cpu
 
-    ## [survdnn::fit] epoch 50/300 loss=3.989828
+    ## [survdnn::fit] epoch 50/300 loss=3.992952
 
-    ## [survdnn::fit] epoch 100/300 loss=3.942912
+    ## [survdnn::fit] epoch 100/300 loss=3.939086
 
-    ## [survdnn::fit] epoch 150/300 loss=3.890888
+    ## [survdnn::fit] epoch 150/300 loss=3.943065
 
-    ## [survdnn::fit] epoch 200/300 loss=3.869117
+    ## [survdnn::fit] epoch 200/300 loss=3.928375
 
-    ## [survdnn::fit] epoch 250/300 loss=3.866454
+    ## [survdnn::fit] epoch 250/300 loss=3.874506
 
-    ## [survdnn::fit] epoch 300/300 loss=3.870147
+    ## [survdnn::fit] epoch 300/300 loss=3.883635
 
-    ## [survdnn::fit] done: epochs_run=300 final_loss=3.870147
+    ## [survdnn::fit] done: epochs_run=300 final_loss=3.883635
 
 - Accelerated Failure Time
 
@@ -171,19 +174,19 @@ mod2 <- survdnn(
 
     ## [survdnn::fit] start: n=137 p=2 loss=aft optimizer=adam epochs=300 device=cpu
 
-    ## [survdnn::fit] epoch 50/300 loss=4.628552
+    ## [survdnn::fit] epoch 50/300 loss=4.720488
 
-    ## [survdnn::fit] epoch 100/300 loss=4.641005
+    ## [survdnn::fit] epoch 100/300 loss=4.648119
 
-    ## [survdnn::fit] epoch 150/300 loss=4.563893
+    ## [survdnn::fit] epoch 150/300 loss=4.655060
 
-    ## [survdnn::fit] epoch 200/300 loss=4.507134
+    ## [survdnn::fit] epoch 200/300 loss=4.514823
 
-    ## [survdnn::fit] epoch 250/300 loss=4.501204
+    ## [survdnn::fit] epoch 250/300 loss=4.537920
 
-    ## [survdnn::fit] epoch 300/300 loss=4.494009
+    ## [survdnn::fit] epoch 300/300 loss=4.533351
 
-    ## [survdnn::fit] done: epochs_run=300 final_loss=4.494009
+    ## [survdnn::fit] done: epochs_run=300 final_loss=4.533351
 
 - Coxtime
 
@@ -198,19 +201,19 @@ mod3 <- survdnn(
 
     ## [survdnn::fit] start: n=137 p=2 loss=coxtime optimizer=adam epochs=300 device=cpu
 
-    ## [survdnn::fit] epoch 50/300 loss=3.946552
+    ## [survdnn::fit] epoch 50/300 loss=3.972365
 
-    ## [survdnn::fit] epoch 100/300 loss=3.955686
+    ## [survdnn::fit] epoch 100/300 loss=3.931871
 
-    ## [survdnn::fit] epoch 150/300 loss=3.944864
+    ## [survdnn::fit] epoch 150/300 loss=3.870106
 
-    ## [survdnn::fit] epoch 200/300 loss=3.930768
+    ## [survdnn::fit] epoch 200/300 loss=3.805175
 
-    ## [survdnn::fit] epoch 250/300 loss=3.838923
+    ## [survdnn::fit] epoch 250/300 loss=3.854059
 
-    ## [survdnn::fit] epoch 300/300 loss=3.889966
+    ## [survdnn::fit] epoch 300/300 loss=3.834129
 
-    ## [survdnn::fit] done: epochs_run=300 final_loss=3.889966
+    ## [survdnn::fit] done: epochs_run=300 final_loss=3.834129
 
 ## Cross-validation
 
@@ -394,19 +397,19 @@ mod <- survdnn(
 
     ## [survdnn::fit] cpu_threads=4
 
-    ## [survdnn::fit] epoch 50/300 loss=3.962863
+    ## [survdnn::fit] epoch 50/300 loss=4.087458
 
-    ## [survdnn::fit] epoch 100/300 loss=3.952089
+    ## [survdnn::fit] epoch 100/300 loss=4.024695
 
-    ## [survdnn::fit] epoch 150/300 loss=3.896662
+    ## [survdnn::fit] epoch 150/300 loss=3.962932
 
-    ## [survdnn::fit] epoch 200/300 loss=3.834132
+    ## [survdnn::fit] epoch 200/300 loss=3.940214
 
-    ## [survdnn::fit] epoch 250/300 loss=3.866578
+    ## [survdnn::fit] epoch 250/300 loss=3.947866
 
-    ## [survdnn::fit] epoch 300/300 loss=3.821199
+    ## [survdnn::fit] epoch 300/300 loss=3.921413
 
-    ## [survdnn::fit] done: epochs_run=300 final_loss=3.821199
+    ## [survdnn::fit] done: epochs_run=300 final_loss=3.921413
 
 The same `.threads` argument is available in `cv_survdnn()` and
 `tune_survdnn()`.

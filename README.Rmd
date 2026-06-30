@@ -6,6 +6,8 @@ output: github_document
 
 > Deep Neural Networks for Survival Analysis using [R torch](https://torch.mlverse.org/)
 
+Paper: [The R Journal article](https://rjournal.github.io/articles/RJ-2026-008/)
+
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)  
 [![R-CMD-check](https://github.com/ielbadisy/survdnn/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/ielbadisy/survdnn/actions/workflows/R-CMD-check.yaml)
 
