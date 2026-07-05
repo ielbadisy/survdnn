@@ -7,7 +7,10 @@ output: github_document
 > Deep Neural Networks for Survival Analysis using [R torch](https://torch.mlverse.org/)
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)  
+[![r-universe](https://img.shields.io/badge/r--universe-0.7.6-0F6CBD?logo=r&logoColor=white)](https://ielbadisy.r-universe.dev/survdnn)  
 [![R-CMD-check](https://github.com/ielbadisy/survdnn/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/ielbadisy/survdnn/actions/workflows/R-CMD-check.yaml)
+[![Codecov](https://codecov.io/gh/ielbadisy/survdnn/branch/main/graph/badge.svg)](https://app.codecov.io/gh/ielbadisy/survdnn)  
+[![The R Journal](https://img.shields.io/badge/The%20R%20Journal-RJ--2026--008-2E74B5)](https://rjournal.github.io/articles/RJ-2026-008/)
 
 
 ## About
