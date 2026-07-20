@@ -41,4 +41,4 @@ Suggests:
 RoxygenNote: 7.3.3
 Config/testthat/edition: 3
 BugReports: https://github.com/ielbadisy/survdnn/issues
-URL: https://github.com/ielbadisy/survdnn
+URL: https://CRAN.R-project.org/package=survdnn
