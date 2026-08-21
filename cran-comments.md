@@ -1,16 +1,21 @@
 ## R CMD check results
 
-0 errors | 0 warnings | 0 notes
+0 errors | 0 warnings | 1 note
+
+* "New maintainer" - the Maintainer field's family-name casing changed
+  from "EL BADISY" to "El Badisy" (title case); same person, same email
+  address, no change in maintainership.
 
 ## Resubmission
 
-This is a resubmission for version 0.7.6.
+This is a resubmission for version 1.0.0 (milestone release: the package's
+methods paper is now published).
 
 Changes made in this update:
 
-* Guarded all model-training `\\donttest{}` examples with `torch::torch_is_installed()` so `--run-donttest` succeeds on systems without Torch installed.
-* Updated examples to use explicit dataset access via `survival::veteran`.
-* Added explicit `verbose` arguments to `cv_survdnn()` and `tune_survdnn()`, and improved consistency of progress messages across fit/cv/tune.
-* Added optional `.threads` arguments to `survdnn()`, `cv_survdnn()`, and `tune_survdnn()` for explicit Torch CPU thread control.
-* Regenerated documentation (`man/*.Rd`) after example updates.
-* Removed internal-tool references from package notes.
+* Added the package's R Journal citation to `DESCRIPTION`'s `Description`
+  field (El Badisy 2026, <doi:10.32614/RJ-2026-008>) and a matching
+  `inst/CITATION` file.
+* The maintainer's family-name casing changed from "EL BADISY" to
+  "El Badisy" (title case); same person, same email address, no change
+  in maintainership.

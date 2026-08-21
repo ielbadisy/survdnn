@@ -1,5 +1,16 @@
 # survdnn
 
+## survdnn 1.0.0
+
+### CRAN resubmission update
+
+* Milestone release: the package's methods paper is now published in The
+  R Journal (El Badisy 2026, <doi:10.32614/RJ-2026-008>), cited in
+  `DESCRIPTION`'s `Description` field and a matching `inst/CITATION` file.
+* Standardized the maintainer's family-name casing to "El Badisy" (title
+  case) in `Authors@R`, matching the rest of the package suite. Daniel
+  Falbel remains listed as a contributor (`ctb`).
+
 ## survdnn 0.7.6
 
 ### CRAN resubmission update

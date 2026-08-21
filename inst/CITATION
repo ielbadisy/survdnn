@@ -1,0 +1,12 @@
+bibentry(
+  bibtype  = "Article",
+  title    = "SurvDNN: Survival Deep Learning Models for Tabular Data",
+  author   = person(given = "Imad", family = "El Badisy"),
+  journal  = "The R Journal",
+  year     = "2026",
+  volume   = "18",
+  number   = "1",
+  pages    = "382-397",
+  issn     = "2073-4859",
+  doi      = "10.32614/RJ-2026-008"
+)
