@@ -3,7 +3,7 @@ Title: Deep Neural Networks for Survival Analysis with R 'torch'
 Version: 0.7.6
 Authors@R: c(
     person(given = "Imad",
-           family = "EL BADISY",
+           family = "El Badisy",
            email = "elbadisyimad@gmail.com",
            role = c("aut", "cre")),
     person(given = "Daniel",
