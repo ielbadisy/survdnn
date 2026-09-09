@@ -38,6 +38,10 @@ If you use `survdnn`, please cite:
 }
 ```
 
+```{r citation}
+citation("survdnn")
+```
+
 
 ## Main features
 

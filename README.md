@@ -44,6 +44,30 @@ If you use `survdnn`, please cite:
 }
 ```
 
+``` r
+citation("survdnn")
+```
+
+    ## To cite package 'survdnn' in publications use:
+    ## 
+    ##   El Badisy I (2026). "SurvDNN: Survival Deep Learning Models for
+    ##   Tabular Data." _The R Journal_, *18*(1), 382-397. ISSN 2073-4859,
+    ##   doi:10.32614/RJ-2026-008 <https://doi.org/10.32614/RJ-2026-008>.
+    ## 
+    ## A BibTeX entry for LaTeX users is
+    ## 
+    ##   @Article{,
+    ##     title = {SurvDNN: Survival Deep Learning Models for Tabular Data},
+    ##     author = {Imad {El Badisy}},
+    ##     journal = {The R Journal},
+    ##     year = {2026},
+    ##     volume = {18},
+    ##     number = {1},
+    ##     pages = {382-397},
+    ##     issn = {2073-4859},
+    ##     doi = {10.32614/RJ-2026-008},
+    ##   }
+
 ## Main features
 
 - Formula interface for `Surv() ~ .` models
