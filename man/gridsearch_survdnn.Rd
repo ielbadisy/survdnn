@@ -81,8 +81,11 @@ if (requireNamespace("torch", quietly = TRUE) && torch::torch_is_installed()) {
   )
 
   # View summary
-  dplyr::group_by(results, hidden, lr, activation, epochs, loss, metric) |>
-    dplyr::summarise(mean = mean(value, na.rm = TRUE), .groups = "drop")
+  basetable::aggregate(
+    as.data.frame(results),
+    by = c("hidden", "lr", "activation", "epochs", "loss", "metric"),
+    value = "value", fun = function(v) mean(v, na.rm = TRUE)
+  )
 }
 }
 }

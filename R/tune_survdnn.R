@@ -1,5 +1,30 @@
 utils::globalVariables(c("loss", "epoch"))
 
+# Groups `df` by `group_vars` (which may include a list-column such as
+# `hidden`, a per-config vector of hidden-layer sizes) and applies each of
+# `funs` to `df[[value_col]]` within each group. List-column group vars are
+# matched by collapsing their elements to a string (structural equality,
+# mirroring dplyr's vctrs-based list-column grouping); basetable::aggregate()
+# has no list-column grouping support, hence the base-R split() here instead.
+.aggregate_by_config <- function(df, group_vars, value_col, funs, out_names = names(funs)) {
+  key_parts <- lapply(group_vars, function(v) {
+    x <- df[[v]]
+    if (is.list(x)) vapply(x, function(e) paste(e, collapse = "_"), character(1)) else as.character(x)
+  })
+  key <- do.call(paste, c(key_parts, sep = "\r"))
+
+  idx_by_key <- split(seq_len(nrow(df)), key)
+  rows <- lapply(idx_by_key, function(idx) {
+    rep_row <- df[idx[1], group_vars, drop = FALSE]
+    stat_vals <- lapply(funs, function(f) f(df[[value_col]][idx]))
+    names(stat_vals) <- out_names
+    cbind(rep_row, as.data.frame(stat_vals))
+  })
+  out <- do.call(rbind, rows)
+  rownames(out) <- NULL
+  out
+}
+
 #' Tune Hyperparameters for a survdnn Model via Cross-Validation
 #'
 #' Performs k-fold cross-validation over a user-defined hyperparameter grid
@@ -113,7 +138,7 @@ tune_survdnn <- function(
         verbose    = verbose
       )
 
-      dplyr::bind_cols(config_tbl[rep(1, nrow(cv_tbl)), ], cv_tbl)
+      tibble::as_tibble(cbind(config_tbl[rep(1, nrow(cv_tbl)), , drop = FALSE], cv_tbl))
     }
   )
 
@@ -122,14 +147,13 @@ tune_survdnn <- function(
   ## select best hyperparameters
   primary_metric <- metrics[1]
 
-  best_row_all <- all_results |>
-    dplyr::filter(metric == primary_metric) |>
-    dplyr::group_by(hidden, lr, activation, epochs, loss) |>
-    dplyr::summarise(mean = mean(value, na.rm = TRUE), .groups = "drop") |>
-    dplyr::slice_max(
-      order_by = if (identical(primary_metric, "cindex")) mean else -mean,
-      n = 1
-    )
+  sub <- as.data.frame(all_results[all_results$metric == primary_metric, , drop = FALSE])
+  m <- .aggregate_by_config(
+    sub, c("hidden", "lr", "activation", "epochs", "loss"), "value",
+    funs = list(mean = function(v) mean(v, na.rm = TRUE))
+  )
+  best_idx <- if (identical(primary_metric, "cindex")) which.max(m$mean) else which.min(m$mean)
+  best_row_all <- tibble::as_tibble(m[best_idx, , drop = FALSE])
 
   if (nrow(best_row_all) == 0) {
     stop("No valid configuration found for primary metric: ", primary_metric, call. = FALSE)
@@ -177,7 +201,7 @@ tune_survdnn <- function(
     return,
     "all"        = all_results,
     "summary"    = summary_tbl,
-    "best_model" = if (refit) best_model else dplyr::select(best_row_all, -mean)
+    "best_model" = if (refit) best_model else best_row_all[, setdiff(names(best_row_all), "mean"), drop = FALSE]
   )
 }
 
@@ -202,12 +226,13 @@ summarize_tune_survdnn <- function(tuning_results, by_time = TRUE) {
     group_vars <- c(group_vars, "time")
   }
 
-  tuning_results |>
-    dplyr::group_by(dplyr::across(all_of(group_vars))) |>
-    dplyr::summarise(
-      mean = mean(value, na.rm = TRUE),
-      sd   = sd(value, na.rm = TRUE),
-      .groups = "drop"
-    ) |>
-    dplyr::arrange(metric, dplyr::desc(mean))
+  out <- .aggregate_by_config(
+    as.data.frame(tuning_results), group_vars, "value",
+    funs = list(
+      mean = function(v) mean(v, na.rm = TRUE),
+      sd = function(v) stats::sd(v, na.rm = TRUE)
+    )
+  )
+  out <- out[order(out$metric, -out$mean), , drop = FALSE]
+  tibble::as_tibble(out)
 }

@@ -155,7 +155,7 @@ cv_survdnn <- function(formula, data, times,
   }
 
   status_var <- all.vars(formula[[2]])[2]          # more safe for extracting the status
-  vfolds <- rsample::vfold_cv(data, v = folds, strata = dplyr::all_of(status_var))
+  vfolds <- rsample::vfold_cv(data, v = folds, strata = tidyselect::all_of(status_var))
 
   results <- purrr::imap_dfr(vfolds$splits, function(split, i) {
 
@@ -205,7 +205,7 @@ cv_survdnn <- function(formula, data, times,
     message(sprintf("[survdnn::cv] done: completed %d folds.", folds))
   }
 
-  dplyr::select(results, fold, metric, time = dplyr::any_of("time"), value)
+  results[, intersect(c("fold", "metric", "time", "value"), names(results)), drop = FALSE]
 }
 
 
@@ -247,16 +247,17 @@ summarize_cv_survdnn <- function(cv_results, by_time = TRUE, conf_level = 0.95) 
     "metric"
   }
 
-  cv_results |>
-    dplyr::group_by(dplyr::across(all_of(group_vars))) |>
-    dplyr::summarize(
-      mean = mean(value, na.rm = TRUE),
-      sd = sd(value, na.rm = TRUE),
-      n = dplyr::n(),
-      se = sd / sqrt(n),
-      lower = mean - z * se,
-      upper = mean + z * se,
-      .groups = "drop"
-    ) |>
-    dplyr::select(-n, -se)
+  df <- as.data.frame(cv_results)
+  m <- basetable::aggregate(df, by = group_vars, value = "value", fun = function(v) mean(v, na.rm = TRUE))
+  names(m)[names(m) == "value"] <- "mean"
+  s <- basetable::aggregate(df, by = group_vars, value = "value", fun = function(v) stats::sd(v, na.rm = TRUE))
+  names(s)[names(s) == "value"] <- "sd"
+  n <- basetable::count(df, by = group_vars, sort = FALSE, name = "n")
+
+  out <- as.data.frame(Reduce(function(a, b) merge(a, b, by = group_vars), list(m, s, n)))
+  se <- out$sd / sqrt(out$n)
+  out$n <- NULL
+  out$lower <- out$mean - z * se
+  out$upper <- out$mean + z * se
+  tibble::as_tibble(out)
 }

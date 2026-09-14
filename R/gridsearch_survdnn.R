@@ -57,8 +57,11 @@
 #'   )
 #'
 #'   # View summary
-#'   dplyr::group_by(results, hidden, lr, activation, epochs, loss, metric) |>
-#'     dplyr::summarise(mean = mean(value, na.rm = TRUE), .groups = "drop")
+#'   basetable::aggregate(
+#'     as.data.frame(results),
+#'     by = c("hidden", "lr", "activation", "epochs", "loss", "metric"),
+#'     value = "value", fun = function(v) mean(v, na.rm = TRUE)
+#'   )
 #' }
 #' }
 
@@ -114,7 +117,7 @@ config <- tibble::tibble(
   loss       = loss
 )
 
-dplyr::bind_cols(config[rep(1, nrow(eval_tbl)), ], eval_tbl)
+tibble::as_tibble(cbind(config[rep(1, nrow(eval_tbl)), , drop = FALSE], eval_tbl))
   })
 
 return(results)

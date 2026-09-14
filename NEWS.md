@@ -1,5 +1,20 @@
 # survdnn
 
+## survdnn 1.0.1
+
+* Dropped the `dplyr` dependency. `summarize_cv_survdnn()` and
+  `plot.survdnn()`'s mean-curve overlay now use `basetable::aggregate()`/
+  `count()`; `cv_survdnn()`'s column selection and `gridsearch_survdnn()`/
+  `tune_survdnn()`'s row-binding use plain base R. The two group-by
+  aggregations keyed partly on the `hidden` list-column (per-config vector
+  of hidden-layer sizes) -- `tune_survdnn()`'s best-config selection and
+  `summarize_tune_survdnn()` -- use a new internal `.aggregate_by_config()`
+  (base R `split()`, since `basetable::aggregate()` has no list-column
+  grouping support, and dplyr's list-column grouping via vctrs equality
+  needed a structural stand-in: elements collapsed to a string key).
+  `rsample::vfold_cv(strata = ...)`'s external-vector tidyselect now goes
+  through `tidyselect::all_of()` directly instead of `dplyr::all_of()`.
+
 ## survdnn 1.0.0
 
 ### CRAN resubmission update

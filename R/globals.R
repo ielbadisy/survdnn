@@ -4,5 +4,4 @@
 #' @importFrom stats model.frame model.matrix model.response delete.response terms qnorm sd approx pnorm predict
 #' @importFrom utils tail
 #' @importFrom methods is
-#' @importFrom dplyr all_of
 NULL

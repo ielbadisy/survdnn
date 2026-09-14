@@ -75,8 +75,12 @@ plot.survdnn <- function(x, newdata = NULL, times = 1:365,
 
   # plot mean curves
   if (add_mean || plot_mean_only) {
-    df_mean <- dplyr::group_by(df_long, group, time) |>
-      dplyr::summarise(mean_surv = mean(surv, na.rm = TRUE), .groups = "drop")
+    df_mean <- basetable::aggregate(
+      df_long,
+      by = c("group", "time"), value = "surv",
+      fun = function(v) mean(v, na.rm = TRUE)
+    )
+    names(df_mean)[names(df_mean) == "surv"] <- "mean_surv"
 
     p <- p + geom_line(data = df_mean,
                        mapping = aes(x = time, y = mean_surv, color = group),
