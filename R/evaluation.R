@@ -54,7 +54,7 @@ evaluate_survdnn <- function(model,
   # predict on the filtered mf to keep row alignment
   sp_matrix <- predict(model, newdata = mf, times = times, type = "survival")
 
-  purrr::map_dfr(metrics, function(metric) { ## (to replace map_dfr() with fmap() from functionals package)
+  .map_dfr(metrics, function(metric) {
     if (metric == "brier" && length(times) > 1) {
       tibble::tibble(
         metric = "brier",
@@ -157,7 +157,7 @@ cv_survdnn <- function(formula, data, times,
   status_var <- all.vars(formula[[2]])[2]          # more safe for extracting the status
   vfolds <- rsample::vfold_cv(data, v = folds, strata = tidyselect::all_of(status_var))
 
-  results <- purrr::imap_dfr(vfolds$splits, function(split, i) {
+  results <- .imap_dfr(vfolds$splits, function(split, i) {
 
     ## re-seed inside every fold to ensure full reproducibility
     survdnn_set_seed(.seed)

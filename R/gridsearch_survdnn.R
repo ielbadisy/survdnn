@@ -79,11 +79,17 @@ gridsearch_survdnn <- function(formula, train, valid, times,
   if (length(miss)) stop("param_grid is missing: ", paste(miss, collapse=", "), call. = FALSE)
 
   
-  param_df <- tidyr::crossing(!!!param_grid)
-  
-  
-  results <- purrr::pmap_dfr(param_df, function(hidden, lr, activation, epochs, loss) {
-    
+  param_df <- .crossing_grid(param_grid)
+
+
+  results <- .map_rbind(seq_len(nrow(param_df)), function(.row_i) {
+    hidden <- param_df$hidden[[.row_i]]
+    lr <- param_df$lr[[.row_i]]
+    activation <- param_df$activation[[.row_i]]
+    epochs <- param_df$epochs[[.row_i]]
+    loss <- param_df$loss[[.row_i]]
+
+
     message(glue::glue("[survdnn] Training: loss={loss}, activation={activation}, hidden={toString(hidden)}"))
 
 # re-seed inside each config to make results fully reproducible

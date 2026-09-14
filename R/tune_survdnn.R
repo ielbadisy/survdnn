@@ -79,7 +79,7 @@ tune_survdnn <- function(
 
   if (!is.null(.seed)) survdnn_set_seed(.seed)
 
-  param_df <- tidyr::crossing(!!!param_grid)
+  param_df <- .crossing_grid(param_grid)
   n_configs <- nrow(param_df)
 
   if (isTRUE(verbose)) {
@@ -94,7 +94,7 @@ tune_survdnn <- function(
     }
   }
 
-  all_results <- purrr::map_dfr(
+  all_results <- .map_rbind(
     seq_len(n_configs),
     function(config_id) {
       hidden <- param_df$hidden[[config_id]]

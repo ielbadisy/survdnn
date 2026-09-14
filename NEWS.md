@@ -1,6 +1,19 @@
 # survdnn
 
-## survdnn 1.0.1
+## survdnn 1.0.2
+
+* Dropped the remaining `purrr` and `tidyr` dependencies. New internal
+  `.map_dfr()`/`.imap_dfr()`/`.crossing_grid()`/`.pivot_longer_simple()`
+  helpers (`R/utils-tidy.R`) replace `purrr::map_dfr()`/`imap_dfr()`/
+  `pmap_dfr()`, `tidyr::crossing()`, and `tidyr::pivot_longer()`.
+  `tune_survdnn()`'s and `gridsearch_survdnn()`'s config grids and results
+  carry a `hidden` list-column (the per-config vector of hidden-layer
+  sizes); since `basetable::rbindfill()` coerces list-columns to `NA`
+  instead of preserving them, those two row-binding sites use a new
+  `.map_rbind()` (base R `rbind()`) instead of `.map_dfr()`. `purrr` and
+  `tidyr` removed from `Imports` entirely. Requires `basetable (>= 1.4.1)`.
+
+# survdnn 1.0.1
 
 * Dropped the `dplyr` dependency. `summarize_cv_survdnn()` and
   `plot.survdnn()`'s mean-curve overlay now use `basetable::aggregate()`/

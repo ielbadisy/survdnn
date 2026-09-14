@@ -45,9 +45,9 @@ plot.survdnn <- function(x, newdata = NULL, times = 1:365,
   df_surv$id <- seq_len(nrow(df_surv))
 
   # reshape to long format
-  df_long <- tidyr::pivot_longer(
+  df_long <- .pivot_longer_simple(
     df_surv,
-    cols = -id,
+    cols = setdiff(names(df_surv), "id"),
     names_to = "time_label",
     values_to = "surv"
   )
