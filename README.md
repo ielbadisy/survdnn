@@ -6,10 +6,12 @@
 
 [![License:
 MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)  
-[![CRAN status](https://www.r-pkg.org/badges/version/survdnn)](https://CRAN.R-project.org/package=survdnn)  
+[![CRAN
+status](https://www.r-pkg.org/badges/version/survdnn)](https://CRAN.R-project.org/package=survdnn)  
 [![R-CMD-check](https://github.com/ielbadisy/survdnn/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/ielbadisy/survdnn/actions/workflows/R-CMD-check.yaml)
 [![Codecov](https://codecov.io/gh/ielbadisy/survdnn/branch/main/graph/badge.svg)](https://app.codecov.io/gh/ielbadisy/survdnn)  
-[![The R Journal](https://img.shields.io/badge/The%20R%20Journal-RJ--2026--008-2E74B5)](https://rjournal.github.io/articles/RJ-2026-008/)
+[![The R
+Journal](https://img.shields.io/badge/The%20R%20Journal-RJ--2026--008-2E74B5)](https://rjournal.github.io/articles/RJ-2026-008/)
 
 ## About
 
@@ -31,42 +33,40 @@ If you use `survdnn`, please cite:
 
 ``` bibtex
 @article{RJ-2026-008,
-  author = {Badisy, Imad El},
-  title = {The R Journal: SurvDNN: Survival Deep Learning Models for Tabular Data},
+  author = {El Badisy, Imad},
+  title = {SurvDNN: Survival Deep Learning Models for Tabular Data},
   journal = {The R Journal},
   year = {2026},
-  note = {https://doi.org/10.32614/RJ-2026-008},
-  doi = {10.32614/RJ-2026-008},
   volume = {18},
-  issue = {1},
+  number = {1},
+  pages = {382--397},
   issn = {2073-4859},
-  pages = {384-399}
+  doi = {10.32614/RJ-2026-008}
 }
 ```
 
 ``` r
 citation("survdnn")
+#> To cite package 'survdnn' in publications use:
+#> 
+#>   El Badisy I (2026). "SurvDNN: Survival Deep Learning Models for
+#>   Tabular Data." _The R Journal_, *18*(1), 382-397. ISSN 2073-4859,
+#>   doi:10.32614/RJ-2026-008 <https://doi.org/10.32614/RJ-2026-008>.
+#> 
+#> A BibTeX entry for LaTeX users is
+#> 
+#>   @Article{,
+#>     title = {SurvDNN: Survival Deep Learning Models for Tabular Data},
+#>     author = {Imad {El Badisy}},
+#>     journal = {The R Journal},
+#>     year = {2026},
+#>     volume = {18},
+#>     number = {1},
+#>     pages = {382-397},
+#>     issn = {2073-4859},
+#>     doi = {10.32614/RJ-2026-008},
+#>   }
 ```
-
-    ## To cite package 'survdnn' in publications use:
-    ## 
-    ##   El Badisy I (2026). "SurvDNN: Survival Deep Learning Models for
-    ##   Tabular Data." _The R Journal_, *18*(1), 382-397. ISSN 2073-4859,
-    ##   doi:10.32614/RJ-2026-008 <https://doi.org/10.32614/RJ-2026-008>.
-    ## 
-    ## A BibTeX entry for LaTeX users is
-    ## 
-    ##   @Article{,
-    ##     title = {SurvDNN: Survival Deep Learning Models for Tabular Data},
-    ##     author = {Imad {El Badisy}},
-    ##     journal = {The R Journal},
-    ##     year = {2026},
-    ##     volume = {18},
-    ##     number = {1},
-    ##     pages = {382-397},
-    ##     issn = {2073-4859},
-    ##     doi = {10.32614/RJ-2026-008},
-    ##   }
 
 ## Main features
 
@@ -82,11 +82,29 @@ citation("survdnn")
   - `"aft"`: Accelerated Failure Time
   - `"coxtime"`: deep time-dependent Cox
 
-- Evaluation: C-index, Brier score, IBS
+- Optimizers: Adam, AdamW, SGD, RMSprop, Adagrad (with custom
+  `optim_args`)
 
-- Model selection with `cv_survdnn()` and `tune_survdnn()`
+- Training control: early stopping via `callback_early_stopping()` and
+  loss curves via `plot_loss()`
 
-- Prediction of survival curves via `predict()` and `plot()`
+- Evaluation: C-index, Brier score, IBS with `evaluate_survdnn()`, plus
+  standalone metric helpers `cindex_survmat()`, `brier()` and
+  `ibs_survmat()`
+
+- Model selection with `cv_survdnn()`, `tune_survdnn()` and
+  `gridsearch_survdnn()`, summarized with `summarize_cv_survdnn()` and
+  `summarize_tune_survdnn()`
+
+- Prediction of survival curves, risks and linear predictors via
+  `predict()` and `plot()`
+
+- Reproducibility (`.seed`), CPU thread control (`.threads`) and GPU
+  support (`.device`)
+
+- Lightweight data handling: internal wrangling uses base R and
+  [`basetable`](https://CRAN.R-project.org/package=basetable), with no
+  `dplyr`, `tidyr` or `purrr` dependency
 
 ## Installation
 
@@ -94,15 +112,19 @@ citation("survdnn")
 # Install from CRAN
 install.packages("survdnn")
 
-
-# Install from GitHub
+# Install the development version from GitHub
 install.packages("remotes")
 remotes::install_github("ielbadisy/survdnn")
 
-# Or clone and install locally
+# Install the torch backend libraries (once)
+torch::install_torch()
+```
+
+Or clone and install locally:
+
+``` bash
 git clone https://github.com/ielbadisy/survdnn.git
-setwd("survdnn")
-devtools::install()
+R CMD INSTALL survdnn
 ```
 
 ## Quick example
@@ -124,36 +146,35 @@ mod <- survdnn(
   )
 
 summary(mod)
+#> 
+#> Formula:
+#>   Surv(time, status) ~ age + karno + celltype
+#> <environment: 0x57b0e1b9afd0>
+#> 
+#> Model architecture:
+#>   Hidden layers:  32 : 16 
+#>   Activation:  relu 
+#>   Dropout:  0.3 
+#>   Batch norm:  TRUE 
+#>   Final loss:  3.755239 
+#> 
+#> Training summary:
+#>   Epochs:  300 
+#>   Learning rate:  1e-04 
+#>   Loss function:  cox 
+#>   Optimizer:  adam 
+#>   Device:  cpu 
+#>   CPU threads:  default 
+#>   NA action:  omit 
+#> 
+#> Data summary:
+#>   Observations (used/total): 137 / 137
+#>   Predictors (5): age, karno, celltypesmallcell, celltypeadeno, celltypelarge
+#>   Time range: [ 1, 999 ]
+#>   Events / censored:  128  /  9 
+#>   Event rate:  93.4% 
+#>   Predictors standardized:  yes
 ```
-
-    ## 
-    ## Formula:
-    ##   Surv(time, status) ~ age + karno + celltype
-    ## <environment: 0x5b4526e32988>
-    ## 
-    ## Model architecture:
-    ##   Hidden layers:  32 : 16 
-    ##   Activation:  relu 
-    ##   Dropout:  0.3 
-    ##   Batch norm:  TRUE 
-    ##   Final loss:  3.867987 
-    ## 
-    ## Training summary:
-    ##   Epochs:  300 
-    ##   Learning rate:  1e-04 
-    ##   Loss function:  cox 
-    ##   Optimizer:  adam 
-    ##   Device:  cpu 
-    ##   CPU threads:  default 
-    ##   NA action:  omit 
-    ## 
-    ## Data summary:
-    ##   Observations (used/total): 137 / 137
-    ##   Predictors (5): age, karno, celltypesmallcell, celltypeadeno, celltypelarge
-    ##   Time range: [ 1, 999 ]
-    ##   Events / censored:  128  /  9 
-    ##   Event rate:  93.4% 
-    ##   Predictors standardized:  yes
 
 ``` r
 plot(mod, group_by = "celltype", times = 1:300)
@@ -170,23 +191,15 @@ mod1 <- survdnn(
   loss = "cox",
   epochs = 300
   )
+#> [survdnn::fit] start: n=137 p=2 loss=cox optimizer=adam epochs=300 device=cpu
+#> [survdnn::fit] epoch 50/300 loss=3.971071
+#> [survdnn::fit] epoch 100/300 loss=4.007168
+#> [survdnn::fit] epoch 150/300 loss=3.914469
+#> [survdnn::fit] epoch 200/300 loss=3.903474
+#> [survdnn::fit] epoch 250/300 loss=3.900623
+#> [survdnn::fit] epoch 300/300 loss=3.899372
+#> [survdnn::fit] done: epochs_run=300 final_loss=3.899372
 ```
-
-    ## [survdnn::fit] start: n=137 p=2 loss=cox optimizer=adam epochs=300 device=cpu
-
-    ## [survdnn::fit] epoch 50/300 loss=4.032557
-
-    ## [survdnn::fit] epoch 100/300 loss=4.025298
-
-    ## [survdnn::fit] epoch 150/300 loss=3.925760
-
-    ## [survdnn::fit] epoch 200/300 loss=3.908267
-
-    ## [survdnn::fit] epoch 250/300 loss=3.904748
-
-    ## [survdnn::fit] epoch 300/300 loss=3.893675
-
-    ## [survdnn::fit] done: epochs_run=300 final_loss=3.893675
 
 - Accelerated Failure Time
 
@@ -197,23 +210,15 @@ mod2 <- survdnn(
   loss = "aft",
   epochs = 300
   )
+#> [survdnn::fit] start: n=137 p=2 loss=aft optimizer=adam epochs=300 device=cpu
+#> [survdnn::fit] epoch 50/300 loss=4.756445
+#> [survdnn::fit] epoch 100/300 loss=4.690298
+#> [survdnn::fit] epoch 150/300 loss=4.630436
+#> [survdnn::fit] epoch 200/300 loss=4.670382
+#> [survdnn::fit] epoch 250/300 loss=4.533873
+#> [survdnn::fit] epoch 300/300 loss=4.554882
+#> [survdnn::fit] done: epochs_run=300 final_loss=4.554882
 ```
-
-    ## [survdnn::fit] start: n=137 p=2 loss=aft optimizer=adam epochs=300 device=cpu
-
-    ## [survdnn::fit] epoch 50/300 loss=4.772373
-
-    ## [survdnn::fit] epoch 100/300 loss=4.735664
-
-    ## [survdnn::fit] epoch 150/300 loss=4.662155
-
-    ## [survdnn::fit] epoch 200/300 loss=4.628159
-
-    ## [survdnn::fit] epoch 250/300 loss=4.622926
-
-    ## [survdnn::fit] epoch 300/300 loss=4.604257
-
-    ## [survdnn::fit] done: epochs_run=300 final_loss=4.604257
 
 - Coxtime
 
@@ -224,23 +229,53 @@ mod3 <- survdnn(
   loss = "coxtime",
   epochs = 300
   )
+#> [survdnn::fit] start: n=137 p=2 loss=coxtime optimizer=adam epochs=300 device=cpu
+#> [survdnn::fit] epoch 50/300 loss=4.024404
+#> [survdnn::fit] epoch 100/300 loss=3.994672
+#> [survdnn::fit] epoch 150/300 loss=3.956705
+#> [survdnn::fit] epoch 200/300 loss=3.934431
+#> [survdnn::fit] epoch 250/300 loss=3.904075
+#> [survdnn::fit] epoch 300/300 loss=3.870991
+#> [survdnn::fit] done: epochs_run=300 final_loss=3.870991
 ```
 
-    ## [survdnn::fit] start: n=137 p=2 loss=coxtime optimizer=adam epochs=300 device=cpu
+## Early stopping and training loss
 
-    ## [survdnn::fit] epoch 50/300 loss=4.151459
+Training can be stopped early when the loss stops improving, and the
+loss trajectory can be inspected with `plot_loss()`:
 
-    ## [survdnn::fit] epoch 100/300 loss=4.018471
+``` r
+mod_es <- survdnn(
+  Surv(time, status) ~ age + karno + celltype,
+  data = veteran,
+  epochs = 500,
+  optimizer = "adamw",
+  callbacks = callback_early_stopping(patience = 20),
+  verbose = FALSE,
+  .seed = 123
+  )
 
-    ## [survdnn::fit] epoch 150/300 loss=3.997110
+plot_loss(mod_es)
+```
 
-    ## [survdnn::fit] epoch 200/300 loss=3.983270
+<img src="man/figures/README-unnamed-chunk-8-1.png" alt="" width="100%" />
 
-    ## [survdnn::fit] epoch 250/300 loss=3.925767
+## Evaluation
 
-    ## [survdnn::fit] epoch 300/300 loss=3.850844
+`evaluate_survdnn()` computes the C-index, Brier score and integrated
+Brier score at chosen time points, on the training data or on `newdata`:
 
-    ## [survdnn::fit] done: epochs_run=300 final_loss=3.850844
+``` r
+evaluate_survdnn(mod1, metrics = c("cindex", "brier", "ibs"), times = c(90, 180, 300))
+#> # A tibble: 5 × 3
+#>   metric  value  time
+#>   <chr>   <dbl> <dbl>
+#> 1 cindex 0.708     NA
+#> 2 brier  0.184     90
+#> 3 brier  0.154    180
+#> 4 brier  0.0956   300
+#> 5 ibs    0.144     NA
+```
 
 ## Cross-validation
 
@@ -257,6 +292,9 @@ cv_results <- cv_survdnn(
   )
 
 print(cv_results)
+
+# mean, sd and confidence interval per metric and time
+summarize_cv_survdnn(cv_results)
 ```
 
 ## Hyperparameter tuning
@@ -282,6 +320,27 @@ tune_res <- tune_survdnn(
   )
 
 print(tune_res)
+```
+
+`summarize_tune_survdnn()` aggregates the cross-validated results of
+`tune_survdnn(return = "all")` per configuration.
+
+For a single train/validation split, `gridsearch_survdnn()` evaluates
+the same kind of grid on a held-out validation set:
+
+``` r
+idx   <- sample(nrow(veteran), 0.7 * nrow(veteran))
+train <- veteran[idx, ]
+valid <- veteran[-idx, ]
+
+gs <- gridsearch_survdnn(
+  formula = Surv(time, status) ~ age + karno + celltype,
+  train = train,
+  valid = valid,
+  times = c(90, 300),
+  metrics = c("cindex", "ibs"),
+  param_grid = grid
+  )
 ```
 
 ## Tuning and refitting the best Model
@@ -328,13 +387,13 @@ model selection and final model fitting.
 plot(mod1, group_by = "celltype", times = 1:300)
 ```
 
-![](README_files/figure-gfm/unnamed-chunk-11-1.png)<!-- -->
+<img src="man/figures/README-unnamed-chunk-15-1.png" alt="" width="100%" />
 
 ``` r
 plot(mod1, group_by = "celltype", times = 1:300, plot_mean_only = TRUE)
 ```
 
-![](README_files/figure-gfm/unnamed-chunk-12-1.png)<!-- -->
+<img src="man/figures/README-unnamed-chunk-16-1.png" alt="" width="100%" />
 
 ## Documentation
 
@@ -418,25 +477,16 @@ mod <- survdnn(
   data = survival::veteran,
   .threads = 4
 )
+#> [survdnn::fit] start: n=137 p=5 loss=cox optimizer=adam epochs=300 device=cpu
+#> [survdnn::fit] cpu_threads=4
+#> [survdnn::fit] epoch 50/300 loss=3.974626
+#> [survdnn::fit] epoch 100/300 loss=3.878856
+#> [survdnn::fit] epoch 150/300 loss=3.835840
+#> [survdnn::fit] epoch 200/300 loss=3.888390
+#> [survdnn::fit] epoch 250/300 loss=3.843022
+#> [survdnn::fit] epoch 300/300 loss=3.779572
+#> [survdnn::fit] done: epochs_run=300 final_loss=3.779572
 ```
-
-    ## [survdnn::fit] start: n=137 p=5 loss=cox optimizer=adam epochs=300 device=cpu
-
-    ## [survdnn::fit] cpu_threads=4
-
-    ## [survdnn::fit] epoch 50/300 loss=3.895973
-
-    ## [survdnn::fit] epoch 100/300 loss=3.861168
-
-    ## [survdnn::fit] epoch 150/300 loss=3.843835
-
-    ## [survdnn::fit] epoch 200/300 loss=3.803881
-
-    ## [survdnn::fit] epoch 250/300 loss=3.842178
-
-    ## [survdnn::fit] epoch 300/300 loss=3.823312
-
-    ## [survdnn::fit] done: epochs_run=300 final_loss=3.823312
 
 The same `.threads` argument is available in `cv_survdnn()` and
 `tune_survdnn()`.
@@ -471,4 +521,4 @@ pull request.
 
 ## License
 
-MIT License © 2025 Imad EL BADISY
+MIT License © 2025 Imad El Badisy

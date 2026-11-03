@@ -2,6 +2,15 @@
 output: github_document
 ---
 
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  fig.path = "man/figures/README-",
+  out.width = "100%"
+)
+```
+
 # survdnn <img src="https://raw.githubusercontent.com/ielbadisy/survdnn/main/inst/logo.png" align="right" height="140"/>
 
 > Deep Neural Networks for Survival Analysis using [R torch](https://torch.mlverse.org/)
@@ -25,16 +34,15 @@ If you use `survdnn`, please cite:
 
 ```bibtex
 @article{RJ-2026-008,
-  author = {Badisy, Imad El},
-  title = {The R Journal: SurvDNN: Survival Deep Learning Models for Tabular Data},
+  author = {El Badisy, Imad},
+  title = {SurvDNN: Survival Deep Learning Models for Tabular Data},
   journal = {The R Journal},
   year = {2026},
-  note = {https://doi.org/10.32614/RJ-2026-008},
-  doi = {10.32614/RJ-2026-008},
   volume = {18},
-  issue = {1},
+  number = {1},
+  pages = {382--397},
   issn = {2073-4859},
-  pages = {384-399}
+  doi = {10.32614/RJ-2026-008}
 }
 ```
 
@@ -56,11 +64,19 @@ citation("survdnn")
   - `"aft"`: Accelerated Failure Time
   - `"coxtime"`: deep time-dependent Cox
 
-- Evaluation: C-index, Brier score, IBS
+- Optimizers: Adam, AdamW, SGD, RMSprop, Adagrad (with custom `optim_args`)
 
-- Model selection with `cv_survdnn()` and `tune_survdnn()`
+- Training control: early stopping via `callback_early_stopping()` and loss curves via `plot_loss()`
 
-- Prediction of survival curves via `predict()` and `plot()`
+- Evaluation: C-index, Brier score, IBS with `evaluate_survdnn()`, plus standalone metric helpers `cindex_survmat()`, `brier()` and `ibs_survmat()`
+
+- Model selection with `cv_survdnn()`, `tune_survdnn()` and `gridsearch_survdnn()`, summarized with `summarize_cv_survdnn()` and `summarize_tune_survdnn()`
+
+- Prediction of survival curves, risks and linear predictors via `predict()` and `plot()`
+
+- Reproducibility (`.seed`), CPU thread control (`.threads`) and GPU support (`.device`)
+
+- Lightweight data handling: internal wrangling uses base R and [`basetable`](https://CRAN.R-project.org/package=basetable), with no `dplyr`, `tidyr` or `purrr` dependency
 
 
 ## Installation
@@ -69,15 +85,19 @@ citation("survdnn")
 # Install from CRAN
 install.packages("survdnn")
 
-
-# Install from GitHub
+# Install the development version from GitHub
 install.packages("remotes")
 remotes::install_github("ielbadisy/survdnn")
 
-# Or clone and install locally
+# Install the torch backend libraries (once)
+torch::install_torch()
+```
+
+Or clone and install locally:
+
+```bash
 git clone https://github.com/ielbadisy/survdnn.git
-setwd("survdnn")
-devtools::install()
+R CMD INSTALL survdnn
 ```
 
 
@@ -144,6 +164,34 @@ mod3 <- survdnn(
 ```
 
 
+## Early stopping and training loss
+
+Training can be stopped early when the loss stops improving, and the loss trajectory can be inspected with `plot_loss()`:
+
+```{r}
+mod_es <- survdnn(
+  Surv(time, status) ~ age + karno + celltype,
+  data = veteran,
+  epochs = 500,
+  optimizer = "adamw",
+  callbacks = callback_early_stopping(patience = 20),
+  verbose = FALSE,
+  .seed = 123
+  )
+
+plot_loss(mod_es)
+```
+
+
+## Evaluation
+
+`evaluate_survdnn()` computes the C-index, Brier score and integrated Brier score at chosen time points, on the training data or on `newdata`:
+
+```{r}
+evaluate_survdnn(mod1, metrics = c("cindex", "brier", "ibs"), times = c(90, 180, 300))
+```
+
+
 ## Cross-validation
 
 ```{r, eval = FALSE}
@@ -159,6 +207,9 @@ cv_results <- cv_survdnn(
   )
 
 print(cv_results)
+
+# mean, sd and confidence interval per metric and time
+summarize_cv_survdnn(cv_results)
 ```
 
 
@@ -188,6 +239,26 @@ tune_res <- tune_survdnn(
 print(tune_res)
 ```
 
+
+
+`summarize_tune_survdnn()` aggregates the cross-validated results of `tune_survdnn(return = "all")` per configuration.
+
+For a single train/validation split, `gridsearch_survdnn()` evaluates the same kind of grid on a held-out validation set:
+
+```{r, eval = FALSE}
+idx   <- sample(nrow(veteran), 0.7 * nrow(veteran))
+train <- veteran[idx, ]
+valid <- veteran[-idx, ]
+
+gs <- gridsearch_survdnn(
+  formula = Surv(time, status) ~ age + karno + celltype,
+  train = train,
+  valid = valid,
+  times = c(90, 300),
+  metrics = c("cindex", "ibs"),
+  param_grid = grid
+  )
+```
 
 
 ## Tuning and refitting the best Model
@@ -334,4 +405,4 @@ Open an [issue](https://github.com/ielbadisy/survdnn/issues) or submit a pull re
 
 ## License
 
-MIT License © 2025 Imad EL BADISY
+MIT License © 2025 Imad El Badisy
