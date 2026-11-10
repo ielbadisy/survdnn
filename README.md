@@ -149,14 +149,14 @@ summary(mod)
 #> 
 #> Formula:
 #>   Surv(time, status) ~ age + karno + celltype
-#> <environment: 0x57b0e1b9afd0>
+#> <environment: 0x5eadd74c6350>
 #> 
 #> Model architecture:
 #>   Hidden layers:  32 : 16 
 #>   Activation:  relu 
 #>   Dropout:  0.3 
 #>   Batch norm:  TRUE 
-#>   Final loss:  3.755239 
+#>   Final loss:  3.796718 
 #> 
 #> Training summary:
 #>   Epochs:  300 
@@ -192,13 +192,13 @@ mod1 <- survdnn(
   epochs = 300
   )
 #> [survdnn::fit] start: n=137 p=2 loss=cox optimizer=adam epochs=300 device=cpu
-#> [survdnn::fit] epoch 50/300 loss=3.971071
-#> [survdnn::fit] epoch 100/300 loss=4.007168
-#> [survdnn::fit] epoch 150/300 loss=3.914469
-#> [survdnn::fit] epoch 200/300 loss=3.903474
-#> [survdnn::fit] epoch 250/300 loss=3.900623
-#> [survdnn::fit] epoch 300/300 loss=3.899372
-#> [survdnn::fit] done: epochs_run=300 final_loss=3.899372
+#> [survdnn::fit] epoch 50/300 loss=3.918754
+#> [survdnn::fit] epoch 100/300 loss=3.896161
+#> [survdnn::fit] epoch 150/300 loss=3.900485
+#> [survdnn::fit] epoch 200/300 loss=3.858880
+#> [survdnn::fit] epoch 250/300 loss=3.882403
+#> [survdnn::fit] epoch 300/300 loss=3.879139
+#> [survdnn::fit] done: epochs_run=300 final_loss=3.879139
 ```
 
 - Accelerated Failure Time
@@ -211,13 +211,13 @@ mod2 <- survdnn(
   epochs = 300
   )
 #> [survdnn::fit] start: n=137 p=2 loss=aft optimizer=adam epochs=300 device=cpu
-#> [survdnn::fit] epoch 50/300 loss=4.756445
-#> [survdnn::fit] epoch 100/300 loss=4.690298
-#> [survdnn::fit] epoch 150/300 loss=4.630436
-#> [survdnn::fit] epoch 200/300 loss=4.670382
-#> [survdnn::fit] epoch 250/300 loss=4.533873
-#> [survdnn::fit] epoch 300/300 loss=4.554882
-#> [survdnn::fit] done: epochs_run=300 final_loss=4.554882
+#> [survdnn::fit] epoch 50/300 loss=4.732642
+#> [survdnn::fit] epoch 100/300 loss=4.707888
+#> [survdnn::fit] epoch 150/300 loss=4.648007
+#> [survdnn::fit] epoch 200/300 loss=4.584298
+#> [survdnn::fit] epoch 250/300 loss=4.585914
+#> [survdnn::fit] epoch 300/300 loss=4.586056
+#> [survdnn::fit] done: epochs_run=300 final_loss=4.586056
 ```
 
 - Coxtime
@@ -230,13 +230,13 @@ mod3 <- survdnn(
   epochs = 300
   )
 #> [survdnn::fit] start: n=137 p=2 loss=coxtime optimizer=adam epochs=300 device=cpu
-#> [survdnn::fit] epoch 50/300 loss=4.024404
-#> [survdnn::fit] epoch 100/300 loss=3.994672
-#> [survdnn::fit] epoch 150/300 loss=3.956705
-#> [survdnn::fit] epoch 200/300 loss=3.934431
-#> [survdnn::fit] epoch 250/300 loss=3.904075
-#> [survdnn::fit] epoch 300/300 loss=3.870991
-#> [survdnn::fit] done: epochs_run=300 final_loss=3.870991
+#> [survdnn::fit] epoch 50/300 loss=4.010314
+#> [survdnn::fit] epoch 100/300 loss=3.932604
+#> [survdnn::fit] epoch 150/300 loss=3.974687
+#> [survdnn::fit] epoch 200/300 loss=3.924818
+#> [survdnn::fit] epoch 250/300 loss=3.922739
+#> [survdnn::fit] epoch 300/300 loss=3.894928
+#> [survdnn::fit] done: epochs_run=300 final_loss=3.894928
 ```
 
 ## Early stopping and training loss
@@ -267,14 +267,13 @@ Brier score at chosen time points, on the training data or on `newdata`:
 
 ``` r
 evaluate_survdnn(mod1, metrics = c("cindex", "brier", "ibs"), times = c(90, 180, 300))
-#> # A tibble: 5 × 3
-#>   metric  value  time
-#>   <chr>   <dbl> <dbl>
-#> 1 cindex 0.708     NA
-#> 2 brier  0.184     90
-#> 3 brier  0.154    180
-#> 4 brier  0.0956   300
-#> 5 ibs    0.144     NA
+#> # basetable: 5 x 3
+#>   metric    value time
+#> 1 cindex 0.713841   NA
+#> 2  brier 0.194816   90
+#> 3  brier 0.157746  180
+#> 4  brier 0.100056  300
+#> 5    ibs 0.149207   NA
 ```
 
 ## Cross-validation
