@@ -1,21 +1,15 @@
 ## R CMD check results
 
-0 errors | 0 warnings | 1 note
+0 errors | 0 warnings | 0 notes
 
-* "New maintainer" - the Maintainer field's family-name casing changed
-  from "EL BADISY" to "El Badisy" (title case); same person, same email
-  address, no change in maintainership.
+## Update
 
-## Resubmission
-
-This is a resubmission for version 1.0.0 (milestone release: the package's
-methods paper is now published).
+This is an update from version 1.0.0 to 1.0.2.
 
 Changes made in this update:
 
-* Added the package's R Journal citation to `DESCRIPTION`'s `Description`
-  field (El Badisy 2026, <doi:10.32614/RJ-2026-008>) and a matching
-  `inst/CITATION` file.
-* The maintainer's family-name casing changed from "EL BADISY" to
-  "El Badisy" (title case); same person, same email address, no change
-  in maintainership.
+* Dropped the `dplyr`, `purrr` and `tidyr` dependencies; data handling now
+  uses `basetable` and base R.
+* Fixed the `gridsearch_survdnn()` example.
+* `DESCRIPTION` now cites only the package's R Journal paper
+  (<doi:10.32614/RJ-2026-008>).
