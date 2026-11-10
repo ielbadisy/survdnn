@@ -17,7 +17,7 @@ test_that("survdnn omits NAs and messages when verbose=TRUE", {
       verbose = TRUE,
       epochs = 1
     ),
-    "Removed 1 observations with missing values"
+    "removed 1 observations with missing values"
   )
 })
 
@@ -117,6 +117,6 @@ test_that("evaluate_survdnn omits incomplete rows when na_action='omit' (no cras
     )
   )
 
-  expect_s3_class(res, "tbl_df")
+  expect_s3_class(res, "basetable")
   expect_true(all(c("metric", "value") %in% names(res)))
 })
