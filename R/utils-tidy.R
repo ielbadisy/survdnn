@@ -2,12 +2,12 @@
 # (or index-map) .f over .x and row-bind the results, matching purrr's
 # silent drop of NULL results (basetable::rbindfill() already drops NULLs).
 .map_dfr <- function(.x, .f, ...) {
-  tibble::as_tibble(basetable::rbindfill(basetable::map(.x, .f, ...), fill = TRUE))
+  .as_bt(basetable::rbindfill(basetable::map(.x, .f, ...), fill = TRUE))
 }
 
 .imap_dfr <- function(.x, .f) {
   idx <- if (!is.null(names(.x))) names(.x) else seq_along(.x)
-  tibble::as_tibble(basetable::rbindfill(basetable::traverse(list(.x, idx), .f), fill = TRUE))
+  .as_bt(basetable::rbindfill(basetable::traverse(list(.x, idx), .f), fill = TRUE))
 }
 
 # .map_dfr()'s list-column-safe counterpart: basetable::rbindfill() coerces
@@ -42,7 +42,7 @@
     if (is.list(uniq[[nm]])) I(vals) else vals
   }), stringsAsFactors = FALSE)
   names(out) <- nms
-  tibble::as_tibble(out)
+  .as_bt(out)
 }
 
 # tidyr::pivot_longer() replacement for the simple "melt these columns, keep
@@ -61,5 +61,27 @@
     c(names_to, values_to)
   ))
   rownames(out) <- NULL
-  tibble::as_tibble(out)
+  .as_bt(out)
+}
+
+# Result tables are basetable objects. `.bt()` builds one from named columns
+# (list-valued columns, e.g. `hidden`, stay list-columns); `.as_bt()` converts
+# a data frame. The "AsIs" marker data.frame() needs for list-columns is dropped.
+.bt <- function(...) {
+  cols <- list(...)
+  out <- data.frame(
+    lapply(cols, function(x) if (is.list(x)) I(x) else x),
+    stringsAsFactors = FALSE, check.names = FALSE
+  )
+  names(out) <- names(cols)
+  .as_bt(out)
+}
+
+.as_bt <- function(x) {
+  x <- as.data.frame(x, stringsAsFactors = FALSE)
+  for (nm in names(x)) {
+    if (inherits(x[[nm]], "AsIs")) class(x[[nm]]) <- setdiff(class(x[[nm]]), "AsIs")
+  }
+  rownames(x) <- NULL
+  basetable::as_basetable(x)
 }

@@ -38,7 +38,7 @@ or \code{"cuda"}. This is a runtime setting and is not part of the
 hyperparameter grid.}
 }
 \value{
-A tibble with configurations and their validation metrics
+A basetable with configurations and their validation metrics
 }
 \description{
 Performs grid search over user-specified hyperparameters and evaluates performance on a validation set.

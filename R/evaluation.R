@@ -12,7 +12,7 @@
 #'   `"omit"` drops incomplete rows, `"fail"` errors if any NA is present.
 #' @param verbose Logical. If TRUE and `na_action="omit"`, prints a message when rows are removed.
 #'
-#' @return A tibble with evaluation results, containing at least `metric`, `value`, and possibly `time`.
+#' @return A basetable with evaluation results, containing at least `metric`, `value`, and possibly `time`.
 #' @export
 evaluate_survdnn <- function(model,
                              metrics = c("cindex", "brier", "ibs"),
@@ -56,7 +56,7 @@ evaluate_survdnn <- function(model,
 
   .map_dfr(metrics, function(metric) {
     if (metric == "brier" && length(times) > 1) {
-      tibble::tibble(
+      .bt(
         metric = "brier",
         time = times,
         value = vapply(seq_along(times), function(i) {
@@ -70,7 +70,7 @@ evaluate_survdnn <- function(model,
         "brier"  = brier(y, pre_sp = sp_matrix[, 1], t_star = times[1]),
         "ibs"    = ibs_survmat(y, sp_matrix, times)
       )
-      tibble::tibble(metric = metric, value = val)
+      .bt(metric = metric, value = val)
     }
   })
 }
@@ -97,7 +97,7 @@ evaluate_survdnn <- function(model,
 #'   verbose messages to fitting/evaluation in each fold (default: TRUE).
 #' @param ... Additional arguments passed to [survdnn()].
 #'
-#' @return A tibble containing metric values per fold and (optionally) per time point.
+#' @return A basetable containing metric values per fold and (optionally) per time point.
 #' @export
 #'
 #' @examples
@@ -155,7 +155,7 @@ cv_survdnn <- function(formula, data, times,
   }
 
   status_var <- all.vars(formula[[2]])[2]          # more safe for extracting the status
-  vfolds <- rsample::vfold_cv(data, v = folds, strata = tidyselect::all_of(status_var))
+  vfolds <- do.call(rsample::vfold_cv, list(data, v = folds, strata = status_var))
 
   results <- .imap_dfr(vfolds$splits, function(split, i) {
 
@@ -213,11 +213,11 @@ cv_survdnn <- function(formula, data, times,
 #'
 #' Computes mean, standard deviation, and confidence intervals for metrics from cross-validation.
 #'
-#' @param cv_results A tibble returned by [cv_survdnn()].
+#' @param cv_results A basetable returned by [cv_survdnn()].
 #' @param by_time Logical. Whether to stratify results by `time` (if present).
 #' @param conf_level Confidence level for the intervals (default: 0.95).
 #'
-#' @return A tibble summarizing mean, sd, and confidence bounds per metric (and per time if applicable).
+#' @return A basetable summarizing mean, sd, and confidence bounds per metric (and per time if applicable).
 #' @export
 #'
 #' @examples
@@ -259,5 +259,5 @@ summarize_cv_survdnn <- function(cv_results, by_time = TRUE, conf_level = 0.95) 
   out$n <- NULL
   out$lower <- out$mean - z * se
   out$upper <- out$mean + z * se
-  tibble::as_tibble(out)
+  .as_bt(out)
 }

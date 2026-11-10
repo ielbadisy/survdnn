@@ -16,7 +16,7 @@
 #'   or \code{"cuda"}. This is a runtime setting and is not part of the
 #'   hyperparameter grid.
 #' 
-#' @return A tibble with configurations and their validation metrics
+#' @return A basetable with configurations and their validation metrics
 #' @export
 #'
 #' @examples
@@ -111,7 +111,7 @@ eval_tbl <- evaluate_survdnn(
   times    = times
 )
 
-config <- tibble::tibble(
+config <- .bt(
   hidden     = list(hidden),
   lr         = lr,
   activation = activation,
@@ -119,7 +119,7 @@ config <- tibble::tibble(
   loss       = loss
 )
 
-tibble::as_tibble(cbind(config[rep(1, nrow(eval_tbl)), , drop = FALSE], eval_tbl))
+.as_bt(cbind(config[rep(1, nrow(eval_tbl)), , drop = FALSE], eval_tbl))
   })
 
 return(results)

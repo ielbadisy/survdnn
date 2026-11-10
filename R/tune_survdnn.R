@@ -56,7 +56,7 @@ utils::globalVariables(c("loss", "epoch"))
 #'     \item{"best_model"}{Returns the refitted model or best hyperparameters.}
 #'   }
 #'
-#' @return A tibble or model object depending on the `return` value.
+#' @return A basetable or model object depending on the `return` value.
 #' @export
 tune_survdnn <- function(
   formula,
@@ -112,7 +112,7 @@ tune_survdnn <- function(
         )
       }
 
-      config_tbl <- tibble::tibble(
+      config_tbl <- .bt(
         hidden     = list(hidden),
         lr         = lr,
         activation = activation,
@@ -138,7 +138,7 @@ tune_survdnn <- function(
         verbose    = verbose
       )
 
-      tibble::as_tibble(cbind(config_tbl[rep(1, nrow(cv_tbl)), , drop = FALSE], cv_tbl))
+      .as_bt(cbind(config_tbl[rep(1, nrow(cv_tbl)), , drop = FALSE], cv_tbl))
     }
   )
 
@@ -153,7 +153,7 @@ tune_survdnn <- function(
     funs = list(mean = function(v) mean(v, na.rm = TRUE))
   )
   best_idx <- if (identical(primary_metric, "cindex")) which.max(m$mean) else which.min(m$mean)
-  best_row_all <- tibble::as_tibble(m[best_idx, , drop = FALSE])
+  best_row_all <- .as_bt(m[best_idx, , drop = FALSE])
 
   if (nrow(best_row_all) == 0) {
     stop("No valid configuration found for primary metric: ", primary_metric, call. = FALSE)
@@ -211,10 +211,10 @@ tune_survdnn <- function(
 #' Aggregates cross-validation results from `tune_survdnn(return = "all")`
 #' by configuration, metric, and optionally by time point.
 #'
-#' @param tuning_results The full tibble returned by `tune_survdnn(..., return = "all")`.
+#' @param tuning_results The full basetable returned by `tune_survdnn(..., return = "all")`.
 #' @param by_time Logical; whether to group and summarize separately by time points.
 #'
-#' @return A summarized tibble with mean and standard deviation of performance metrics.
+#' @return A summarized basetable with mean and standard deviation of performance metrics.
 #' @export
 summarize_tune_survdnn <- function(tuning_results, by_time = TRUE) {
   if (!all(c("metric", "value") %in% names(tuning_results))) {
@@ -234,5 +234,5 @@ summarize_tune_survdnn <- function(tuning_results, by_time = TRUE) {
     )
   )
   out <- out[order(out$metric, -out$mean), , drop = FALSE]
-  tibble::as_tibble(out)
+  .as_bt(out)
 }

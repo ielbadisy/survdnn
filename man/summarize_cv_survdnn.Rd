@@ -7,14 +7,14 @@
 summarize_cv_survdnn(cv_results, by_time = TRUE, conf_level = 0.95)
 }
 \arguments{
-\item{cv_results}{A tibble returned by [cv_survdnn()].}
+\item{cv_results}{A basetable returned by [cv_survdnn()].}
 
 \item{by_time}{Logical. Whether to stratify results by `time` (if present).}
 
 \item{conf_level}{Confidence level for the intervals (default: 0.95).}
 }
 \value{
-A tibble summarizing mean, sd, and confidence bounds per metric (and per time if applicable).
+A basetable summarizing mean, sd, and confidence bounds per metric (and per time if applicable).
 }
 \description{
 Computes mean, standard deviation, and confidence intervals for metrics from cross-validation.

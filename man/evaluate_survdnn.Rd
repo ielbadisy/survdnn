@@ -28,7 +28,7 @@ evaluate_survdnn(
 \item{verbose}{Logical. If TRUE and `na_action="omit"`, prints a message when rows are removed.}
 }
 \value{
-A tibble with evaluation results, containing at least `metric`, `value`, and possibly `time`.
+A basetable with evaluation results, containing at least `metric`, `value`, and possibly `time`.
 }
 \description{
 Computes evaluation metrics for a fitted `survdnn` model at one or more time points.

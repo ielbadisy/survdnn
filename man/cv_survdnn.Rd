@@ -47,7 +47,7 @@ verbose messages to fitting/evaluation in each fold (default: TRUE).}
 \item{...}{Additional arguments passed to [survdnn()].}
 }
 \value{
-A tibble containing metric values per fold and (optionally) per time point.
+A basetable containing metric values per fold and (optionally) per time point.
 }
 \description{
 Performs cross-validation for a `survdnn` model using the specified evaluation metrics.

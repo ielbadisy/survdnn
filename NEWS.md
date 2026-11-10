@@ -2,6 +2,11 @@
 
 ## survdnn 1.0.2
 
+* Result tables from `evaluate_survdnn()`, `cv_survdnn()`,
+  `summarize_cv_survdnn()`, `tune_survdnn()`, `summarize_tune_survdnn()` and
+  `gridsearch_survdnn()` are now `basetable` objects instead of tibbles
+  (still data frames; `hidden` stays a list-column). `tibble` and
+  `tidyselect` removed from `Imports`.
 * Fixed the `gridsearch_survdnn()` example, which grouped results by the
   `hidden` list-column with `basetable::aggregate()` and errored; it now
   uses `summarize_tune_survdnn()`.

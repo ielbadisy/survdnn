@@ -60,7 +60,7 @@ messages to nested cross-validation and optional refit (default: TRUE).}
 }}
 }
 \value{
-A tibble or model object depending on the `return` value.
+A basetable or model object depending on the `return` value.
 }
 \description{
 Performs k-fold cross-validation over a user-defined hyperparameter grid
