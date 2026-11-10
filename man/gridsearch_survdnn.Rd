@@ -80,12 +80,8 @@ if (requireNamespace("torch", quietly = TRUE) && torch::torch_is_installed()) {
     param_grid = param_grid
   )
 
-  # View summary
-  basetable::aggregate(
-    as.data.frame(results),
-    by = c("hidden", "lr", "activation", "epochs", "loss", "metric"),
-    value = "value", fun = function(v) mean(v, na.rm = TRUE)
-  )
+  # View summary (mean and sd per configuration and metric)
+  summarize_tune_survdnn(results, by_time = FALSE)
 }
 }
 }

@@ -2,6 +2,9 @@
 
 ## survdnn 1.0.2
 
+* Fixed the `gridsearch_survdnn()` example, which grouped results by the
+  `hidden` list-column with `basetable::aggregate()` and errored; it now
+  uses `summarize_tune_survdnn()`.
 * Dropped the remaining `purrr` and `tidyr` dependencies. New internal
   `.map_dfr()`/`.imap_dfr()`/`.crossing_grid()`/`.pivot_longer_simple()`
   helpers (`R/utils-tidy.R`) replace `purrr::map_dfr()`/`imap_dfr()`/
