@@ -4,11 +4,11 @@
 #' for training deep neural networks on right-censored survival data.
 #'
 #' @section Supported Losses:
-#' - **Cox partial likelihood loss** (`cox_loss`): Negative partial log-likelihood used in proportional hazards modeling.
-#' - **L2-penalized Cox loss** (`cox_l2_loss`): Adds L2 regularization to the Cox loss.
-#' - **Accelerated Failure Time (AFT) loss** (`aft_loss`): Log-normal AFT **censored negative log-likelihood**
+#' - **Cox partial likelihood loss** (`coxloss`): Negative partial log-likelihood used in proportional hazards modeling.
+#' - **L2-penalized Cox loss** (`coxl2loss`): Adds L2 regularization to the Cox loss.
+#' - **Accelerated Failure Time (AFT) loss** (`aftloss`): Log-normal AFT **censored negative log-likelihood**
 #'   (uses both events and censored observations).
-#' - **CoxTime loss** (`coxtime_loss`): Placeholder (see details). A correct CoxTime loss requires access to the network and the full input tensor.
+#' - **CoxTime loss** (`coxtimeloss`): Placeholder (see details). A correct CoxTime loss requires access to the network and the full input tensor.
 #'
 #' @param pred A torch tensor of model predictions. Its interpretation depends
 #'   on the loss function:
@@ -19,7 +19,7 @@
 #'     \item{\code{loss = "coxtime"}: predicted time-dependent risk scores.}
 #'   }
 #' @param true A tensor with two columns: observed time and status (1 = event, 0 = censored).
-#' @param lambda Regularization parameter for `cox_l2_loss` (default: `1e-3`).
+#' @param lambda Regularization parameter for `coxl2loss` (default: `1e-3`).
 #' @param sigma Positive numeric scale parameter for the log-normal AFT model (default: `1`).
 #'   In `survdnn()`, a learnable global scale can be used via `survdnn__aft_lognormal_nll_factory()`.
 #' @param aft_loc Numeric scalar location offset for the AFT model on the log-time scale.
@@ -59,7 +59,7 @@ survdnn__log_surv_std_normal <- function(z, eps = 1e-12) {
 
 #' @rdname survdnn_losses
 #' @export
-cox_loss <- function(pred, true) {
+coxloss <- function(pred, true) {
   time   <- true[, 1]
   status <- true[, 2]
 
@@ -79,8 +79,8 @@ cox_loss <- function(pred, true) {
 
 #' @rdname survdnn_losses
 #' @export
-cox_l2_loss <- function(pred, true, lambda = 1e-3) {
-  base_loss <- cox_loss(pred, true)
+coxl2loss <- function(pred, true, lambda = 1e-3) {
+  base_loss <- coxloss(pred, true)
   lp <- -pred[, 1]
   l2_penalty <- lambda * torch::torch_mean(lp^2)
   base_loss + l2_penalty
@@ -91,7 +91,7 @@ cox_l2_loss <- function(pred, true, lambda = 1e-3) {
 
 #' @rdname survdnn_losses
 #' @export
-aft_loss <- function(pred, true, sigma = 1, aft_loc = 0, eps = 1e-12) {
+aftloss <- function(pred, true, sigma = 1, aft_loc = 0, eps = 1e-12) {
 
   time   <- true[, 1]
   status <- true[, 2]
@@ -139,9 +139,9 @@ aft_loss <- function(pred, true, sigma = 1, aft_loc = 0, eps = 1e-12) {
 
 #' @rdname survdnn_losses
 #' @export
-coxtime_loss <- function(pred, true) {
+coxtimeloss <- function(pred, true) {
   stop(
-    "coxtime_loss(pred, true) is not identifiable from `pred` alone.\n",
+    "coxtimeloss(pred, true) is not identifiable from `pred` alone.\n",
     "Cox-Time requires evaluating g(t_i, x_j) for all subjects j at each event time t_i.\n",
     "Use the internal factory `survdnn__coxtime_loss_factory()` from survdnn() where `net` and the full input tensor are available.",
     call. = FALSE

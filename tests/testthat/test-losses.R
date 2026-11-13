@@ -1,4 +1,4 @@
-test_that("cox_loss returns scalar tensor (and is differentiable)", {
+test_that("coxloss returns scalar tensor (and is differentiable)", {
   skip_if_not(torch_is_installed())
 
   time   <- torch_tensor(runif(20, 1, 100))
@@ -8,7 +8,7 @@ test_that("cox_loss returns scalar tensor (and is differentiable)", {
   # pred must require grad to test autograd
   pred <- torch_randn(20, 1, requires_grad = TRUE)
 
-  loss <- cox_loss(pred, y)
+  loss <- coxloss(pred, y)
 
   expect_true(inherits(loss, "torch_tensor"))
   expect_equal(loss$numel(), 1)
@@ -18,7 +18,7 @@ test_that("cox_loss returns scalar tensor (and is differentiable)", {
   expect_false(torch::is_undefined_tensor(pred$grad))
 })
 
-test_that("cox_l2_loss returns penalized scalar tensor (and is differentiable)", {
+test_that("coxl2loss returns penalized scalar tensor (and is differentiable)", {
   skip_if_not(torch_is_installed())
 
   time   <- torch_tensor(runif(20, 1, 100))
@@ -27,7 +27,7 @@ test_that("cox_l2_loss returns penalized scalar tensor (and is differentiable)",
 
   pred <- torch_randn(20, 1, requires_grad = TRUE)
 
-  loss <- cox_l2_loss(pred, y, lambda = 0.01)
+  loss <- coxl2loss(pred, y, lambda = 0.01)
 
   expect_true(inherits(loss, "torch_tensor"))
   expect_equal(loss$numel(), 1)
@@ -37,7 +37,7 @@ test_that("cox_l2_loss returns penalized scalar tensor (and is differentiable)",
   expect_false(torch::is_undefined_tensor(pred$grad))
 })
 
-test_that("aft_loss returns scalar tensor (censored log-normal NLL)", {
+test_that("aftloss returns scalar tensor (censored log-normal NLL)", {
   skip_if_not(torch_is_installed())
 
   time   <- torch_tensor(runif(20, 1, 100))
@@ -46,7 +46,7 @@ test_that("aft_loss returns scalar tensor (censored log-normal NLL)", {
 
   pred <- torch_randn(20, 1, requires_grad = TRUE)
 
-  loss <- aft_loss(pred, y, sigma = 1)
+  loss <- aftloss(pred, y, sigma = 1)
 
   expect_true(inherits(loss, "torch_tensor"))
   expect_equal(loss$numel(), 1)
@@ -56,7 +56,7 @@ test_that("aft_loss returns scalar tensor (censored log-normal NLL)", {
   expect_false(torch::is_undefined_tensor(pred$grad))
 })
 
-test_that("aft_loss is finite for fully censored data (no special-casing to 0)", {
+test_that("aftloss is finite for fully censored data (no special-casing to 0)", {
   skip_if_not(torch_is_installed())
 
   time   <- torch_tensor(runif(10, 1, 100))
@@ -65,7 +65,7 @@ test_that("aft_loss is finite for fully censored data (no special-casing to 0)",
 
   pred <- torch_randn(10, 1, requires_grad = TRUE)
 
-  loss <- aft_loss(pred, y, sigma = 1)
+  loss <- aftloss(pred, y, sigma = 1)
 
   expect_true(inherits(loss, "torch_tensor"))
   expect_equal(loss$numel(), 1)
@@ -76,7 +76,7 @@ test_that("aft_loss is finite for fully censored data (no special-casing to 0)",
   expect_false(torch::is_undefined_tensor(pred$grad))
 })
 
-test_that("aft_loss fully censored stays on same device as pred (CUDA)", {
+test_that("aftloss fully censored stays on same device as pred (CUDA)", {
   skip_if_not(torch_is_installed())
   skip_if_not(cuda_is_available())
 
@@ -88,7 +88,7 @@ test_that("aft_loss fully censored stays on same device as pred (CUDA)", {
 
   pred <- torch_randn(10, 1, device = device, requires_grad = TRUE)
 
-  loss <- aft_loss(pred, y, sigma = 1)
+  loss <- aftloss(pred, y, sigma = 1)
 
   expect_true(inherits(loss, "torch_tensor"))
   expect_equal(loss$numel(), 1)
@@ -99,7 +99,7 @@ test_that("aft_loss fully censored stays on same device as pred (CUDA)", {
   expect_false(torch::is_undefined_tensor(pred$grad))
 })
 
-test_that("coxtime_loss() is a placeholder and errors (use factory in training)", {
+test_that("coxtimeloss() is a placeholder and errors (use factory in training)", {
   skip_if_not(torch_is_installed())
 
   n <- 50
@@ -109,7 +109,7 @@ test_that("coxtime_loss() is a placeholder and errors (use factory in training)"
   true   <- torch_cat(list(time, status), dim = 2)
 
   expect_error(
-    coxtime_loss(pred, true),
+    coxtimeloss(pred, true),
     regexp = "not identifiable|requires evaluating",
     fixed  = FALSE
   )

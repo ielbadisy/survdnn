@@ -14,7 +14,7 @@
 #'
 #' @return A basetable with evaluation results, containing at least `metric`, `value`, and possibly `time`.
 #' @export
-evaluate_survdnn <- function(model,
+evaluatesurvdnn <- function(model,
                              metrics = c("cindex", "brier", "ibs"),
                              times,
                              newdata = NULL,
@@ -66,9 +66,9 @@ evaluate_survdnn <- function(model,
     } else {
       val <- switch(
         metric,
-        "cindex" = cindex_survmat(y, predicted = sp_matrix, t_star = max(times)),
+        "cindex" = cindexsurvmat(y, predicted = sp_matrix, t_star = max(times)),
         "brier"  = brier(y, pre_sp = sp_matrix[, 1], t_star = times[1]),
-        "ibs"    = ibs_survmat(y, sp_matrix, times)
+        "ibs"    = ibssurvmat(y, sp_matrix, times)
       )
       .bt(metric = metric, value = val)
     }
@@ -104,7 +104,7 @@ evaluate_survdnn <- function(model,
 #' \donttest{
 #' if (requireNamespace("torch", quietly = TRUE) && torch::torch_is_installed()) {
 #'   veteran <- survival::veteran
-#'   cv_survdnn(
+#'   cvsurvdnn(
 #'     survival::Surv(time, status) ~ age + karno + celltype,
 #'     data = veteran,
 #'     times = c(30, 90, 180),
@@ -116,7 +116,7 @@ evaluate_survdnn <- function(model,
 #'   )
 #' }
 #' }
-cv_survdnn <- function(formula, data, times,
+cvsurvdnn <- function(formula, data, times,
                        metrics = c("cindex", "ibs"),
                        folds = 5,
                        .seed = NULL,
@@ -185,7 +185,7 @@ cv_survdnn <- function(formula, data, times,
       ...
     )
 
-    eval_tbl <- evaluate_survdnn(
+    eval_tbl <- evaluatesurvdnn(
       model,
       metrics   = metrics,
       times     = times,
@@ -213,7 +213,7 @@ cv_survdnn <- function(formula, data, times,
 #'
 #' Computes mean, standard deviation, and confidence intervals for metrics from cross-validation.
 #'
-#' @param cv_results A basetable returned by [cv_survdnn()].
+#' @param cv_results A basetable returned by [cvsurvdnn()].
 #' @param by_time Logical. Whether to stratify results by `time` (if present).
 #' @param conf_level Confidence level for the intervals (default: 0.95).
 #'
@@ -224,7 +224,7 @@ cv_survdnn <- function(formula, data, times,
 #' \donttest{
 #' if (requireNamespace("torch", quietly = TRUE) && torch::torch_is_installed()) {
 #'   veteran <- survival::veteran
-#'   res <- cv_survdnn(
+#'   res <- cvsurvdnn(
 #'     survival::Surv(time, status) ~ age + karno + celltype,
 #'     data = veteran,
 #'     times = c(30, 90, 180, 270),
@@ -234,10 +234,10 @@ cv_survdnn <- function(formula, data, times,
 #'     hidden = c(16, 8),
 #'     epochs = 5
 #'   )
-#'   summarize_cv_survdnn(res)
+#'   summarizecvsurvdnn(res)
 #' }
 #' }
-summarize_cv_survdnn <- function(cv_results, by_time = TRUE, conf_level = 0.95) {
+summarizecvsurvdnn <- function(cv_results, by_time = TRUE, conf_level = 0.95) {
   stopifnot(all(c("fold", "metric", "value") %in% names(cv_results)))
 
   z <- qnorm((1 + conf_level) / 2)

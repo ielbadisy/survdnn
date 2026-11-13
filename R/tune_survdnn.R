@@ -58,7 +58,7 @@ utils::globalVariables(c("loss", "epoch"))
 #'
 #' @return A basetable or model object depending on the `return` value.
 #' @export
-tune_survdnn <- function(
+tunesurvdnn <- function(
   formula,
   data,
   times,
@@ -120,7 +120,7 @@ tune_survdnn <- function(
         loss       = loss
       )
 
-      cv_tbl <- cv_survdnn(
+      cv_tbl <- cvsurvdnn(
         formula    = formula,
         data       = data,
         times      = times,
@@ -142,7 +142,7 @@ tune_survdnn <- function(
     }
   )
 
-  summary_tbl <- summarize_tune_survdnn(all_results, by_time = FALSE)
+  summary_tbl <- summarizetunesurvdnn(all_results, by_time = FALSE)
 
   ## select best hyperparameters
   primary_metric <- metrics[1]
@@ -208,17 +208,17 @@ tune_survdnn <- function(
 
 #' Summarize survdnn Tuning Results
 #'
-#' Aggregates cross-validation results from `tune_survdnn(return = "all")`
+#' Aggregates cross-validation results from `tunesurvdnn(return = "all")`
 #' by configuration, metric, and optionally by time point.
 #'
-#' @param tuning_results The full basetable returned by `tune_survdnn(..., return = "all")`.
+#' @param tuning_results The full basetable returned by `tunesurvdnn(..., return = "all")`.
 #' @param by_time Logical; whether to group and summarize separately by time points.
 #'
 #' @return A summarized basetable with mean and standard deviation of performance metrics.
 #' @export
-summarize_tune_survdnn <- function(tuning_results, by_time = TRUE) {
+summarizetunesurvdnn <- function(tuning_results, by_time = TRUE) {
   if (!all(c("metric", "value") %in% names(tuning_results))) {
-    stop("Input must be the result of `tune_survdnn(return = 'all')`.", call. = FALSE)
+    stop("Input must be the result of `tunesurvdnn(return = 'all')`.", call. = FALSE)
   }
 
   group_vars <- c("hidden", "lr", "activation", "epochs", "loss", "metric")

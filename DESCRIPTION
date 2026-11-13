@@ -1,6 +1,6 @@
 Package: survdnn
 Title: Deep Neural Networks for Survival Analysis with R 'torch'
-Version: 1.0.3
+Version: 1.0.4
 Authors@R: c(
     person(given = "Imad",
            family = "El Badisy",
@@ -25,7 +25,7 @@ Imports:
     survival,
     stats,
     utils,
-    basetable (>= 1.4.1),
+    basetable (>= 1.4.5),
     ggplot2,
     methods,
     rsample,

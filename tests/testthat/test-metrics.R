@@ -1,4 +1,4 @@
-test_that("cindex_survmat computes a valid C-index", {
+test_that("cindexsurvmat computes a valid C-index", {
   skip_on_cran()
   skip_if_not(torch::torch_is_installed())
 
@@ -10,7 +10,7 @@ test_that("cindex_survmat computes a valid C-index", {
   sp <- predict(mod, newdata = data, times = times, type = "survival")
   y <- model.response(model.frame(mod$formula, data))
 
-  cidx <- cindex_survmat(y, sp, t_star = 90)
+  cidx <- cindexsurvmat(y, sp, t_star = 90)
   expect_type(cidx, "double")
   expect_true(cidx >= 0 && cidx <= 1, info = paste("C-index out of bounds:", cidx))
 })
@@ -34,7 +34,7 @@ test_that("brier returns a valid score", {
 })
 
 
-test_that("ibs_survmat returns a valid integrated Brier score", {
+test_that("ibssurvmat returns a valid integrated Brier score", {
   skip_on_cran()
   skip_if_not(torch::torch_is_installed())
 
@@ -46,7 +46,7 @@ test_that("ibs_survmat returns a valid integrated Brier score", {
   sp <- predict(mod, newdata = data, times = times, type = "survival")
   y <- model.response(model.frame(mod$formula, data))
 
-  ibs <- ibs_survmat(y, sp, times)
+  ibs <- ibssurvmat(y, sp, times)
   expect_type(ibs, "double")
   expect_true(ibs >= 0 && ibs <= 1, info = paste("IBS out of bounds:", ibs))
 })
@@ -61,7 +61,7 @@ test_that("metric functions handle dimension mismatches gracefully", {
   wrong_sp <- matrix(runif(200), nrow = 100)  # should be 137 rows
 
   expect_error(
-    ibs_survmat(y, wrong_sp, times = c(30, 60)),
+    ibssurvmat(y, wrong_sp, times = c(30, 60)),
     regexp = "Length of predictions"
   )
 

@@ -1,3 +1,25 @@
+# survdnn 1.0.4
+
+* Exported functions are renamed to glued lowercase. The old names remain as deprecated wrappers for one release.
+
+| Old | New |
+|---|---|
+| `aft_loss()` | `aftloss()` |
+| `build_dnn()` | `builddnn()` |
+| `callback_early_stopping()` | `callbackearlystopping()` |
+| `cindex_survmat()` | `cindexsurvmat()` |
+| `cox_l2_loss()` | `coxl2loss()` |
+| `cox_loss()` | `coxloss()` |
+| `coxtime_loss()` | `coxtimeloss()` |
+| `cv_survdnn()` | `cvsurvdnn()` |
+| `evaluate_survdnn()` | `evaluatesurvdnn()` |
+| `gridsearch_survdnn()` | `gridsearchsurvdnn()` |
+| `ibs_survmat()` | `ibssurvmat()` |
+| `plot_loss()` | `plotloss()` |
+| `summarize_cv_survdnn()` | `summarizecvsurvdnn()` |
+| `summarize_tune_survdnn()` | `summarizetunesurvdnn()` |
+| `tune_survdnn()` | `tunesurvdnn()` |
+
 # survdnn
 
 ## survdnn 1.0.3

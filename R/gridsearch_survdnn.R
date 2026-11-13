@@ -47,7 +47,7 @@
 #'   )
 #'
 #'   # Run grid search
-#'   results <- gridsearch_survdnn(
+#'   results <- gridsearchsurvdnn(
 #'     formula = formula,
 #'     train   = train,
 #'     valid   = valid,
@@ -57,11 +57,11 @@
 #'   )
 #'
 #'   # View summary (mean and sd per configuration and metric)
-#'   summarize_tune_survdnn(results, by_time = FALSE)
+#'   summarizetunesurvdnn(results, by_time = FALSE)
 #' }
 #' }
 
-gridsearch_survdnn <- function(formula, train, valid, times,
+gridsearchsurvdnn <- function(formula, train, valid, times,
   metrics = c("cindex", "ibs"),
   param_grid,
   .seed = 42,
@@ -104,7 +104,7 @@ mod <- survdnn(
   .device    = .device
 )
 
-eval_tbl <- evaluate_survdnn(
+eval_tbl <- evaluatesurvdnn(
   model    = mod,
   newdata  = valid,
   metrics  = metrics,
