@@ -66,11 +66,11 @@ citation("survdnn")
 
 - Optimizers: Adam, AdamW, SGD, RMSprop, Adagrad (with custom `optim_args`)
 
-- Training control: early stopping via `callback_early_stopping()` and loss curves via `plot_loss()`
+- Training control: early stopping via `callbackearlystopping()` and loss curves via `plotloss()`
 
-- Evaluation: C-index, Brier score, IBS with `evaluate_survdnn()`, plus standalone metric helpers `cindex_survmat()`, `brier()` and `ibs_survmat()`
+- Evaluation: C-index, Brier score, IBS with `evaluatesurvdnn()`, plus standalone metric helpers `cindexsurvmat()`, `brier()` and `ibssurvmat()`
 
-- Model selection with `cv_survdnn()`, `tune_survdnn()` and `gridsearch_survdnn()`, summarized with `summarize_cv_survdnn()` and `summarize_tune_survdnn()`
+- Model selection with `cvsurvdnn()`, `tunesurvdnn()` and `gridsearchsurvdnn()`, summarized with `summarizecvsurvdnn()` and `summarizetunesurvdnn()`
 
 - Prediction of survival curves, risks and linear predictors via `predict()` and `plot()`
 
@@ -166,7 +166,7 @@ mod3 <- survdnn(
 
 ## Early stopping and training loss
 
-Training can be stopped early when the loss stops improving, and the loss trajectory can be inspected with `plot_loss()`:
+Training can be stopped early when the loss stops improving, and the loss trajectory can be inspected with `plotloss()`:
 
 ```{r}
 mod_es <- survdnn(
@@ -174,28 +174,28 @@ mod_es <- survdnn(
   data = veteran,
   epochs = 500,
   optimizer = "adamw",
-  callbacks = callback_early_stopping(patience = 20),
+  callbacks = callbackearlystopping(patience = 20),
   verbose = FALSE,
   .seed = 123
   )
 
-plot_loss(mod_es)
+plotloss(mod_es)
 ```
 
 
 ## Evaluation
 
-`evaluate_survdnn()` computes the C-index, Brier score and integrated Brier score at chosen time points, on the training data or on `newdata`:
+`evaluatesurvdnn()` computes the C-index, Brier score and integrated Brier score at chosen time points, on the training data or on `newdata`:
 
 ```{r}
-evaluate_survdnn(mod1, metrics = c("cindex", "brier", "ibs"), times = c(90, 180, 300))
+evaluatesurvdnn(mod1, metrics = c("cindex", "brier", "ibs"), times = c(90, 180, 300))
 ```
 
 
 ## Cross-validation
 
 ```{r, eval = FALSE}
-cv_results <- cv_survdnn(
+cv_results <- cvsurvdnn(
   Surv(time, status) ~ age + karno + celltype,
   data = veteran,
   times = c(600),
@@ -209,7 +209,7 @@ cv_results <- cv_survdnn(
 print(cv_results)
 
 # mean, sd and confidence interval per metric and time
-summarize_cv_survdnn(cv_results)
+summarizecvsurvdnn(cv_results)
 ```
 
 
@@ -225,7 +225,7 @@ grid <- list(
   loss       = c("cox", "aft", "coxtime")
   )
 
-tune_res <- tune_survdnn(
+tune_res <- tunesurvdnn(
   formula = Surv(time, status) ~ age + karno + celltype,
   data = veteran,
   times = c(90, 300),
@@ -241,16 +241,16 @@ print(tune_res)
 
 
 
-`summarize_tune_survdnn()` aggregates the cross-validated results of `tune_survdnn(return = "all")` per configuration.
+`summarizetunesurvdnn()` aggregates the cross-validated results of `tunesurvdnn(return = "all")` per configuration.
 
-For a single train/validation split, `gridsearch_survdnn()` evaluates the same kind of grid on a held-out validation set:
+For a single train/validation split, `gridsearchsurvdnn()` evaluates the same kind of grid on a held-out validation set:
 
 ```{r, eval = FALSE}
 idx   <- sample(nrow(veteran), 0.7 * nrow(veteran))
 train <- veteran[idx, ]
 valid <- veteran[-idx, ]
 
-gs <- gridsearch_survdnn(
+gs <- gridsearchsurvdnn(
   formula = Surv(time, status) ~ age + karno + celltype,
   train = train,
   valid = valid,
@@ -263,10 +263,10 @@ gs <- gridsearch_survdnn(
 
 ## Tuning and refitting the best Model
 
-`tune_survdnn()` can be used also to automatically refit the best-performing model on the full dataset. This behavior is controlled by the `refit` and `return` arguments. For example:
+`tunesurvdnn()` can be used also to automatically refit the best-performing model on the full dataset. This behavior is controlled by the `refit` and `return` arguments. For example:
 
 ```{r, eval = FALSE}
-best_model <- tune_survdnn(
+best_model <- tunesurvdnn(
   formula = Surv(time, status) ~ age + karno + celltype,
   data = veteran,
   times = c(90, 300),
@@ -291,7 +291,7 @@ plot(best_model, times = 1:300)
 predict(best_model, veteran, type = "risk", times = 180)
 ```
 
-This makes `tune_survdnn()` suitable for end-to-end workflows, combining model selection and final model fitting.
+This makes `tunesurvdnn()` suitable for end-to-end workflows, combining model selection and final model fitting.
 
 
 
@@ -311,8 +311,8 @@ plot(mod1, group_by = "celltype", times = 1:300, plot_mean_only = TRUE)
 ```{r, eval = FALSE}
 help(package = "survdnn")
 ?survdnn
-?tune_survdnn
-?cv_survdnn
+?tunesurvdnn
+?cvsurvdnn
 ?plot.survdnn
 ```
 
@@ -352,7 +352,7 @@ When `.seed` is provided, `survdnn()` internally synchronizes both R and Torch r
 
 If `.seed = NULL` (the default), randomness is left uncontrolled and results may vary between runs.
 
-For full reproducibility in cross-validation or hyperparameter tuning, the same `.seed` mechanism is propagated internally by `cv_survdnn()` and `tune_survdnn()`, ensuring consistent data splits, model initialization, and optimization paths across repetitions.
+For full reproducibility in cross-validation or hyperparameter tuning, the same `.seed` mechanism is propagated internally by `cvsurvdnn()` and `tunesurvdnn()`, ensuring consistent data splits, model initialization, and optimization paths across repetitions.
 
 ## CPU and core usage
 
@@ -374,7 +374,7 @@ mod <- survdnn(
 )
 ```
 
-The same `.threads` argument is available in `cv_survdnn()` and `tune_survdnn()`.
+The same `.threads` argument is available in `cvsurvdnn()` and `tunesurvdnn()`.
 
 This setting affects:
 
@@ -386,7 +386,7 @@ This setting affects:
 
 * cross-validation and hyperparameter tuning
 
-GPU acceleration can be enabled by setting `.device = "cuda"` when calling `survdnn()` (`cv_survdnn()` and `tune_survdnn()` too). 
+GPU acceleration can be enabled by setting `.device = "cuda"` when calling `survdnn()` (`cvsurvdnn()` and `tunesurvdnn()` too). 
 
 
 ## Availability 

@@ -83,5 +83,5 @@
     if (inherits(x[[nm]], "AsIs")) class(x[[nm]]) <- setdiff(class(x[[nm]]), "AsIs")
   }
   rownames(x) <- NULL
-  basetable::as_basetable(x)
+  basetable::asbasetable(x)
 }

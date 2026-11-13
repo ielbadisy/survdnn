@@ -10,7 +10,7 @@
 #' @return A function of the form `function(epoch, current)` that returns TRUE
 #'   if training should stop, FALSE otherwise.
 #' @export
-callback_early_stopping <- function(patience = 10L,
+callbackearlystopping <- function(patience = 10L,
                                     min_delta = 0,
                                     mode = c("min", "max"),
                                     verbose = FALSE) {
@@ -25,7 +25,7 @@ callback_early_stopping <- function(patience = 10L,
 
   function(epoch, current) {
     if (!is.numeric(current) || length(current) != 1L || is.na(current)) {
-      warning("callback_early_stopping: `current` must be a single numeric value; ignoring callback for this epoch.")
+      warning("callbackearlystopping: `current` must be a single numeric value; ignoring callback for this epoch.")
       return(FALSE)
     }
 

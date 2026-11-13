@@ -1,10 +1,10 @@
-test_that("cv_survdnn performs cross-validation and returns fold-level metrics", {
+test_that("cvsurvdnn performs cross-validation and returns fold-level metrics", {
   skip_on_cran()
   skip_if_not(torch::torch_is_installed())
 
   data <- survival::veteran
 
-  out <- cv_survdnn(
+  out <- cvsurvdnn(
     Surv(time, status) ~ age + karno + celltype,
     data = data,
     times = c(30, 90),
@@ -22,36 +22,36 @@ test_that("cv_survdnn performs cross-validation and returns fold-level metrics",
   expect_true(all(out$fold %in% 1:2))
 })
 
-test_that("cv_survdnn errors on missing inputs or bad arguments", {
+test_that("cvsurvdnn errors on missing inputs or bad arguments", {
   skip_on_cran()
   skip_if_not(torch::torch_is_installed())
 
   df <- survival::veteran
 
   expect_error(
-    cv_survdnn("not a formula", df, times = 50),
+    cvsurvdnn("not a formula", df, times = 50),
     "`formula` must be a survival formula"
   )
 
   expect_error(
-    cv_survdnn(Surv(time, status) ~ ., "not a df", times = 50),
+    cvsurvdnn(Surv(time, status) ~ ., "not a df", times = 50),
     "`data` must be a data frame"
   )
 
   expect_error(
-    cv_survdnn(Surv(time, status) ~ ., df),
+    cvsurvdnn(Surv(time, status) ~ ., df),
     "must provide a `times`"
   )
 })
 
-test_that("cv_survdnn verbose controls progress messages", {
+test_that("cvsurvdnn verbose controls progress messages", {
   skip_on_cran()
   skip_if_not(torch::torch_is_installed())
 
   data <- survival::veteran
 
   msg_on <- capture.output(
-    cv_survdnn(
+    cvsurvdnn(
       Surv(time, status) ~ age + karno + celltype,
       data = data,
       times = c(30),
@@ -70,7 +70,7 @@ test_that("cv_survdnn verbose controls progress messages", {
   expect_true(any(grepl("\\[survdnn::fit\\]", msg_on)))
 
   msg_off <- capture.output(
-    cv_survdnn(
+    cvsurvdnn(
       Surv(time, status) ~ age + karno + celltype,
       data = data,
       times = c(30),

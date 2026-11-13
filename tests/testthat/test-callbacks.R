@@ -1,5 +1,5 @@
-test_that("callback_early_stopping stops on plateauing loss", {
-  cb <- callback_early_stopping(patience = 2, mode = "min")
+test_that("callbackearlystopping stops on plateauing loss", {
+  cb <- callbackearlystopping(patience = 2, mode = "min")
 
   # fake loss sequence: improves, then flat/worse
   out1 <- cb(epoch = 1, current = 1.0)  # best = 1.0
@@ -20,7 +20,7 @@ test_that("survdnn uses early stopping callback on training loss", {
   veteran <- survival::veteran
 
   # strong early stopping: patience small, epochs large (need to investigate this in a simuation study)
-  cb <- callback_early_stopping(patience = 1, mode = "min")
+  cb <- callbackearlystopping(patience = 1, mode = "min")
 
   mod <- survdnn::survdnn(
     Surv(time, status) ~ age + karno + celltype,

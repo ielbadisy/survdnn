@@ -2,19 +2,19 @@
 % Please edit documentation in R/losses.R
 \name{survdnn_losses}
 \alias{survdnn_losses}
-\alias{cox_loss}
-\alias{cox_l2_loss}
-\alias{aft_loss}
-\alias{coxtime_loss}
+\alias{coxloss}
+\alias{coxl2loss}
+\alias{aftloss}
+\alias{coxtimeloss}
 \title{Loss Functions for survdnn Models}
 \usage{
-cox_loss(pred, true)
+coxloss(pred, true)
 
-cox_l2_loss(pred, true, lambda = 0.001)
+coxl2loss(pred, true, lambda = 0.001)
 
-aft_loss(pred, true, sigma = 1, aft_loc = 0, eps = 1e-12)
+aftloss(pred, true, sigma = 1, aft_loc = 0, eps = 1e-12)
 
-coxtime_loss(pred, true)
+coxtimeloss(pred, true)
 }
 \arguments{
 \item{pred}{A torch tensor of model predictions. Its interpretation depends
@@ -28,7 +28,7 @@ on the loss function:
 
 \item{true}{A tensor with two columns: observed time and status (1 = event, 0 = censored).}
 
-\item{lambda}{Regularization parameter for `cox_l2_loss` (default: `1e-3`).}
+\item{lambda}{Regularization parameter for `coxl2loss` (default: `1e-3`).}
 
 \item{sigma}{Positive numeric scale parameter for the log-normal AFT model (default: `1`).
 In `survdnn()`, a learnable global scale can be used via `survdnn__aft_lognormal_nll_factory()`.}
@@ -48,11 +48,11 @@ for training deep neural networks on right-censored survival data.
 }
 \section{Supported Losses}{
 
-- **Cox partial likelihood loss** (`cox_loss`): Negative partial log-likelihood used in proportional hazards modeling.
-- **L2-penalized Cox loss** (`cox_l2_loss`): Adds L2 regularization to the Cox loss.
-- **Accelerated Failure Time (AFT) loss** (`aft_loss`): Log-normal AFT **censored negative log-likelihood**
+- **Cox partial likelihood loss** (`coxloss`): Negative partial log-likelihood used in proportional hazards modeling.
+- **L2-penalized Cox loss** (`coxl2loss`): Adds L2 regularization to the Cox loss.
+- **Accelerated Failure Time (AFT) loss** (`aftloss`): Log-normal AFT **censored negative log-likelihood**
   (uses both events and censored observations).
-- **CoxTime loss** (`coxtime_loss`): Placeholder (see details). A correct CoxTime loss requires access to the network and the full input tensor.
+- **CoxTime loss** (`coxtimeloss`): Placeholder (see details). A correct CoxTime loss requires access to the network and the full input tensor.
 }
 
 \examples{
