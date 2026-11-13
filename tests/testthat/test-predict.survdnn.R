@@ -62,3 +62,35 @@ test_that("predict.survdnn handles invalid or missing times properly", {
                 "For type = 'risk', `times` must be a single( numeric)? value\\.")
               
 })
+
+test_that("Cox survival predictions use the Breslow baseline with lp as an offset", {
+  skip_on_cran()
+  skip_if_not(torch::torch_is_installed())
+
+  set.seed(1)
+  n <- 300
+  d <- data.frame(x1 = rnorm(n), x2 = rnorm(n))
+  t_ev <- rexp(n, 0.1 * exp(0.8 * d$x1 - 0.5 * d$x2))
+  t_cens <- rexp(n, 0.05)
+  d$time <- pmin(t_ev, t_cens)
+  d$status <- as.integer(t_ev <= t_cens)
+
+  torch::torch_manual_seed(1)
+  mod <- survdnn(Surv(time, status) ~ x1 + x2, data = d,
+                 hidden = 8, epochs = 50, verbose = FALSE)
+
+  lp_train <- predict(mod, newdata = d, type = "lp")
+  nd <- d[1:5, ]
+  lp_new <- predict(mod, newdata = nd, type = "lp")
+  times <- c(0.01, 1, 5, 10, 20, 1000)
+
+  pred <- unname(as.matrix(predict(mod, newdata = nd, times = times, type = "survival")))
+
+  fit0 <- survival::coxph(survival::Surv(time, status) ~ offset(lp),
+                          data = data.frame(time = d$time, status = d$status, lp = lp_train),
+                          ties = "breslow")
+  s0 <- summary(survival::survfit(fit0), times = times, extend = TRUE)$surv
+  ref <- t(vapply(lp_new, function(l) s0^exp(l - mean(lp_train)), numeric(length(times))))
+
+  expect_equal(pred, ref, tolerance = 1e-6)
+})
