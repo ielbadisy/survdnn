@@ -43,7 +43,7 @@ test_that("survdnn fails on NAs when na_action='fail'", {
   )
 })
 
-test_that("evaluatesurvdnn respects na_action='fail' on newdata", {
+test_that("evaluate_survdnn respects na_action='fail' on newdata", {
   skip_on_cran()
   skip_if_not(torch::torch_is_installed())
 
@@ -69,7 +69,7 @@ test_that("evaluatesurvdnn respects na_action='fail' on newdata", {
   )
 
   expect_error(
-    evaluatesurvdnn(
+    evaluate_survdnn(
       mod,
       metrics = "cindex",
       times = 2,
@@ -81,7 +81,7 @@ test_that("evaluatesurvdnn respects na_action='fail' on newdata", {
 
 
 
-test_that("evaluatesurvdnn omits incomplete rows when na_action='omit' (no crash)", {
+test_that("evaluate_survdnn omits incomplete rows when na_action='omit' (no crash)", {
   skip_on_cran()
   skip_if_not(torch::torch_is_installed())
 
@@ -107,7 +107,7 @@ test_that("evaluatesurvdnn omits incomplete rows when na_action='omit' (no crash
   )
 
   res <- suppressWarnings(
-    evaluatesurvdnn(
+    evaluate_survdnn(
       mod,
       metrics = c("brier", "ibs"),
       times = c(1, 2),

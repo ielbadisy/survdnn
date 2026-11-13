@@ -16,7 +16,7 @@
 #' @return A `nn_sequential` object representing the network.
 #' @keywords internal
 #' @export
-builddnn <- function(
+build_dnn <- function(
   input_dim,
   hidden,
   activation = "relu",
@@ -84,7 +84,7 @@ builddnn <- function(
 #'   hidden linear layer (default = TRUE).
 #' @param callbacks Optional list of callback functions. Each callback should have
 #'   signature `function(epoch, current)` and return TRUE if training should stop,
-#'   FALSE otherwise. Used, for example, with [callbackearlystopping()].
+#'   FALSE otherwise. Used, for example, with [callback_early_stopping()].
 #' @param .seed Optional integer. If provided, sets both R and torch random seeds for reproducible
 #'   weight initialization, shuffling, and dropout.
 #' @param .device Character string indicating the computation device.
@@ -249,7 +249,7 @@ survdnn <- function(
   )
 
   # network
-  net <- builddnn(
+  net <- build_dnn(
     input_dim  = ncol(x_tensor),
     hidden     = hidden,
     activation = activation,
@@ -265,9 +265,9 @@ survdnn <- function(
   loss_fn <- NULL
 
   if (loss == "cox") {
-    loss_fn <- function(net, x, y) coxloss(net(x), y)
+    loss_fn <- function(net, x, y) cox_loss(net(x), y)
   } else if (loss == "cox_l2") {
-    loss_fn <- function(net, x, y) coxl2loss(net(x), y, lambda = 1e-3)
+    loss_fn <- function(net, x, y) cox_l2_loss(net(x), y, lambda = 1e-3)
   } else if (loss == "aft") {
     loc0 <- if (is.finite(aft_loc)) aft_loc else 0
     aft_bundle <- survdnn__aft_lognormal_nll_factory(device = device, aft_loc = loc0)

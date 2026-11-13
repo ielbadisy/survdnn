@@ -1,4 +1,4 @@
-test_that("evaluatesurvdnn returns expected metric values", {
+test_that("evaluate_survdnn returns expected metric values", {
   skip_on_cran()
   skip_if_not(torch::torch_is_installed())
 
@@ -8,7 +8,7 @@ test_that("evaluatesurvdnn returns expected metric values", {
 
   times <- c(30, 90, 180)
 
-  out <- evaluatesurvdnn(mod, metrics = c("cindex", "ibs", "brier"), times = times)
+  out <- evaluate_survdnn(mod, metrics = c("cindex", "ibs", "brier"), times = times)
 
   expect_s3_class(out, "data.frame")
   expect_true(all(c("metric", "value") %in% names(out)))
@@ -17,7 +17,7 @@ test_that("evaluatesurvdnn returns expected metric values", {
   expect_true(any(out$metric == "brier"))
 })
 
-test_that("evaluatesurvdnn errors with unknown metrics or missing times", {
+test_that("evaluate_survdnn errors with unknown metrics or missing times", {
   skip_on_cran()
   skip_if_not(torch::torch_is_installed())
 
@@ -25,6 +25,6 @@ test_that("evaluatesurvdnn errors with unknown metrics or missing times", {
   mod <- survdnn(Surv(time, status) ~ age + karno + celltype,
                  data = data, epochs = 5, verbose = FALSE)
 
-  expect_error(evaluatesurvdnn(mod, metrics = "abc", times = 100), "Unknown metric")
-  expect_error(evaluatesurvdnn(mod, metrics = "cindex"), "must provide `times`")
+  expect_error(evaluate_survdnn(mod, metrics = "abc", times = 100), "Unknown metric")
+  expect_error(evaluate_survdnn(mod, metrics = "cindex"), "must provide `times`")
 })

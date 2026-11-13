@@ -56,7 +56,7 @@ hidden linear layer (default = TRUE).}
 
 \item{callbacks}{Optional list of callback functions. Each callback should have
 signature `function(epoch, current)` and return TRUE if training should stop,
-FALSE otherwise. Used, for example, with [callbackearlystopping()].}
+FALSE otherwise. Used, for example, with [callback_early_stopping()].}
 
 \item{.seed}{Optional integer. If provided, sets both R and torch random seeds for reproducible
 weight initialization, shuffling, and dropout.}
