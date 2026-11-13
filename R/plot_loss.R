@@ -13,7 +13,7 @@ utils::globalVariables(c("epoch"))
 #'
 #' @return A `ggplot` object.
 #' @export
-plotloss <- function(object,
+plot_loss <- function(object,
                       smooth = FALSE,
                       log_y  = FALSE,
                       ...) {

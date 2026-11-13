@@ -20,11 +20,11 @@
 #'   age + karno + celltype, data = veteran, epochs = 50, verbose = FALSE)
 #'   pred <- predict(mod, newdata = veteran, type = "survival", times = c(30, 90, 180))
 #'   y <- model.response(model.frame(mod$formula, veteran))
-#'   cindexsurvmat(y, pred, t_star = 180)
+#'   cindex_survmat(y, pred, t_star = 180)
 #' }
 #' }
 
-cindexsurvmat <- function(object, predicted, t_star = NULL) {
+cindex_survmat <- function(object, predicted, t_star = NULL) {
   if (!inherits(object, "Surv")) stop("object must be a survival object (from Surv())")
 
   time <- object[, 1]
@@ -166,11 +166,11 @@ brier <- function(object, pre_sp, t_star) {
 #'   age + karno + celltype, data = train, epochs = 50, verbose = FALSE)
 #'   pred <- predict(mod, newdata = test, times = c(30, 90, 180), type = "survival")
 #'   y_test <- model.response(model.frame(mod$formula, test))
-#'   ibssurvmat(y_test, sp_matrix = pred, times = c(30, 90, 180))
+#'   ibs_survmat(y_test, sp_matrix = pred, times = c(30, 90, 180))
 #' }
 #' }
 
-ibssurvmat <- function(object, sp_matrix, times) {
+ibs_survmat <- function(object, sp_matrix, times) {
   if (!inherits(object, "Surv")) stop("object must be a survival object")
   if (length(times) != ncol(sp_matrix)) stop("Length of times must match sp_matrix columns")
 

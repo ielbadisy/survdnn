@@ -85,16 +85,16 @@ citation("survdnn")
 - Optimizers: Adam, AdamW, SGD, RMSprop, Adagrad (with custom
   `optim_args`)
 
-- Training control: early stopping via `callbackearlystopping()` and
-  loss curves via `plotloss()`
+- Training control: early stopping via `callback_early_stopping()` and
+  loss curves via `plot_loss()`
 
-- Evaluation: C-index, Brier score, IBS with `evaluatesurvdnn()`, plus
-  standalone metric helpers `cindexsurvmat()`, `brier()` and
-  `ibssurvmat()`
+- Evaluation: C-index, Brier score, IBS with `evaluate_survdnn()`, plus
+  standalone metric helpers `cindex_survmat()`, `brier()` and
+  `ibs_survmat()`
 
-- Model selection with `cvsurvdnn()`, `tunesurvdnn()` and
-  `gridsearchsurvdnn()`, summarized with `summarizecvsurvdnn()` and
-  `summarizetunesurvdnn()`
+- Model selection with `cv_survdnn()`, `tune_survdnn()` and
+  `gridsearch_survdnn()`, summarized with `summarize_cv_survdnn()` and
+  `summarize_tune_survdnn()`
 
 - Prediction of survival curves, risks and linear predictors via
   `predict()` and `plot()`
@@ -149,14 +149,14 @@ summary(mod)
 #> 
 #> Formula:
 #>   Surv(time, status) ~ age + karno + celltype
-#> <environment: 0x5db5be1ff818>
+#> <environment: 0x5eadd74c6350>
 #> 
 #> Model architecture:
 #>   Hidden layers:  32 : 16 
 #>   Activation:  relu 
 #>   Dropout:  0.3 
 #>   Batch norm:  TRUE 
-#>   Final loss:  3.814102 
+#>   Final loss:  3.796718 
 #> 
 #> Training summary:
 #>   Epochs:  300 
@@ -192,13 +192,13 @@ mod1 <- survdnn(
   epochs = 300
   )
 #> [survdnn::fit] start: n=137 p=2 loss=cox optimizer=adam epochs=300 device=cpu
-#> [survdnn::fit] epoch 50/300 loss=4.103405
-#> [survdnn::fit] epoch 100/300 loss=3.983948
-#> [survdnn::fit] epoch 150/300 loss=3.931320
-#> [survdnn::fit] epoch 200/300 loss=3.908505
-#> [survdnn::fit] epoch 250/300 loss=3.875206
-#> [survdnn::fit] epoch 300/300 loss=3.870788
-#> [survdnn::fit] done: epochs_run=300 final_loss=3.870788
+#> [survdnn::fit] epoch 50/300 loss=3.918754
+#> [survdnn::fit] epoch 100/300 loss=3.896161
+#> [survdnn::fit] epoch 150/300 loss=3.900485
+#> [survdnn::fit] epoch 200/300 loss=3.858880
+#> [survdnn::fit] epoch 250/300 loss=3.882403
+#> [survdnn::fit] epoch 300/300 loss=3.879139
+#> [survdnn::fit] done: epochs_run=300 final_loss=3.879139
 ```
 
 - Accelerated Failure Time
@@ -211,13 +211,13 @@ mod2 <- survdnn(
   epochs = 300
   )
 #> [survdnn::fit] start: n=137 p=2 loss=aft optimizer=adam epochs=300 device=cpu
-#> [survdnn::fit] epoch 50/300 loss=4.706174
-#> [survdnn::fit] epoch 100/300 loss=4.640653
-#> [survdnn::fit] epoch 150/300 loss=4.648038
-#> [survdnn::fit] epoch 200/300 loss=4.605468
-#> [survdnn::fit] epoch 250/300 loss=4.558011
-#> [survdnn::fit] epoch 300/300 loss=4.551201
-#> [survdnn::fit] done: epochs_run=300 final_loss=4.551201
+#> [survdnn::fit] epoch 50/300 loss=4.732642
+#> [survdnn::fit] epoch 100/300 loss=4.707888
+#> [survdnn::fit] epoch 150/300 loss=4.648007
+#> [survdnn::fit] epoch 200/300 loss=4.584298
+#> [survdnn::fit] epoch 250/300 loss=4.585914
+#> [survdnn::fit] epoch 300/300 loss=4.586056
+#> [survdnn::fit] done: epochs_run=300 final_loss=4.586056
 ```
 
 - Coxtime
@@ -230,19 +230,19 @@ mod3 <- survdnn(
   epochs = 300
   )
 #> [survdnn::fit] start: n=137 p=2 loss=coxtime optimizer=adam epochs=300 device=cpu
-#> [survdnn::fit] epoch 50/300 loss=3.973237
-#> [survdnn::fit] epoch 100/300 loss=3.938820
-#> [survdnn::fit] epoch 150/300 loss=3.916350
-#> [survdnn::fit] epoch 200/300 loss=3.846620
-#> [survdnn::fit] epoch 250/300 loss=3.881622
-#> [survdnn::fit] epoch 300/300 loss=3.830255
-#> [survdnn::fit] done: epochs_run=300 final_loss=3.830255
+#> [survdnn::fit] epoch 50/300 loss=4.010314
+#> [survdnn::fit] epoch 100/300 loss=3.932604
+#> [survdnn::fit] epoch 150/300 loss=3.974687
+#> [survdnn::fit] epoch 200/300 loss=3.924818
+#> [survdnn::fit] epoch 250/300 loss=3.922739
+#> [survdnn::fit] epoch 300/300 loss=3.894928
+#> [survdnn::fit] done: epochs_run=300 final_loss=3.894928
 ```
 
 ## Early stopping and training loss
 
 Training can be stopped early when the loss stops improving, and the
-loss trajectory can be inspected with `plotloss()`:
+loss trajectory can be inspected with `plot_loss()`:
 
 ``` r
 mod_es <- survdnn(
@@ -250,36 +250,36 @@ mod_es <- survdnn(
   data = veteran,
   epochs = 500,
   optimizer = "adamw",
-  callbacks = callbackearlystopping(patience = 20),
+  callbacks = callback_early_stopping(patience = 20),
   verbose = FALSE,
   .seed = 123
   )
 
-plotloss(mod_es)
+plot_loss(mod_es)
 ```
 
 <img src="man/figures/README-unnamed-chunk-8-1.png" alt="" width="100%" />
 
 ## Evaluation
 
-`evaluatesurvdnn()` computes the C-index, Brier score and integrated
+`evaluate_survdnn()` computes the C-index, Brier score and integrated
 Brier score at chosen time points, on the training data or on `newdata`:
 
 ``` r
-evaluatesurvdnn(mod1, metrics = c("cindex", "brier", "ibs"), times = c(90, 180, 300))
+evaluate_survdnn(mod1, metrics = c("cindex", "brier", "ibs"), times = c(90, 180, 300))
 #> # basetable: 5 x 3
 #>   metric    value time
-#> 1 cindex 0.705360   NA
-#> 2  brier 0.201083   90
-#> 3  brier 0.157307  180
-#> 4  brier 0.097234  300
-#> 5    ibs 0.149524   NA
+#> 1 cindex 0.713841   NA
+#> 2  brier 0.194816   90
+#> 3  brier 0.157746  180
+#> 4  brier 0.100056  300
+#> 5    ibs 0.149207   NA
 ```
 
 ## Cross-validation
 
 ``` r
-cv_results <- cvsurvdnn(
+cv_results <- cv_survdnn(
   Surv(time, status) ~ age + karno + celltype,
   data = veteran,
   times = c(600),
@@ -293,7 +293,7 @@ cv_results <- cvsurvdnn(
 print(cv_results)
 
 # mean, sd and confidence interval per metric and time
-summarizecvsurvdnn(cv_results)
+summarize_cv_survdnn(cv_results)
 ```
 
 ## Hyperparameter tuning
@@ -307,7 +307,7 @@ grid <- list(
   loss       = c("cox", "aft", "coxtime")
   )
 
-tune_res <- tunesurvdnn(
+tune_res <- tune_survdnn(
   formula = Surv(time, status) ~ age + karno + celltype,
   data = veteran,
   times = c(90, 300),
@@ -321,18 +321,18 @@ tune_res <- tunesurvdnn(
 print(tune_res)
 ```
 
-`summarizetunesurvdnn()` aggregates the cross-validated results of
-`tunesurvdnn(return = "all")` per configuration.
+`summarize_tune_survdnn()` aggregates the cross-validated results of
+`tune_survdnn(return = "all")` per configuration.
 
-For a single train/validation split, `gridsearchsurvdnn()` evaluates the
-same kind of grid on a held-out validation set:
+For a single train/validation split, `gridsearch_survdnn()` evaluates
+the same kind of grid on a held-out validation set:
 
 ``` r
 idx   <- sample(nrow(veteran), 0.7 * nrow(veteran))
 train <- veteran[idx, ]
 valid <- veteran[-idx, ]
 
-gs <- gridsearchsurvdnn(
+gs <- gridsearch_survdnn(
   formula = Surv(time, status) ~ age + karno + celltype,
   train = train,
   valid = valid,
@@ -344,12 +344,12 @@ gs <- gridsearchsurvdnn(
 
 ## Tuning and refitting the best Model
 
-`tunesurvdnn()` can be used also to automatically refit the
+`tune_survdnn()` can be used also to automatically refit the
 best-performing model on the full dataset. This behavior is controlled
 by the `refit` and `return` arguments. For example:
 
 ``` r
-best_model <- tunesurvdnn(
+best_model <- tune_survdnn(
   formula = Surv(time, status) ~ age + karno + celltype,
   data = veteran,
   times = c(90, 300),
@@ -377,7 +377,7 @@ plot(best_model, times = 1:300)
 predict(best_model, veteran, type = "risk", times = 180)
 ```
 
-This makes `tunesurvdnn()` suitable for end-to-end workflows, combining
+This makes `tune_survdnn()` suitable for end-to-end workflows, combining
 model selection and final model fitting.
 
 ## Plot survival curves
@@ -399,8 +399,8 @@ plot(mod1, group_by = "celltype", times = 1:300, plot_mean_only = TRUE)
 ``` r
 help(package = "survdnn")
 ?survdnn
-?tunesurvdnn
-?cvsurvdnn
+?tune_survdnn
+?cv_survdnn
 ?plot.survdnn
 ```
 
@@ -450,9 +450,9 @@ If `.seed = NULL` (the default), randomness is left uncontrolled and
 results may vary between runs.
 
 For full reproducibility in cross-validation or hyperparameter tuning,
-the same `.seed` mechanism is propagated internally by `cvsurvdnn()` and
-`tunesurvdnn()`, ensuring consistent data splits, model initialization,
-and optimization paths across repetitions.
+the same `.seed` mechanism is propagated internally by `cv_survdnn()`
+and `tune_survdnn()`, ensuring consistent data splits, model
+initialization, and optimization paths across repetitions.
 
 ## CPU and core usage
 
@@ -487,8 +487,8 @@ mod <- survdnn(
 #> [survdnn::fit] done: epochs_run=300 final_loss=3.779572
 ```
 
-The same `.threads` argument is available in `cvsurvdnn()` and
-`tunesurvdnn()`.
+The same `.threads` argument is available in `cv_survdnn()` and
+`tune_survdnn()`.
 
 This setting affects:
 
@@ -501,7 +501,7 @@ This setting affects:
 - cross-validation and hyperparameter tuning
 
 GPU acceleration can be enabled by setting `.device = "cuda"` when
-calling `survdnn()` (`cvsurvdnn()` and `tunesurvdnn()` too).
+calling `survdnn()` (`cv_survdnn()` and `tune_survdnn()` too).
 
 ## Availability
 

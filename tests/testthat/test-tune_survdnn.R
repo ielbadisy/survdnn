@@ -1,4 +1,4 @@
-test_that("tunesurvdnn returns correct structure for all modes", {
+test_that("tune_survdnn returns correct structure for all modes", {
   skip_on_cran()
   skip_if_not(torch::torch_is_installed())
 
@@ -12,7 +12,7 @@ test_that("tunesurvdnn returns correct structure for all modes", {
   )
   times <- c(30, 90)
 
-  all_res <- tunesurvdnn(
+  all_res <- tune_survdnn(
     Surv(time, status) ~ age + karno + celltype,
     data = data,
     times = times,
@@ -29,7 +29,7 @@ test_that("tunesurvdnn returns correct structure for all modes", {
   expect_s3_class(all_res, "data.frame")
   expect_true(all(c("fold", "metric", "value") %in% names(all_res)))
 
-  summary_res <- tunesurvdnn(
+  summary_res <- tune_survdnn(
     Surv(time, status) ~ age + karno + celltype,
     data = data,
     times = times,
@@ -46,7 +46,7 @@ test_that("tunesurvdnn returns correct structure for all modes", {
   expect_s3_class(summary_res, "data.frame")
   expect_true(all(c("metric", "mean", "sd") %in% names(summary_res)))
 
-  best_cfg <- tunesurvdnn(
+  best_cfg <- tune_survdnn(
     Surv(time, status) ~ age + karno + celltype,
     data = data,
     times = times,
@@ -64,7 +64,7 @@ test_that("tunesurvdnn returns correct structure for all modes", {
   expect_true(all(c("hidden", "lr", "activation", "epochs", "loss") %in% names(best_cfg)))
 })
 
-test_that("tunesurvdnn works with refit = TRUE and returns survdnn model", {
+test_that("tune_survdnn works with refit = TRUE and returns survdnn model", {
   skip_on_cran()
   skip_if_not(torch::torch_is_installed())
 
@@ -78,7 +78,7 @@ test_that("tunesurvdnn works with refit = TRUE and returns survdnn model", {
   )
   times <- c(30, 90)
 
-  mod <- tunesurvdnn(
+  mod <- tune_survdnn(
     Surv(time, status) ~ age + karno + celltype,
     data = data,
     times = times,
@@ -96,7 +96,7 @@ test_that("tunesurvdnn works with refit = TRUE and returns survdnn model", {
   expect_s3_class(mod$model, "nn_module")
 })
 
-test_that("summarizetunesurvdnn aggregates correctly and throws on bad input", {
+test_that("summarize_tune_survdnn aggregates correctly and throws on bad input", {
   skip_on_cran()
   skip_if_not(torch::torch_is_installed())
 
@@ -110,7 +110,7 @@ test_that("summarizetunesurvdnn aggregates correctly and throws on bad input", {
   )
   times <- c(30, 90)
 
-  all_res <- tunesurvdnn(
+  all_res <- tune_survdnn(
     Surv(time, status) ~ age + karno + celltype,
     data = data,
     times = times,
@@ -124,17 +124,17 @@ test_that("summarizetunesurvdnn aggregates correctly and throws on bad input", {
     return = "all"
   )
 
-  sm <- summarizetunesurvdnn(all_res, by_time = TRUE)
+  sm <- summarize_tune_survdnn(all_res, by_time = TRUE)
   expect_s3_class(sm, "data.frame")
 
   if ("time" %in% names(all_res)) {
     expect_true("time" %in% names(sm))
   }
 
-  expect_error(summarizetunesurvdnn(data.frame(a = 1)), "Input must be the result")
+  expect_error(summarize_tune_survdnn(data.frame(a = 1)), "Input must be the result")
 })
 
-test_that("tunesurvdnn verbose controls progress messages", {
+test_that("tune_survdnn verbose controls progress messages", {
   skip_on_cran()
   skip_if_not(torch::torch_is_installed())
 
@@ -148,7 +148,7 @@ test_that("tunesurvdnn verbose controls progress messages", {
   )
 
   msg_on <- capture.output(
-    tunesurvdnn(
+    tune_survdnn(
       Surv(time, status) ~ age + karno + celltype,
       data = data,
       times = c(30),
@@ -168,7 +168,7 @@ test_that("tunesurvdnn verbose controls progress messages", {
   expect_true(any(grepl("\\[survdnn::cv\\]", msg_on)))
 
   msg_off <- capture.output(
-    tunesurvdnn(
+    tune_survdnn(
       Surv(time, status) ~ age + karno + celltype,
       data = data,
       times = c(30),

@@ -1,4 +1,4 @@
-test_that("plotloss returns a ggplot object", {
+test_that("plot_loss returns a ggplot object", {
   skip_on_cran()
   skip_if_not(torch::torch_is_installed())
 
@@ -13,6 +13,6 @@ test_that("plotloss returns a ggplot object", {
     .device = "cpu"
   )
 
-  p <- plotloss(mod)
+  p <- plot_loss(mod)
   expect_s3_class(p, "ggplot")
 })
