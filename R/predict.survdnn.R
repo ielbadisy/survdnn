@@ -105,19 +105,18 @@ predict.survdnn <- function(
 
     y_train <- model.response(model.frame(object$formula, object$data))
 
-    train_df <- data.frame(
-      time   = y_train[, "time"],
-      status = y_train[, "status"],
-      lp     = train_lp
-    )
-
-    bh <- survival::basehaz(
-      survival::coxph(survival::Surv(time, status) ~ lp, data = train_df),
-      centered = FALSE
-    )
+    ## Breslow estimator with lp as an offset (slope fixed at 1), as in
+    ## survival::coxph(Surv(time, status) ~ offset(lp), ties = "breslow"):
+    ## dH0(s) = d(s) / sum_{j: time_j >= s} exp(lp_j), right-continuous step.
+    time_train   <- y_train[, "time"]
+    status_train <- y_train[, "status"]
+    event_times  <- sort(unique(time_train[status_train == 1]))
+    d_s   <- as.numeric(table(factor(time_train[status_train == 1], levels = event_times)))
+    denom <- vapply(event_times, function(s) sum(exp(train_lp[time_train >= s])), numeric(1))
+    H0_steps <- cumsum(d_s / denom)
 
     times_sorted <- sort(as.numeric(times))
-    H0 <- stats::approx(bh$time, bh$hazard, xout = times_sorted, rule = 2)$y
+    H0 <- c(0, H0_steps)[findInterval(times_sorted, event_times) + 1L]
 
     surv_mat <- outer(
       lp,

@@ -1,5 +1,14 @@
 # survdnn
 
+## survdnn 1.0.3
+
+* Fixed Cox (`"cox"`, `"cox_l2"`) survival and risk predictions: the Breslow
+  baseline hazard was estimated from `coxph(Surv ~ lp)` (fitted slope) but then
+  applied as `exp(lp)` (slope 1), and interpolated linearly between times. It is
+  now the Breslow estimator with `lp` as an offset, a right-continuous step
+  function equal to 0 before the first event, matching
+  `survival::survfit(coxph(Surv ~ offset(lp), ties = "breslow"))`.
+
 ## survdnn 1.0.2
 
 * Result tables from `evaluate_survdnn()`, `cv_survdnn()`,
