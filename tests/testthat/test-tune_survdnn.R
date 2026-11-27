@@ -186,3 +186,15 @@ test_that("tune_survdnn verbose controls progress messages", {
 
   expect_false(any(grepl("\\[survdnn::tune\\]|\\[survdnn::cv\\]|\\[survdnn::fit\\]", msg_off)))
 })
+
+test_that("gridsearch_survdnn honours verbose", {
+  skip_if_not_installed("torch")
+  skip_if_not(torch::torch_is_installed())
+  v <- survival::veteran
+  g <- list(hidden = list(4L), lr = 1e-3, activation = "relu", epochs = 2L, loss = "cox")
+  gs <- function(...) gridsearch_survdnn(Surv(time, status) ~ age + karno, v[1:90, ], v[91:137, ],
+                                         times = 90, metrics = "cindex", param_grid = g, .device = "cpu", ...)
+  expect_message(gs(), "Training")
+  expect_silent(r <- gs(verbose = FALSE))
+  expect_equal(nrow(r), 1L)
+})

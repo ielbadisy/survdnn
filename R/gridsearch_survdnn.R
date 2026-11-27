@@ -15,6 +15,7 @@
 #'   fitting all models in the grid search. One of \code{"auto"}, \code{"cpu"},
 #'   or \code{"cuda"}. This is a runtime setting and is not part of the
 #'   hyperparameter grid.
+#' @param verbose Logical; print one progress message per configuration (default `TRUE`).
 #' 
 #' @return A basetable with configurations and their validation metrics
 #' @export
@@ -65,7 +66,8 @@ gridsearch_survdnn <- function(formula, train, valid, times,
   metrics = c("cindex", "ibs"),
   param_grid,
   .seed = 42,
-  .device = c("auto", "cpu", "cuda")) {
+  .device = c("auto", "cpu", "cuda"),
+  verbose = TRUE) {
   .device <- match.arg(.device)
   
   if (!is.null(.seed)) survdnn_set_seed(.seed)
@@ -86,7 +88,7 @@ gridsearch_survdnn <- function(formula, train, valid, times,
     loss <- param_df$loss[[.row_i]]
 
 
-    message(glue::glue("[survdnn] Training: loss={loss}, activation={activation}, hidden={toString(hidden)}"))
+    if (isTRUE(verbose)) message(glue::glue("[survdnn] Training: loss={loss}, activation={activation}, hidden={toString(hidden)}"))
 
 # re-seed inside each config to make results fully reproducible
 survdnn_set_seed(.seed)
