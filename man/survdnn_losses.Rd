@@ -62,7 +62,10 @@ for training deep neural networks on right-censored survival data.
   tied times are broken by sort order), with log relative risk `-pred`.
 - **L2-penalized Cox loss** (`cox_l2_loss`): Adds `lambda` times the mean squared output to the Cox loss.
 - **Accelerated Failure Time (AFT) loss** (`aft_loss`): Log-normal AFT **censored negative log-likelihood**
-  (uses both events and censored observations).
+  (uses both events and censored observations), averaged over subjects. The constant `0.5 log(2 pi)` of
+  each event term is omitted: it does not change the gradients or the fit, but the loss values (and
+  `loss_history` of `survdnn(loss = "aft")`) are below the full negative log-likelihood by
+  `0.5 log(2 pi)` times the proportion of events.
 - **CoxTime loss** (`coxtime_loss`): Negative Cox-Time partial log-likelihood (Kvamme et al., 2019),
   the mean over events of `g(t_i, x_i) - log sum_{j: t_j >= t_i} exp(g(t_i, x_j))`, where `g` is the
   network output on the log-risk scale (no sign flip, unlike `cox_loss`). It needs the network itself,
