@@ -20,8 +20,11 @@ coxtime_loss(pred, true)
 \item{pred}{A torch tensor of model predictions. Its interpretation depends
 on the loss function:
 \itemize{
-  \item{\code{loss = "cox"} or \code{"cox_l2"}: linear predictors
-        (log hazard ratios).}
+  \item{\code{loss = "cox"} or \code{"cox_l2"}: the network output, which is the
+        \emph{negated} log hazard ratio: the loss uses \code{-pred} as the log
+        relative risk, so a larger \code{pred} means a lower hazard. To evaluate the
+        loss at a log hazard ratio \code{g}, pass \code{pred = -g}.
+        \code{predict(type = "lp")} returns \code{-pred} (the log-risk scale).}
   \item{\code{loss = "aft"}: predicted log survival times.}
   \item{\code{loss = "coxtime"}: predicted time-dependent risk scores.}
 }}
@@ -49,7 +52,9 @@ for training deep neural networks on right-censored survival data.
 \section{Supported Losses}{
 
 - **Cox partial likelihood loss** (`cox_loss`): Negative partial log-likelihood used in proportional hazards modeling.
-- **L2-penalized Cox loss** (`cox_l2_loss`): Adds L2 regularization to the Cox loss.
+  It is the mean over events of minus the log partial likelihood contribution (Breslow form;
+  tied times are broken by sort order), with log relative risk `-pred`.
+- **L2-penalized Cox loss** (`cox_l2_loss`): Adds `lambda` times the mean squared output to the Cox loss.
 - **Accelerated Failure Time (AFT) loss** (`aft_loss`): Log-normal AFT **censored negative log-likelihood**
   (uses both events and censored observations).
 - **CoxTime loss** (`coxtime_loss`): Placeholder (see details). A correct CoxTime loss requires access to the network and the full input tensor.

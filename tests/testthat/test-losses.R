@@ -151,3 +151,13 @@ test_that("survdnn__coxtime_loss_factory returns scalar tensor and is differenti
   gsum <- sum(vapply(grads, function(g) if (is.null(g)) 0 else as.numeric(g$abs()$sum()$item()), numeric(1)))
   expect_gt(gsum, 0)
 })
+test_that("cox_loss(pred) is the Cox partial likelihood at log hazard ratio -pred", {
+  skip_if_not(torch_is_installed())
+  set.seed(1)
+  n <- 50; tt <- rexp(n); s <- rbinom(n, 1, 0.7); g <- rnorm(n)
+  y <- torch_tensor(cbind(tt, s))
+  ref <- -survival::coxph(survival::Surv(tt, s) ~ offset(g))$loglik[1] / sum(s)
+  expect_equal(cox_loss(torch_tensor(matrix(-g)), y)$item(), ref, tolerance = 1e-5)
+  expect_equal(cox_l2_loss(torch_tensor(matrix(-g)), y, lambda = 0.1)$item(), ref + 0.1 * mean(g^2),
+               tolerance = 1e-5)
+})

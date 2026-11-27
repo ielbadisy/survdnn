@@ -1,5 +1,9 @@
 # survdnn
 
+## survdnn 1.0.6
+
+* `cox_loss()` and `cox_l2_loss()` documentation: `pred` is the negated log hazard ratio (the loss uses `-pred` as the log relative risk), not the log hazard ratio as stated. The code is unchanged.
+
 ## survdnn 1.0.5
 
 * Reverted the 1.0.4 renaming of exported functions. The public API is frozen as published in the R Journal paper: all names (`cv_survdnn()`, `tune_survdnn()`, `cox_loss()`, ...) are unchanged and not deprecated.
