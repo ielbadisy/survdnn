@@ -14,7 +14,7 @@ cox_l2_loss(pred, true, lambda = 0.001)
 
 aft_loss(pred, true, sigma = 1, aft_loc = 0, eps = 1e-12)
 
-coxtime_loss(pred, true)
+coxtime_loss(pred, true, net = NULL, x = NULL)
 }
 \arguments{
 \item{pred}{A torch tensor of model predictions. Its interpretation depends
@@ -26,7 +26,7 @@ on the loss function:
         loss at a log hazard ratio \code{g}, pass \code{pred = -g}.
         \code{predict(type = "lp")} returns \code{-pred} (the log-risk scale).}
   \item{\code{loss = "aft"}: predicted log survival times.}
-  \item{\code{loss = "coxtime"}: predicted time-dependent risk scores.}
+  \item{\code{loss = "coxtime"}: ignored (kept for a common signature); see \code{net}.}
 }}
 
 \item{true}{A tensor with two columns: observed time and status (1 = event, 0 = censored).}
@@ -41,6 +41,12 @@ When non-zero, the model is trained on centered log-times `log(time) - aft_loc` 
 Prediction should add this offset back: `mu = mu_resid + aft_loc`.}
 
 \item{eps}{Small constant for numerical stability (default: `1e-12`).}
+
+\item{net}{For `coxtime_loss`: the network, a function or `nn_module` mapping an input tensor
+`[time, x]` to a one-column tensor of log-risk scores `g(t, x)`.}
+
+\item{x}{For `coxtime_loss`: input tensor with one row per subject, time (as fed to `net`) in
+the first column and covariates in the others. Risk sets use the raw times in `true`.}
 }
 \value{
 A scalar `torch_tensor` representing the loss value.
@@ -57,7 +63,12 @@ for training deep neural networks on right-censored survival data.
 - **L2-penalized Cox loss** (`cox_l2_loss`): Adds `lambda` times the mean squared output to the Cox loss.
 - **Accelerated Failure Time (AFT) loss** (`aft_loss`): Log-normal AFT **censored negative log-likelihood**
   (uses both events and censored observations).
-- **CoxTime loss** (`coxtime_loss`): Placeholder (see details). A correct CoxTime loss requires access to the network and the full input tensor.
+- **CoxTime loss** (`coxtime_loss`): Negative Cox-Time partial log-likelihood (Kvamme et al., 2019),
+  the mean over events of `g(t_i, x_i) - log sum_{j: t_j >= t_i} exp(g(t_i, x_j))`, where `g` is the
+  network output on the log-risk scale (no sign flip, unlike `cox_loss`). It needs the network itself,
+  evaluated at each event time for every subject, so it requires `net` and `x`; `pred` is ignored
+  and called without `net` and `x` it stops with an explanatory error. `survdnn(loss = "coxtime")`
+  computes it internally.
 }
 
 \examples{
