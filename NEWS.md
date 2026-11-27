@@ -2,6 +2,7 @@
 
 ## survdnn 1.0.6
 
+* `aft_loss()` documentation now states that the constant `0.5 log(2 pi)` of each event term is omitted from the negative log-likelihood. The code is unchanged.
 * `coxtime_loss()` now works: new optional arguments `net` and `x` evaluate the Cox-Time partial likelihood (previously it always errored). Without them it still stops, with a clearer message.
 * `cox_loss()` and `cox_l2_loss()` documentation: `pred` is the negated log hazard ratio (the loss uses `-pred` as the log relative risk), not the log hazard ratio as stated. The code is unchanged.
 

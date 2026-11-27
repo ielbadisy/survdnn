@@ -157,3 +157,12 @@ test_that("cox_loss(pred) is the Cox partial likelihood at log hazard ratio -pre
   expect_equal(cox_l2_loss(torch_tensor(matrix(-g)), y, lambda = 0.1)$item(), ref + 0.1 * mean(g^2),
                tolerance = 1e-5)
 })
+
+test_that("aft_loss is the log-normal censored NLL without 0.5 log(2 pi) per event", {
+  skip_if_not(torch_is_installed())
+  set.seed(1)
+  n <- 30; tt <- rexp(n); s <- rbinom(n, 1, 0.6); mu <- rnorm(n, sd = 0.3); sg <- 1.4
+  nll <- -ifelse(s == 1, dlnorm(tt, mu, sg, log = TRUE), plnorm(tt, mu, sg, lower.tail = FALSE, log.p = TRUE))
+  l <- aft_loss(torch_tensor(matrix(mu)), torch_tensor(cbind(tt, s)), sigma = sg)$item()
+  expect_equal(l, mean(nll) - 0.5 * log(2 * pi) * mean(s), tolerance = 1e-5)
+})
