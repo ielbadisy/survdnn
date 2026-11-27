@@ -12,7 +12,8 @@ gridsearch_survdnn(
   metrics = c("cindex", "ibs"),
   param_grid,
   .seed = 42,
-  .device = c("auto", "cpu", "cuda")
+  .device = c("auto", "cpu", "cuda"),
+  verbose = TRUE
 )
 }
 \arguments{
@@ -36,6 +37,8 @@ supported entries are \code{hidden}, \code{lr}, \code{activation},
 fitting all models in the grid search. One of \code{"auto"}, \code{"cpu"},
 or \code{"cuda"}. This is a runtime setting and is not part of the
 hyperparameter grid.}
+
+\item{verbose}{Logical; print one progress message per configuration (default `TRUE`).}
 }
 \value{
 A basetable with configurations and their validation metrics
