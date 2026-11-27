@@ -84,7 +84,8 @@ build_dnn <- function(
 #'   hidden linear layer (default = TRUE).
 #' @param callbacks Optional list of callback functions. Each callback should have
 #'   signature `function(epoch, current)` and return TRUE if training should stop,
-#'   FALSE otherwise. Used, for example, with [callback_early_stopping()].
+#'   FALSE otherwise. Used, for example, with [callback_early_stopping()]. `current` is the
+#'   validation loss when `validation > 0`, otherwise the training loss.
 #' @param .seed Optional integer. If provided, sets both R and torch random seeds for reproducible
 #'   weight initialization, shuffling, and dropout.
 #' @param .device Character string indicating the computation device.
@@ -95,6 +96,12 @@ build_dnn <- function(
 #' @param na_action Character. How to handle missing values in the model variables:
 #'   `"omit"` drops incomplete rows (and reports how many were removed when `verbose=TRUE`);
 #'   `"fail"` stops with an error if any missing values are present.
+#' @param validation Fraction of rows held out at random (after `.seed`) to compute a
+#'   validation loss at each epoch, which is then passed to `callbacks` (for early stopping)
+#'   and stored in `val_loss_history`. The network is trained on the other rows; the stored
+#'   `data` (used for the Cox baseline hazard) keeps all rows. The default `0` trains on all
+#'   rows and passes the training loss, as in earlier versions. For Cox losses the validation
+#'   loss is the partial likelihood of the held-out set as a whole, so it needs events in it.
 #'
 #' @return An object of class `"survdnn"` containing:
 #' \describe{
@@ -106,6 +113,8 @@ build_dnn <- function(
 #'   \item{x_scale}{Column standard deviations of predictors.}
 #'   \item{loss_history}{Vector of loss values per epoch.}
 #'   \item{final_loss}{Final training loss.}
+#'   \item{val_loss_history}{Vector of validation loss values per epoch when `validation > 0`;
+#'     `NULL` otherwise.}
 #'   \item{loss}{Loss function name used ("cox", "aft", etc.).}
 #'   \item{activation}{Activation function used.}
 #'   \item{hidden}{Hidden layer sizes.}
@@ -138,7 +147,8 @@ survdnn <- function(
   .seed = NULL,
   .device = c("auto", "cpu", "cuda"),
   .threads = NULL,
-  na_action = c("omit", "fail")
+  na_action = c("omit", "fail"),
+  validation = 0
 ) {
   survdnn_set_seed(.seed)
   device <- survdnn_get_device(.device)
@@ -248,6 +258,14 @@ survdnn <- function(
     device = device
   )
 
+  # held-out rows for a validation loss (R RNG used only when validation > 0)
+  vi <- if (validation > 0) sample.int(nrow(x), max(1L, round(validation * nrow(x)))) else integer(0)
+  if (length(vi)) {
+    ti <- setdiff(seq_len(nrow(x)), vi)
+    x_val <- x_tensor[vi, , drop = FALSE]; y_val <- y_tensor[vi, , drop = FALSE]
+    x_tensor <- x_tensor[ti, , drop = FALSE]; y_tensor <- y_tensor[ti, , drop = FALSE]
+  }
+
   # network
   net <- build_dnn(
     input_dim  = ncol(x_tensor),
@@ -304,6 +322,7 @@ survdnn <- function(
 
   # training loop
   loss_history   <- numeric(epochs)
+  val_history    <- if (length(vi)) numeric(epochs) else NULL
   early_stopped  <- FALSE
   last_epoch_run <- epochs
 
@@ -318,6 +337,11 @@ survdnn <- function(
     current_loss        <- loss_val$item()
     loss_history[epoch] <- current_loss
     last_epoch_run      <- epoch
+    monitored           <- current_loss
+    if (length(vi)) {
+      net$eval()
+      monitored <- val_history[epoch] <- torch::with_no_grad(loss_fn(net, x_val, y_val))$item()
+    }
 
     if (isTRUE(verbose) && (epoch %% 50 == 0 || epoch == epochs)) {
       message(sprintf("[survdnn::fit] epoch %d/%d loss=%.6f", epoch, epochs, current_loss))
@@ -325,7 +349,7 @@ survdnn <- function(
 
     if (!is.null(callbacks)) {
       for (cb in callbacks) {
-        if (isTRUE(cb(epoch, current_loss))) {
+        if (isTRUE(cb(epoch, monitored))) {
           early_stopped <- TRUE
           break
         }
@@ -336,6 +360,7 @@ survdnn <- function(
 
   if (early_stopped && last_epoch_run < epochs) {
     loss_history <- loss_history[seq_len(last_epoch_run)]
+    if (length(vi)) val_history <- val_history[seq_len(last_epoch_run)]
     if (isTRUE(verbose)) {
       message(sprintf("[survdnn::fit] early stopping at epoch %d/%d.", last_epoch_run, epochs))
     }
@@ -369,6 +394,7 @@ survdnn <- function(
       x_scale             = attr(x_scaled, "scaled:scale"),
       loss_history        = loss_history,
       final_loss          = tail(loss_history, 1),
+      val_loss_history    = val_history,
       loss                = loss,
       activation          = activation,
       hidden              = hidden,

@@ -21,7 +21,8 @@ survdnn(
   .seed = NULL,
   .device = c("auto", "cpu", "cuda"),
   .threads = NULL,
-  na_action = c("omit", "fail")
+  na_action = c("omit", "fail"),
+  validation = 0
 )
 }
 \arguments{
@@ -56,7 +57,8 @@ hidden linear layer (default = TRUE).}
 
 \item{callbacks}{Optional list of callback functions. Each callback should have
 signature `function(epoch, current)` and return TRUE if training should stop,
-FALSE otherwise. Used, for example, with [callback_early_stopping()].}
+FALSE otherwise. Used, for example, with [callback_early_stopping()]. `current` is the
+validation loss when `validation > 0`, otherwise the training loss.}
 
 \item{.seed}{Optional integer. If provided, sets both R and torch random seeds for reproducible
 weight initialization, shuffling, and dropout.}
@@ -71,6 +73,13 @@ Torch CPU thread count via `torch::torch_set_num_threads()`.}
 \item{na_action}{Character. How to handle missing values in the model variables:
 `"omit"` drops incomplete rows (and reports how many were removed when `verbose=TRUE`);
 `"fail"` stops with an error if any missing values are present.}
+
+\item{validation}{Fraction of rows held out at random (after `.seed`) to compute a
+validation loss at each epoch, which is then passed to `callbacks` (for early stopping)
+and stored in `val_loss_history`. The network is trained on the other rows; the stored
+`data` (used for the Cox baseline hazard) keeps all rows. The default `0` trains on all
+rows and passes the training loss, as in earlier versions. For Cox losses the validation
+loss is the partial likelihood of the held-out set as a whole, so it needs events in it.}
 }
 \value{
 An object of class `"survdnn"` containing:
@@ -83,6 +92,8 @@ An object of class `"survdnn"` containing:
   \item{x_scale}{Column standard deviations of predictors.}
   \item{loss_history}{Vector of loss values per epoch.}
   \item{final_loss}{Final training loss.}
+  \item{val_loss_history}{Vector of validation loss values per epoch when `validation > 0`;
+    `NULL` otherwise.}
   \item{loss}{Loss function name used ("cox", "aft", etc.).}
   \item{activation}{Activation function used.}
   \item{hidden}{Hidden layer sizes.}

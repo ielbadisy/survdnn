@@ -42,3 +42,21 @@ test_that("survdnn uses early stopping callback on training loss", {
   expect_true(length(mod$loss_history) <= 50L)
   expect_true(length(mod$loss_history) >= 1L)
 })
+
+test_that("callbacks monitor the validation loss when validation > 0", {
+  skip_if_not_installed("torch")
+  skip_if_not(torch::torch_is_installed())
+  seen <- numeric(0)
+  cb <- function(epoch, current) { seen <<- c(seen, current); FALSE }
+  fit <- function(...) survdnn(Surv(time, status) ~ age + karno, data = survival::veteran, hidden = 4L,
+                               epochs = 8L, verbose = FALSE, .seed = 1, .device = "cpu", ...)
+  m <- fit(callbacks = cb, validation = 0.3)
+  expect_length(m$val_loss_history, 8L)
+  expect_equal(seen, m$val_loss_history)
+  expect_false(isTRUE(all.equal(m$val_loss_history, m$loss_history)))
+  seen <- numeric(0)
+  m0 <- fit(callbacks = cb)
+  expect_null(m0$val_loss_history)
+  expect_equal(seen, m0$loss_history)
+  for (l in c("cox_l2", "aft", "coxtime")) expect_length(fit(loss = l, validation = 0.3)$val_loss_history, 8L)
+})
