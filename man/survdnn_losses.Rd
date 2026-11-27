@@ -67,7 +67,8 @@ for training deep neural networks on right-censored survival data.
   `loss_history` of `survdnn(loss = "aft")`) are below the full negative log-likelihood by
   `0.5 log(2 pi)` times the proportion of events.
 - **CoxTime loss** (`coxtime_loss`): Negative Cox-Time partial log-likelihood (Kvamme et al., 2019),
-  the mean over events of `g(t_i, x_i) - log sum_{j: t_j >= t_i} exp(g(t_i, x_j))`, where `g` is the
+  the mean over events of `g(t_i, x_i)` minus the log of the sum of `exp(g(t_i, x_j))` over subjects
+  `j` with `t_j >= t_i`, where `g` is the
   network output on the log-risk scale (no sign flip, unlike `cox_loss`). It needs the network itself,
   evaluated at each event time for every subject, so it requires `net` and `x`; `pred` is ignored
   and called without `net` and `x` it stops with an explanatory error. `survdnn(loss = "coxtime")`
