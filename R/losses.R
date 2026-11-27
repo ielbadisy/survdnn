@@ -10,7 +10,12 @@
 #' - **L2-penalized Cox loss** (`cox_l2_loss`): Adds `lambda` times the mean squared output to the Cox loss.
 #' - **Accelerated Failure Time (AFT) loss** (`aft_loss`): Log-normal AFT **censored negative log-likelihood**
 #'   (uses both events and censored observations).
-#' - **CoxTime loss** (`coxtime_loss`): Placeholder (see details). A correct CoxTime loss requires access to the network and the full input tensor.
+#' - **CoxTime loss** (`coxtime_loss`): Negative Cox-Time partial log-likelihood (Kvamme et al., 2019),
+#'   the mean over events of `g(t_i, x_i) - log sum_{j: t_j >= t_i} exp(g(t_i, x_j))`, where `g` is the
+#'   network output on the log-risk scale (no sign flip, unlike `cox_loss`). It needs the network itself,
+#'   evaluated at each event time for every subject, so it requires `net` and `x`; `pred` is ignored
+#'   and called without `net` and `x` it stops with an explanatory error. `survdnn(loss = "coxtime")`
+#'   computes it internally.
 #'
 #' @param pred A torch tensor of model predictions. Its interpretation depends
 #'   on the loss function:
@@ -21,7 +26,7 @@
 #'           loss at a log hazard ratio \code{g}, pass \code{pred = -g}.
 #'           \code{predict(type = "lp")} returns \code{-pred} (the log-risk scale).}
 #'     \item{\code{loss = "aft"}: predicted log survival times.}
-#'     \item{\code{loss = "coxtime"}: predicted time-dependent risk scores.}
+#'     \item{\code{loss = "coxtime"}: ignored (kept for a common signature); see \code{net}.}
 #'   }
 #' @param true A tensor with two columns: observed time and status (1 = event, 0 = censored).
 #' @param lambda Regularization parameter for `cox_l2_loss` (default: `1e-3`).
@@ -30,6 +35,10 @@
 #' @param aft_loc Numeric scalar location offset for the AFT model on the log-time scale.
 #'   When non-zero, the model is trained on centered log-times `log(time) - aft_loc` for better numerical stability.
 #'   Prediction should add this offset back: `mu = mu_resid + aft_loc`.
+#' @param net For `coxtime_loss`: the network, a function or `nn_module` mapping an input tensor
+#'   `[time, x]` to a one-column tensor of log-risk scores `g(t, x)`.
+#' @param x For `coxtime_loss`: input tensor with one row per subject, time (as fed to `net`) in
+#'   the first column and covariates in the others. Risk sets use the raw times in `true`.
 #' @param eps Small constant for numerical stability (default: `1e-12`).
 #'
 #' @return A scalar `torch_tensor` representing the loss value.
@@ -140,17 +149,20 @@ aft_loss <- function(pred, true, sigma = 1, aft_loc = 0, eps = 1e-12) {
 
 
 
-# CoxTime loss (not identifiable from pred alone)
+# CoxTime loss: needs the network, not a single prediction per subject
 
 #' @rdname survdnn_losses
 #' @export
-coxtime_loss <- function(pred, true) {
-  stop(
-    "coxtime_loss(pred, true) is not identifiable from `pred` alone.\n",
-    "Cox-Time requires evaluating g(t_i, x_j) for all subjects j at each event time t_i.\n",
-    "Use the internal factory `survdnn__coxtime_loss_factory()` from survdnn() where `net` and the full input tensor are available.",
-    call. = FALSE
-  )
+coxtime_loss <- function(pred, true, net = NULL, x = NULL) {
+  if (is.null(net) || is.null(x)) {
+    stop(
+      "coxtime_loss() cannot be computed from `pred` alone: Cox-Time needs g(t_i, x_j) for every ",
+      "subject j at each event time t_i.\n",
+      "Pass `net` (the network) and `x` (input tensor whose first column is time as fed to `net`).",
+      call. = FALSE
+    )
+  }
+  survdnn__coxtime_loss_factory(net)(x, true)
 }
 
 

@@ -99,20 +99,16 @@ test_that("aft_loss fully censored stays on same device as pred (CUDA)", {
   expect_false(torch::is_undefined_tensor(pred$grad))
 })
 
-test_that("coxtime_loss() is a placeholder and errors (use factory in training)", {
+test_that("coxtime_loss() errors without net and x, and equals Cox with a time-free net", {
   skip_if_not(torch_is_installed())
-
-  n <- 50
-  pred   <- torch_randn(c(n, 1))
-  time   <- torch_rand(c(n, 1)) * 100
-  status <- torch_ones(c(n, 1))
-  true   <- torch_cat(list(time, status), dim = 2)
-
-  expect_error(
-    coxtime_loss(pred, true),
-    regexp = "not identifiable|requires evaluating",
-    fixed  = FALSE
-  )
+  set.seed(1)
+  n <- 40; tt <- rexp(n); s <- rbinom(n, 1, 0.7); z <- rnorm(n)
+  true <- torch_tensor(cbind(tt, s))
+  expect_error(coxtime_loss(torch_randn(c(n, 1)), true), "cannot be computed from `pred` alone")
+  net <- function(inp) 0.7 * inp[, 2, drop = FALSE]
+  l <- coxtime_loss(NULL, true, net = net, x = torch_tensor(cbind(tt, z)))$item()
+  ref <- -survival::coxph(survival::Surv(tt, s) ~ offset(0.7 * z))$loglik[1] / sum(s)
+  expect_equal(l, ref, tolerance = 1e-5)
 })
 
 test_that("survdnn__coxtime_loss_factory returns scalar tensor and is differentiable", {
