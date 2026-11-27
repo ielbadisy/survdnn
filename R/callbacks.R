@@ -1,6 +1,10 @@
 #' Early stopping callback for survdnn
 #'
-#' Simple early stopping on a monitored scalar, typically the training loss.
+#' Simple early stopping on a monitored scalar. Inside [survdnn()] the monitored value is the
+#' validation loss when `survdnn(validation = )` is positive, and the training loss otherwise
+#' (the default). Monitoring the training loss rarely stops a network that is still fitting the
+#' training data, so set `validation` to stop on held-out performance. The weights of the last
+#' epoch run (not the best one) are kept.
 #'
 #' @param patience Integer. Number of epochs with no improvement before stopping.
 #' @param min_delta Minimum change to qualify as an improvement (default: 0).

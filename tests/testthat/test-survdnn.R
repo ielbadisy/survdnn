@@ -54,6 +54,7 @@ test_that("survdnn() fits a model and returns correct structure", {
       "threads",
       "x_center",
       "x_scale",
+      "val_loss_history",
       "xnames"
     ),
     ignore.order = TRUE

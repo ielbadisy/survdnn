@@ -2,6 +2,7 @@
 
 ## survdnn 1.0.6
 
+* New `validation` argument in `survdnn()` (default `0`, unchanged behaviour): a held-out fraction whose loss is computed each epoch, stored in `val_loss_history` and passed to `callbacks`, so `callback_early_stopping()` monitors the validation loss when one exists.
 * `aft_loss()` documentation now states that the constant `0.5 log(2 pi)` of each event term is omitted from the negative log-likelihood. The code is unchanged.
 * `coxtime_loss()` now works: new optional arguments `net` and `x` evaluate the Cox-Time partial likelihood (previously it always errored). Without them it still stops, with a clearer message.
 * `cox_loss()` and `cox_l2_loss()` documentation: `pred` is the negated log hazard ratio (the loss uses `-pred` as the log relative risk), not the log hazard ratio as stated. The code is unchanged.
